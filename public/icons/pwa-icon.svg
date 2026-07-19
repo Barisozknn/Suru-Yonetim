@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <!-- Arka plan -->
+  <rect width="192" height="192" rx="32" fill="#2f5c35"/>
+  <!-- Çimen/Tarla -->
+  <ellipse cx="96" cy="168" rx="70" ry="16" fill="#1e3d22"/>
+  <!-- Sığır gövdesi -->
+  <ellipse cx="96" cy="110" rx="50" ry="34" fill="#f5f0e8"/>
+  <ellipse cx="96" cy="110" rx="50" ry="34" fill="none" stroke="#c8b89a" stroke-width="2"/>
+  <!-- Sığır başı -->
+  <ellipse cx="96" cy="78" rx="26" ry="22" fill="#f5f0e8" stroke="#c8b89a" stroke-width="2"/>
+  <!-- Burun -->
+  <ellipse cx="96" cy="92" rx="14" ry="8" fill="#e8cfc0"/>
+  <!-- Burun delikleri -->
+  <circle cx="90" cy="92" r="2.5" fill="#c8a090"/>
+  <circle cx="102" cy="92" r="2.5" fill="#c8a090"/>
+  <!-- Gözler -->
+  <circle cx="84" cy="72" r="4" fill="#2d1b10"/>
+  <circle cx="108" cy="72" r="4" fill="#2d1b10"/>
+  <circle cx="85.5" cy="70.5" r="1.5" fill="white"/>
+  <circle cx="109.5" cy="70.5" r="1.5" fill="white"/>
+  <!-- Kulaklar -->
+  <ellipse cx="70" cy="70" rx="10" ry="7" fill="#f5f0e8" stroke="#c8b89a" stroke-width="1.5" transform="rotate(-20 70 70)"/>
+  <ellipse cx="122" cy="70" rx="10" ry="7" fill="#f5f0e8" stroke="#c8b89a" stroke-width="1.5" transform="rotate(20 122 70)"/>
+  <!-- Boynuzlar -->
+  <path d="M76 62 Q68 46 62 44" stroke="#a08060" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M116 62 Q124 46 130 44" stroke="#a08060" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <!-- Bacaklar -->
+  <rect x="60" y="138" width="14" height="28" rx="7" fill="#e8dfc8"/>
+  <rect x="82" y="138" width="14" height="28" rx="7" fill="#e8dfc8"/>
+  <rect x="96" y="138" width="14" height="28" rx="7" fill="#e8dfc8"/>
+  <rect x="118" y="138" width="14" height="28" rx="7" fill="#e8dfc8"/>
+  <!-- Küpe (sol kulak) -->
+  <circle cx="60" cy="72" r="5" fill="#e74c3c" stroke="#c0392b" stroke-width="1"/>
+  <text x="60" y="76" text-anchor="middle" font-size="6" fill="white" font-weight="bold">TR</text>
+</svg>

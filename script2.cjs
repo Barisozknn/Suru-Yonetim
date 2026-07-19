@@ -1,0 +1,1 @@
+const fs = require('fs'); const ttf = fs.readFileSync('Roboto-Regular.ttf'); const b64 = ttf.toString('base64'); fs.writeFileSync('src/utils/fonts.ts', 'export const RobotoRegularBase64 = \" " + b64 + " "\;');  
