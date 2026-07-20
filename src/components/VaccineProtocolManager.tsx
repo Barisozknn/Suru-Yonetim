@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import type { AsiProtokolu, AsiUygulama, PlanlananAsi } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 import { Plus, Trash2, X, Save, Syringe, ChevronDown, ChevronUp, Users, Edit2 } from 'lucide-react';
 
 const VaccineProtocolManager: React.FC = () => {
-  const protokoller = useLiveQuery(() => db.asiProtokolleri.toArray()) || [];
-  const hayvanlar = useLiveQuery(() => db.hayvanlar.toArray()) || [];
-  const gruplar = useLiveQuery(() => db.gruplar.toArray()) || [];
+  const protokoller = useLiveFarmQuery(() => db.asiProtokolleri.toArray()) || [];
+  const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
+  const gruplar = useLiveFarmQuery(() => db.gruplar.toArray()) || [];
 
   const [showForm, setShowForm] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);

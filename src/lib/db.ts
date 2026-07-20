@@ -1,3 +1,4 @@
+import { useStore } from '../store/useStore';
 import Dexie, { type Table } from 'dexie';
 import type { Hayvan, Grup, Yem, YemHareketi, SutKaydi, AgirlikKaydi, SaglikOlayi, AsiProtokolu, PlanlananAsi, UremeKaydi, BuzagiKaydi, Sohbet, EkFinansalIslem, GunlukYemMaliyeti } from '../types';
 
@@ -10,6 +11,7 @@ export interface SyncOperation {
 }
 
 export class SuruYonetimDB extends Dexie {
+  ciftlikler!: Table<import('../types').Ciftlik, string>;
   hayvanlar!: Table<Hayvan, string>;
   gruplar!: Table<Grup, string>;
   yemler!: Table<Yem, string>;
@@ -28,6 +30,27 @@ export class SuruYonetimDB extends Dexie {
 
   constructor() {
     super('SuruYonetimDB');
+
+    
+
+    this.version(10).stores({
+      ciftlikler: 'id, ad',
+      hayvanlar: 'id, ciftlikId, kupeNo, tur, irk, durum, grupId',
+      gruplar: 'id, ciftlikId, ad, tur',
+      yemler: 'id, ciftlikId, ad, tur',
+      yemHareketleri: 'id, ciftlikId, yemId, islemTarihi',
+      sutKayitlari: 'id, ciftlikId, hayvanId, tarih',
+      agirlikKayitlari: 'id, ciftlikId, hayvanId, tarih',
+      saglikOlaylari: 'id, ciftlikId, hayvanId, tarih, tur',
+      asiProtokolleri: 'id, ciftlikId, ad, hedefTur',
+      planlananAsilar: 'id, ciftlikId, hayvanId, planlanaTarih, yapildiMi',
+      uremeKayitlari: 'id, ciftlikId, hayvanId, tarih, tur',
+      buzagiKayitlari: 'id, ciftlikId, hayvanId',
+      sohbetler: 'id, ciftlikId, olusturulmaTarihi, guncellenmeTarihi',
+      ekFinansalIslemler: 'id, ciftlikId, tarih, tip, kategori',
+      gunlukYemMaliyetleri: 'id, ciftlikId, tarih',
+      syncQueue: '++id, ciftlikId, table, created_at'
+    });
 
     this.version(9).stores({
       hayvanlar: 'id, kupeNo, tur, irk, durum, grupId',
@@ -102,7 +125,22 @@ export class SuruYonetimDB extends Dexie {
     this.version(2).stores({
       hayvanlar: 'id, kupeNo, tur, irk, durum, grupId, anneKupeNo, babaKupeNo'
     });
+
+    
   }
 }
 
 export const db = new SuruYonetimDB();
+
+const tables = ['hayvanlar', 'gruplar', 'yemler', 'yemHareketleri', 'sutKayitlari', 'agirlikKayitlari', 'saglikOlaylari', 'asiProtokolleri', 'planlananAsilar', 'uremeKayitlari', 'buzagiKayitlari', 'sohbetler', 'ekFinansalIslemler', 'gunlukYemMaliyetleri'];
+
+db.tables.forEach(table => {
+  if (tables.includes(table.name)) {
+    table.hook('creating', function (_primKey, obj, _trans) {
+      const activeId = useStore.getState().activeCiftlikId;
+      if (activeId && !obj.ciftlikId) {
+        obj.ciftlikId = activeId;
+      }
+    });
+  }
+});

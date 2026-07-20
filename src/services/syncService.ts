@@ -1,5 +1,6 @@
 import { db } from '../lib/db';
 import { supabase } from '../lib/supabase';
+import { useStore } from '../store/useStore';
 
 const mapFromSupabaseHayvan = (row: any) => ({
   id: row.id,
@@ -17,7 +18,8 @@ const mapFromSupabaseHayvan = (row: any) => ({
   notlar: row.notlar,
   satisFiyati: row.satis_fiyati,
   satisTarihi: row.satis_tarihi,
-  user_id: row.user_id
+  user_id: row.user_id,
+  ciftlikId: row.ciftlik_id || undefined
 });
 
 const mapToSupabaseHayvan = (obj: any) => ({
@@ -36,7 +38,8 @@ const mapToSupabaseHayvan = (obj: any) => ({
   notlar: obj.notlar,
   satis_fiyati: obj.satisFiyati,
   satis_tarihi: obj.satisTarihi,
-  user_id: obj.user_id
+  user_id: obj.user_id,
+  ciftlik_id: obj.ciftlikId
 });
 
 const mapFromSupabaseGrup = (row: any) => ({
@@ -47,7 +50,8 @@ const mapFromSupabaseGrup = (row: any) => ({
   rasyonAdi: row.rasyon_adi,
   rasyonOzet: row.rasyon_ozet,
   rasyonTarihi: row.rasyon_tarihi,
-  user_id: row.user_id
+  user_id: row.user_id,
+  ciftlikId: row.ciftlik_id || undefined
 });
 
 const mapToSupabaseGrup = (obj: any) => ({
@@ -58,7 +62,8 @@ const mapToSupabaseGrup = (obj: any) => ({
   rasyon_adi: obj.rasyonAdi,
   rasyon_ozet: obj.rasyonOzet,
   rasyon_tarihi: obj.rasyonTarihi,
-  user_id: obj.user_id
+  user_id: obj.user_id,
+  ciftlik_id: obj.ciftlikId
 });
 
 const mapFromSupabaseYem = (row: any) => ({
@@ -70,7 +75,8 @@ const mapFromSupabaseYem = (row: any) => ({
   sonAlimTarihi: row.son_alim_tarihi,
   tedarikci: row.tedarikci,
   minStokUyariKg: row.min_stok_uyari_kg,
-  user_id: row.user_id
+  user_id: row.user_id,
+  ciftlikId: row.ciftlik_id || undefined
 });
 
 const mapToSupabaseYem = (obj: any) => ({
@@ -82,7 +88,8 @@ const mapToSupabaseYem = (obj: any) => ({
   son_alim_tarihi: obj.sonAlimTarihi,
   tedarikci: obj.tedarikci,
   min_stok_uyari_kg: obj.minStokUyariKg,
-  user_id: obj.user_id
+  user_id: obj.user_id,
+  ciftlik_id: obj.ciftlikId
 });
 
 const mapFromSupabaseYemHareketi = (row: any) => ({
@@ -92,7 +99,8 @@ const mapFromSupabaseYemHareketi = (row: any) => ({
   miktarKg: row.miktar_kg,
   islemTarihi: row.islem_tarihi,
   aciklama: row.aciklama,
-  user_id: row.user_id
+  user_id: row.user_id,
+  ciftlikId: row.ciftlik_id || undefined
 });
 
 const mapToSupabaseYemHareketi = (obj: any) => ({
@@ -102,7 +110,8 @@ const mapToSupabaseYemHareketi = (obj: any) => ({
   miktar_kg: obj.miktarKg,
   islem_tarihi: obj.islemTarihi,
   aciklama: obj.aciklama,
-  user_id: obj.user_id
+  user_id: obj.user_id,
+  ciftlik_id: obj.ciftlikId
 });
 
 const mapFromSupabaseSut = (row: any) => ({
@@ -114,7 +123,8 @@ const mapFromSupabaseSut = (row: any) => ({
   proteinYuzde: row.protein_yuzde,
   laktozYuzde: row.laktoz_yuzde,
   somatikHucre: row.somatik_hucre,
-  user_id: row.user_id
+  user_id: row.user_id,
+  ciftlikId: row.ciftlik_id || undefined
 });
 
 const mapToSupabaseSut = (obj: any) => ({
@@ -126,7 +136,8 @@ const mapToSupabaseSut = (obj: any) => ({
   protein_yuzde: obj.proteinYuzde,
   laktoz_yuzde: obj.laktozYuzde,
   somatik_hucre: obj.somatikHucre,
-  user_id: obj.user_id
+  user_id: obj.user_id,
+  ciftlik_id: obj.ciftlikId
 });
 
 const mapFromSupabaseAgirlik = (row: any) => ({
@@ -134,7 +145,8 @@ const mapFromSupabaseAgirlik = (row: any) => ({
   hayvanId: row.hayvan_id,
   tarih: row.tarih,
   kg: row.kg,
-  user_id: row.user_id
+  user_id: row.user_id,
+  ciftlikId: row.ciftlik_id || undefined
 });
 
 const mapToSupabaseAgirlik = (obj: any) => ({
@@ -142,7 +154,8 @@ const mapToSupabaseAgirlik = (obj: any) => ({
   hayvan_id: obj.hayvanId,
   tarih: obj.tarih,
   kg: obj.kg,
-  user_id: obj.user_id
+  user_id: obj.user_id,
+  ciftlik_id: obj.ciftlikId
 });
 
 const mapFromSupabaseSaglik = (row: any) => ({
@@ -155,7 +168,8 @@ const mapFromSupabaseSaglik = (row: any) => ({
   arinmaSuresiGun: row.arinma_suresi_gun,
   maliyet: row.maliyet,
   detaylar: row.detaylar,
-  user_id: row.user_id
+  user_id: row.user_id,
+  ciftlikId: row.ciftlik_id || undefined
 });
 
 const mapToSupabaseSaglik = (obj: any) => ({
@@ -168,7 +182,8 @@ const mapToSupabaseSaglik = (obj: any) => ({
   arinma_suresi_gun: obj.arinmaSuresiGun,
   maliyet: obj.maliyet,
   detaylar: obj.detaylar,
-  user_id: obj.user_id
+  user_id: obj.user_id,
+  ciftlik_id: obj.ciftlikId
 });
 
 const mapFromSupabasePlanlananAsi = (row: any) => ({
@@ -180,7 +195,8 @@ const mapFromSupabasePlanlananAsi = (row: any) => ({
   planlanaTarih: row.planlana_tarih,
   yapildiMi: row.yapildi_mi,
   yapilmaTarihi: row.yapilma_tarihi,
-  user_id: row.user_id
+  user_id: row.user_id,
+  ciftlikId: row.ciftlik_id || undefined
 });
 
 const mapToSupabasePlanlananAsi = (obj: any) => ({
@@ -192,7 +208,8 @@ const mapToSupabasePlanlananAsi = (obj: any) => ({
   planlana_tarih: obj.planlanaTarih,
   yapildi_mi: obj.yapildiMi,
   yapilma_tarihi: obj.yapilmaTarihi,
-  user_id: obj.user_id
+  user_id: obj.user_id,
+  ciftlik_id: obj.ciftlikId
 });
 
 const mapFromSupabaseEkFinansalIslem = (row: any) => ({
@@ -202,7 +219,8 @@ const mapFromSupabaseEkFinansalIslem = (row: any) => ({
   kategori: row.kategori,
   miktar: row.miktar,
   aciklama: row.aciklama,
-  user_id: row.user_id
+  user_id: row.user_id,
+  ciftlikId: row.ciftlik_id || undefined
 });
 
 const mapToSupabaseEkFinansalIslem = (obj: any) => ({
@@ -212,21 +230,24 @@ const mapToSupabaseEkFinansalIslem = (obj: any) => ({
   kategori: obj.kategori,
   miktar: obj.miktar,
   aciklama: obj.aciklama,
-  user_id: obj.user_id
+  user_id: obj.user_id,
+  ciftlik_id: obj.ciftlikId
 });
 
 const mapFromSupabaseGunlukYemMaliyeti = (row: any) => ({
   id: row.id,
   tarih: row.tarih,
   toplamMaliyet: row.toplam_maliyet,
-  user_id: row.user_id
+  user_id: row.user_id,
+  ciftlikId: row.ciftlik_id || undefined
 });
 
 const mapToSupabaseGunlukYemMaliyeti = (obj: any) => ({
   id: obj.id,
   tarih: obj.tarih,
   toplam_maliyet: obj.toplamMaliyet,
-  user_id: obj.user_id
+  user_id: obj.user_id,
+  ciftlik_id: obj.ciftlikId
 });
 
 const mapFromSupabaseProtokol = (row: any) => ({
@@ -234,7 +255,8 @@ const mapFromSupabaseProtokol = (row: any) => ({
   ad: row.ad,
   hedefTur: row.hedef_tur,
   uygulamalar: row.uygulamalar,
-  user_id: row.user_id
+  user_id: row.user_id,
+  ciftlikId: row.ciftlik_id || undefined
 });
 
 const mapToSupabaseProtokol = (obj: any) => ({
@@ -242,7 +264,8 @@ const mapToSupabaseProtokol = (obj: any) => ({
   ad: obj.ad,
   hedef_tur: obj.hedefTur,
   uygulamalar: obj.uygulamalar,
-  user_id: obj.user_id
+  user_id: obj.user_id,
+  ciftlik_id: obj.ciftlikId
 });
 
 const mapFromSupabaseUreme = (row: any) => ({
@@ -253,7 +276,8 @@ const mapFromSupabaseUreme = (row: any) => ({
   durum: row.durum,
   notlar: row.notlar,
   detaylar: row.detaylar,
-  user_id: row.user_id
+  user_id: row.user_id,
+  ciftlikId: row.ciftlik_id || undefined
 });
 
 const mapToSupabaseUreme = (obj: any) => ({
@@ -264,7 +288,8 @@ const mapToSupabaseUreme = (obj: any) => ({
   durum: obj.durum,
   notlar: obj.notlar,
   detaylar: obj.detaylar,
-  user_id: obj.user_id
+  user_id: obj.user_id,
+  ciftlik_id: obj.ciftlikId
 });
 
 const mapFromSupabaseBuzagi = (row: any) => ({
@@ -278,7 +303,8 @@ const mapFromSupabaseBuzagi = (row: any) => ({
   hedefSuttenKesimAgirligiKg: row.hedef_sutten_kesim_agirligi_kg,
   gerceklesenSuttenKesimTarihi: row.gerceklesen_sutten_kesim_tarihi,
   gerceklesenSuttenKesimAgirligiKg: row.gerceklesen_sutten_kesim_agirligi_kg,
-  user_id: row.user_id
+  user_id: row.user_id,
+  ciftlikId: row.ciftlik_id || undefined
 });
 
 const mapToSupabaseBuzagi = (obj: any) => ({
@@ -292,7 +318,8 @@ const mapToSupabaseBuzagi = (obj: any) => ({
   hedef_sutten_kesim_agirligi_kg: obj.hedefSuttenKesimAgirligiKg,
   gerceklesen_sutten_kesim_tarihi: obj.gerceklesenSuttenKesimTarihi,
   gerceklesen_sutten_kesim_agirligi_kg: obj.gerceklesenSuttenKesimAgirligiKg,
-  user_id: obj.user_id
+  user_id: obj.user_id,
+  ciftlik_id: obj.ciftlikId
 });
 
 const mapFromSupabaseSohbet = (row: any) => ({
@@ -301,7 +328,8 @@ const mapFromSupabaseSohbet = (row: any) => ({
   olusturulmaTarihi: row.olusturulmaTarihi,
   guncellenmeTarihi: row.guncellenmeTarihi,
   mesajlar: row.mesajlar,
-  user_id: row.user_id
+  user_id: row.user_id,
+  ciftlikId: row.ciftlik_id || undefined
 });
 
 const mapToSupabaseSohbet = (obj: any) => ({
@@ -310,13 +338,21 @@ const mapToSupabaseSohbet = (obj: any) => ({
   olusturulmaTarihi: obj.olusturulmaTarihi,
   guncellenmeTarihi: obj.guncellenmeTarihi,
   mesajlar: obj.mesajlar,
-  user_id: obj.user_id
+  user_id: obj.user_id,
+  ciftlik_id: obj.ciftlikId
 });
 
 export const pullInitialData = async () => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
+
+    const ciftliklerRes = await supabase.from('ciftlikler').select('*').eq('user_id', user.id);
+    if (ciftliklerRes.data) {
+      const mappedCiftlikler = ciftliklerRes.data.map(row => ({ id: row.id, ad: row.ad, olusturulmaTarihi: row.olusturulma_tarihi, user_id: row.user_id }));
+      await db.ciftlikler.bulkPut(mappedCiftlikler);
+      useStore.getState().setCiftlikler(mappedCiftlikler);
+    }
 
     const [hayvanlarRes, gruplarRes, yemlerRes, yemHareketleriRes, sutRes, agirlikRes, saglikRes, protokolRes, planlananAsilarRes, uremeRes, buzagiRes, sohbetlerRes, ekFinansRes] = await Promise.all([
       supabase.from('hayvanlar').select('*').eq('user_id', user.id),
@@ -356,6 +392,21 @@ export const pullInitialData = async () => {
       }
     } catch (e) {
       console.warn('gunluk_yem_maliyetleri tablosu henüz Supabase de oluşturulmamış olabilir.', e);
+    }
+
+    try {
+      const ayarlarRes = await supabase.from('kullanici_ayarlari').select('ayarlar').eq('user_id', user.id).maybeSingle();
+      if (ayarlarRes.data && !ayarlarRes.error) {
+        const remoteAyarlar = ayarlarRes.data.ayarlar;
+        if (remoteAyarlar) {
+          useStore.setState(state => ({
+            ...state,
+            ...remoteAyarlar
+          }));
+        }
+      }
+    } catch (e) {
+      console.warn('kullanici_ayarlari tablosu henüz Supabase de oluşturulmamış olabilir.', e);
     }
 
     console.log('Veriler IndexedDB ye çekildi.');

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import type { AgirlikKaydi, Hayvan } from '../types';
@@ -11,7 +11,7 @@ interface Props {
 }
 
 const WeightRecords: React.FC<Props> = ({ hayvan }) => {
-  const kayitlar = useLiveQuery(() => 
+  const kayitlar = useLiveFarmQuery(() => 
     db.agirlikKayitlari.where('hayvanId').equals(hayvan.id).sortBy('tarih')
   ) || [];
 

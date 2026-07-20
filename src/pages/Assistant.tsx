@@ -70,12 +70,12 @@ const tools = [
   }
 ];
 
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import type { Sohbet, Mesaj } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
 const Assistant: React.FC = () => {
-  const sohbetler = useLiveQuery(() => db.sohbetler.orderBy('guncellenmeTarihi').reverse().toArray()) || [];
+  const sohbetler = useLiveFarmQuery(() => db.sohbetler.orderBy('guncellenmeTarihi').reverse().toArray()) || [];
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   
   const activeChat = sohbetler.find(s => s.id === activeChatId);

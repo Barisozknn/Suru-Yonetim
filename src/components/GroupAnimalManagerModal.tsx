@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Search, CheckCircle } from 'lucide-react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import type { Grup } from '../types';
 
@@ -13,7 +13,7 @@ const GroupAnimalManagerModal: React.FC<GroupAnimalManagerModalProps> = ({ grup,
   const [aramaMetni, setAramaMetni] = useState('');
 
   // Sadece aktif hayvanları çek
-  const aktifHayvanlar = useLiveQuery(async () => {
+  const aktifHayvanlar = useLiveFarmQuery(async () => {
     const tumHayvanlar = await db.hayvanlar.filter(h => h.durum === 'Aktif').toArray();
     return tumHayvanlar;
   }) || [];

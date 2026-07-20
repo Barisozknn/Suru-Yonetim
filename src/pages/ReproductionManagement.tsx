@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { Search, Activity } from 'lucide-react';
 import ReproductionSchedule from '../components/ReproductionSchedule';
@@ -13,7 +13,7 @@ const ReproductionManagement: React.FC = () => {
   const [selectedAnimalId, setSelectedAnimalId] = useState<string | null>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
 
-  const hayvanlar = useLiveQuery(() => db.hayvanlar.toArray()) || [];
+  const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
   
   const filteredHayvanlar = searchTerm.length > 1 
     ? hayvanlar.filter(h => h.kupeNo.toLowerCase().includes(searchTerm.toLowerCase()) && (['İnek', 'Düve', 'Boğa', 'Tosun'].includes(h.tur)))

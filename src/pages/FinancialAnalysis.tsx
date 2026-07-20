@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { useStore } from '../store/useStore';
 import { Wallet, TrendingUp, TrendingDown, Plus, Filter, Info, Settings2 } from 'lucide-react';
@@ -15,16 +15,16 @@ const FinancialAnalysis: React.FC = () => {
   const [timeFilter, setTimeFilter] = useState<'all' | 'this_month' | 'last_7_days' | 'this_year'>('last_7_days');
   const [groupFilter, setGroupFilter] = useState<string>('all');
 
-  const gruplar = useLiveQuery(() => db.gruplar.toArray()) || [];
-  const hayvanlar = useLiveQuery(() => db.hayvanlar.toArray()) || [];
-  const sutKayitlari = useLiveQuery(() => db.sutKayitlari.toArray()) || [];
-  const saglikOlaylari = useLiveQuery(() => db.saglikOlaylari.toArray()) || [];
-  const uremeKayitlari = useLiveQuery(() => db.uremeKayitlari.toArray()) || [];
-  const yemHareketleri = useLiveQuery(() => db.yemHareketleri.toArray()) || [];
-  const yemler = useLiveQuery(() => db.yemler.toArray()) || [];
-  const ekFinansalIslemler = useLiveQuery(() => db.ekFinansalIslemler.toArray()) || [];
-  const gunlukYemMaliyetleri = useLiveQuery(() => db.gunlukYemMaliyetleri.toArray()) || [];
-  const planlananAsilar = useLiveQuery(() => db.planlananAsilar.toArray()) || [];
+  const gruplar = useLiveFarmQuery(() => db.gruplar.toArray()) || [];
+  const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
+  const sutKayitlari = useLiveFarmQuery(() => db.sutKayitlari.toArray()) || [];
+  const saglikOlaylari = useLiveFarmQuery(() => db.saglikOlaylari.toArray()) || [];
+  const uremeKayitlari = useLiveFarmQuery(() => db.uremeKayitlari.toArray()) || [];
+  const yemHareketleri = useLiveFarmQuery(() => db.yemHareketleri.toArray()) || [];
+  const yemler = useLiveFarmQuery(() => db.yemler.toArray()) || [];
+  const ekFinansalIslemler = useLiveFarmQuery(() => db.ekFinansalIslemler.toArray()) || [];
+  const gunlukYemMaliyetleri = useLiveFarmQuery(() => db.gunlukYemMaliyetleri.toArray()) || [];
+  const planlananAsilar = useLiveFarmQuery(() => db.planlananAsilar.toArray()) || [];
 
   const handleSutFiyatiUpdate = () => {
     const val = parseFloat(localSutFiyati);

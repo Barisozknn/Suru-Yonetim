@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import type { UremeKaydi, UremeKaydiTur } from '../types';
 import { useStore } from '../store/useStore';
+import { getUremeAyarForIrk } from '../utils/reproductionSettings';
 import { Plus, Trash2, Heart, Info, CalendarCheck, ShieldAlert, CalendarDays, GitMerge, Droplet, Activity, Droplets } from 'lucide-react';
 import ReproductionModal from './ReproductionModal';
 
@@ -30,12 +31,16 @@ const addDays = (dateStr: string, days: number) => {
 };
 
 const ReproductionTimeline: React.FC<Props> = ({ hayvanId }) => {
-  const olaylar = useLiveQuery(
+  const olaylar = useLiveFarmQuery(
     () => db.uremeKayitlari.where('hayvanId').equals(hayvanId).reverse().sortBy('tarih'),
     [hayvanId]
   ) || [];
 
-  const { uremeAyarlari } = useStore();
+  const hayvan = useLiveFarmQuery(() => db.hayvanlar.get(hayvanId), [hayvanId]);
+  const { uremeAyarlari: globalAyarlar } = useStore();
+  
+  // Eğer hayvan bilgisi yüklenmediyse bile varsayılanları kullanmak için null geçiyoruz
+  const uremeAyarlari = getUremeAyarForIrk(hayvan?.irk, globalAyarlar);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<UremeKaydi | undefined>(undefined);
@@ -54,27 +59,35 @@ const ReproductionTimeline: React.FC<Props> = ({ hayvanId }) => {
 
   if (olaylar.length > 0) {
     const sonOlay = olaylar[0]; // En yeni olay
+    
+    // Geçerli üreme döngüsünü bul (Son doğumdan sonraki olaylar)
+    const sonDogumIndex = olaylar.findIndex(o => o.tur === 'Doğum');
+    const guncelDongu = sonDogumIndex >= 0 ? olaylar.slice(0, sonDogumIndex) : olaylar;
+    
+    const sonTohumlama = guncelDongu.find(o => o.tur === 'Tohumlama/Aşım' || o.tur === 'Doğal Aşım');
+    const sonKuru = guncelDongu.find(o => o.tur === 'Kuruya Çıkarma');
+
     if (sonOlay.tur === 'Gebelik Kontrolü') {
       if (sonOlay.durum === 'Gebe') {
         mevcutDurum = 'Gebe';
-        // Son tohumlama tarihini bul
-        const sonTohumlama = olaylar.find(o => o.tur === 'Tohumlama/Aşım');
         if (sonTohumlama) {
           tahminiDogum = addDays(sonTohumlama.tarih, uremeAyarlari.gebelikSuresi);
-          onerilenKuruyaCikarma = addDays(tahminiDogum, -uremeAyarlari.kuruyaCikarma);
+          // Sadece bu döngüde kuruya çıkarılmadıysa öneri göster
+          if (!sonKuru) {
+            onerilenKuruyaCikarma = addDays(tahminiDogum, -uremeAyarlari.kuruyaCikarma);
+          }
         }
       } else {
         mevcutDurum = sonOlay.durum === 'Boş' ? 'Boş' : 'Belirsiz';
-        beklenenKizginlik = addDays(sonOlay.tarih, uremeAyarlari.kizginlikDongusu); // Boş ise tekrar kızgınlık beklenir
+        beklenenKizginlik = addDays(sonOlay.tarih, uremeAyarlari.kizginlikDongusu);
       }
-    } else if (sonOlay.tur === 'Tohumlama/Aşım') {
+    } else if (sonOlay.tur === 'Tohumlama/Aşım' || sonOlay.tur === 'Doğal Aşım') {
       mevcutDurum = 'Tohumlandı (Gebelik Kontrolü Bekleniyor)';
     } else if (sonOlay.tur === 'Kızgınlık') {
       mevcutDurum = 'Kızgınlık Gözlemlendi (Tohumlanmadı)';
       beklenenKizginlik = addDays(sonOlay.tarih, uremeAyarlari.kizginlikDongusu);
     } else if (sonOlay.tur === 'Kuruya Çıkarma') {
       mevcutDurum = 'Kuruya Çıkarıldı (Doğum Bekleniyor)';
-      const sonTohumlama = olaylar.find(o => o.tur === 'Tohumlama/Aşım');
       if (sonTohumlama) {
         tahminiDogum = addDays(sonTohumlama.tarih, uremeAyarlari.gebelikSuresi);
       } else {
@@ -107,7 +120,7 @@ const ReproductionTimeline: React.FC<Props> = ({ hayvanId }) => {
                   <span className="font-bold text-pink-600">{formatDate(beklenenKizginlik)}</span>
                 </div>
               )}
-              {onerilenKuruyaCikarma && !olaylar.some(o => o.tur === 'Kuruya Çıkarma') && (
+              {onerilenKuruyaCikarma && (
                  <div className="flex justify-between items-center text-sm">
                  <span className="text-earth-600">Önerilen Kuruya Çıkarma:</span>
                  <span className="font-bold text-orange-600">{formatDate(onerilenKuruyaCikarma)}</span>

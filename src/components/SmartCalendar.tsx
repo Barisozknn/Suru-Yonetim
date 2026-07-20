@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
+import { getUremeAyarForIrk } from '../utils/reproductionSettings';
 import { 
   ChevronLeft, ChevronRight, Droplet, Scale, Syringe, 
   Heart, Wheat, AlertTriangle, Info, Calendar as CalendarIcon, CalendarCheck
@@ -28,15 +29,15 @@ export const SmartCalendar: React.FC = () => {
   const { uremeAyarlari } = useStore();
 
   // Dexie Queries
-  const sutKayitlari = useLiveQuery(() => db.sutKayitlari.toArray()) || EMPTY_ARRAY;
-  const agirlikKayitlari = useLiveQuery(() => db.agirlikKayitlari.toArray()) || EMPTY_ARRAY;
-  const saglikOlaylari = useLiveQuery(() => db.saglikOlaylari.toArray()) || EMPTY_ARRAY;
-  const asilar = useLiveQuery(() => db.planlananAsilar.toArray()) || EMPTY_ARRAY;
-  const uremeKayitlari = useLiveQuery(() => db.uremeKayitlari.toArray()) || EMPTY_ARRAY;
-  const yemHareketleri = useLiveQuery(() => db.yemHareketleri.toArray()) || EMPTY_ARRAY;
-  const hayvanlar = useLiveQuery(() => db.hayvanlar.toArray()) || EMPTY_ARRAY;
-  const buzagiKayitlari = useLiveQuery(() => db.buzagiKayitlari.toArray()) || EMPTY_ARRAY;
-  const yemler = useLiveQuery(() => db.yemler.toArray()) || EMPTY_ARRAY;
+  const sutKayitlari = useLiveFarmQuery(() => db.sutKayitlari.toArray()) || EMPTY_ARRAY;
+  const agirlikKayitlari = useLiveFarmQuery(() => db.agirlikKayitlari.toArray()) || EMPTY_ARRAY;
+  const saglikOlaylari = useLiveFarmQuery(() => db.saglikOlaylari.toArray()) || EMPTY_ARRAY;
+  const asilar = useLiveFarmQuery(() => db.planlananAsilar.toArray()) || EMPTY_ARRAY;
+  const uremeKayitlari = useLiveFarmQuery(() => db.uremeKayitlari.toArray()) || EMPTY_ARRAY;
+  const yemHareketleri = useLiveFarmQuery(() => db.yemHareketleri.toArray()) || EMPTY_ARRAY;
+  const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || EMPTY_ARRAY;
+  const buzagiKayitlari = useLiveFarmQuery(() => db.buzagiKayitlari.toArray()) || EMPTY_ARRAY;
+  const yemler = useLiveFarmQuery(() => db.yemler.toArray()) || EMPTY_ARRAY;
 
   const getHayvanNo = (id: string) => hayvanlar.find(h => h.id === id)?.kupeNo || 'Bilinmeyen Hayvan';
   const getYemAd = (id: string) => yemler.find(y => y.id === id)?.ad || 'Bilinmeyen Yem';
@@ -130,13 +131,14 @@ export const SmartCalendar: React.FC = () => {
       // Copy and sort the animal's events
       const hayvanOlaylari = [...olar].sort((a, b) => new Date(b.tarih).getTime() - new Date(a.tarih).getTime());
       const sonOlay = hayvanOlaylari[0];
+      const irkAyari = getUremeAyarForIrk(hayvan.irk, uremeAyarlari);
 
       if (sonOlay.tur === 'Gebelik Kontrolü') {
         if (sonOlay.durum === 'Gebe') {
           const sonTohumlama = hayvanOlaylari.find(o => o.tur === 'Tohumlama/Aşım');
           if (sonTohumlama) {
-            const tahminiDogum = addDays(sonTohumlama.tarih, uremeAyarlari.gebelikSuresi);
-            const onerilenKuruyaCikarma = addDays(tahminiDogum, -uremeAyarlari.kuruyaCikarma);
+            const tahminiDogum = addDays(sonTohumlama.tarih, irkAyari.gebelikSuresi);
+            const onerilenKuruyaCikarma = addDays(tahminiDogum, -irkAyari.kuruyaCikarma);
 
             events.push({
               id: `tahmini-dogum-${hayvan.id}`,
@@ -161,7 +163,7 @@ export const SmartCalendar: React.FC = () => {
             }
           }
         } else if (sonOlay.durum === 'Boş' || sonOlay.durum === 'Belirsiz') {
-          const beklenen = addDays(sonOlay.tarih, uremeAyarlari.kizginlikDongusu);
+          const beklenen = addDays(sonOlay.tarih, irkAyari.kizginlikDongusu);
           events.push({
             id: `kizginlik-beklentisi-${hayvan.id}`,
             type: 'Kızgınlık Beklentisi',
@@ -173,7 +175,7 @@ export const SmartCalendar: React.FC = () => {
           });
         }
       } else if (sonOlay.tur === 'Kızgınlık') {
-        const beklenen = addDays(sonOlay.tarih, uremeAyarlari.kizginlikDongusu);
+        const beklenen = addDays(sonOlay.tarih, irkAyari.kizginlikDongusu);
         events.push({
           id: `kizginlik-beklentisi-${hayvan.id}`,
           type: 'Kızgınlık Beklentisi',
@@ -187,9 +189,9 @@ export const SmartCalendar: React.FC = () => {
         const sonTohumlama = hayvanOlaylari.find(o => o.tur === 'Tohumlama/Aşım');
         let tahminiDogum: string;
         if (sonTohumlama) {
-          tahminiDogum = addDays(sonTohumlama.tarih, uremeAyarlari.gebelikSuresi);
+          tahminiDogum = addDays(sonTohumlama.tarih, irkAyari.gebelikSuresi);
         } else {
-          tahminiDogum = addDays(sonOlay.tarih, uremeAyarlari.kuruyaCikarma);
+          tahminiDogum = addDays(sonOlay.tarih, irkAyari.kuruyaCikarma);
         }
         events.push({
           id: `tahmini-dogum-${hayvan.id}`,
@@ -201,7 +203,7 @@ export const SmartCalendar: React.FC = () => {
           link: `/hayvanlar?id=${hayvan.id}&tab=ureme`
         });
       } else if (sonOlay.tur === 'Tohumlama/Aşım') {
-        const beklenen = addDays(sonOlay.tarih, uremeAyarlari.kizginlikDongusu);
+        const beklenen = addDays(sonOlay.tarih, irkAyari.kizginlikDongusu);
         events.push({
           id: `kizginlik-beklentisi-${hayvan.id}`,
           type: 'Kızgınlık Beklentisi',

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Save, Droplet } from 'lucide-react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import type { Grup, SutKaydi } from '../types';
 import { v4 as uuidv4 } from 'uuid';
@@ -11,7 +11,7 @@ interface Props {
 }
 
 const GroupMilkModal: React.FC<Props> = ({ grup, onClose }) => {
-  const hayvanlar = useLiveQuery(() => 
+  const hayvanlar = useLiveFarmQuery(() => 
     db.hayvanlar.where('grupId').equals(grup.id).filter(h => h.tur === 'İnek' && h.cinsiyet === 'Dişi').toArray()
   ) || [];
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import type { Hayvan } from '../types';
 import { Edit2, X, Save, Trash2 } from 'lucide-react';
@@ -46,39 +46,39 @@ const PedigreeTree: React.FC<PedigreeTreeProps> = ({ hayvan, onSelectAnimal }) =
   const [manualKupeNo, setManualKupeNo] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const allAnimals = useLiveQuery(() => db.hayvanlar.filter(h => h.durum === 'Aktif').toArray()) || [];
+  const allAnimals = useLiveFarmQuery(() => db.hayvanlar.filter(h => h.durum === 'Aktif').toArray()) || [];
 
-  const anne = useLiveQuery(
+  const anne = useLiveFarmQuery(
     async () => hayvan.anneKupeNo ? await db.hayvanlar.where('kupeNo').equals(hayvan.anneKupeNo).first() : undefined,
     [hayvan.anneKupeNo]
   );
 
-  const baba = useLiveQuery(
+  const baba = useLiveFarmQuery(
     async () => hayvan.babaKupeNo ? await db.hayvanlar.where('kupeNo').equals(hayvan.babaKupeNo).first() : undefined,
     [hayvan.babaKupeNo]
   );
 
-  const anneAnne = useLiveQuery(
+  const anneAnne = useLiveFarmQuery(
     async () => anne?.anneKupeNo ? await db.hayvanlar.where('kupeNo').equals(anne.anneKupeNo).first() : undefined,
     [anne?.anneKupeNo]
   );
 
-  const anneBaba = useLiveQuery(
+  const anneBaba = useLiveFarmQuery(
     async () => anne?.babaKupeNo ? await db.hayvanlar.where('kupeNo').equals(anne.babaKupeNo).first() : undefined,
     [anne?.babaKupeNo]
   );
 
-  const babaAnne = useLiveQuery(
+  const babaAnne = useLiveFarmQuery(
     async () => baba?.anneKupeNo ? await db.hayvanlar.where('kupeNo').equals(baba.anneKupeNo).first() : undefined,
     [baba?.anneKupeNo]
   );
 
-  const babaBaba = useLiveQuery(
+  const babaBaba = useLiveFarmQuery(
     async () => baba?.babaKupeNo ? await db.hayvanlar.where('kupeNo').equals(baba.babaKupeNo).first() : undefined,
     [baba?.babaKupeNo]
   );
 
-  const yavrular = useLiveQuery(async () => {
+  const yavrular = useLiveFarmQuery(async () => {
     return await db.hayvanlar
       .filter(h => (h.anneKupeNo === hayvan.kupeNo) || (h.babaKupeNo === hayvan.kupeNo))
       .toArray();

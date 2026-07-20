@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { Network, Search } from 'lucide-react';
 import PedigreeTree from '../components/PedigreeTree';
@@ -9,7 +9,7 @@ const PedigreePage: React.FC = () => {
   const [selectedAnimalId, setSelectedAnimalId] = useState<string | null>(null);
 
   // Fetch all animals for the search/dropdown
-  const hayvanlar = useLiveQuery(() => db.hayvanlar.toArray()) || [];
+  const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
   
   // The currently selected animal to show tree for
   const selectedAnimal = hayvanlar.find(h => h.id === selectedAnimalId);

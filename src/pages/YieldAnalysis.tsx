@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Droplet, TrendingUp, Activity, Award, Search, ChevronRight, ArrowLeft } from 'lucide-react';
@@ -8,10 +8,10 @@ import MilkRecords from '../components/MilkRecords';
 import WeightRecords from '../components/WeightRecords';
 
 const YieldAnalysis: React.FC = () => {
-  const hayvanlar = useLiveQuery(() => db.hayvanlar.toArray()) || [];
-  const sutKayitlari = useLiveQuery(() => db.sutKayitlari.toArray()) || [];
-  const agirlikKayitlari = useLiveQuery(() => db.agirlikKayitlari.toArray()) || [];
-  const gruplar = useLiveQuery(() => db.gruplar.toArray()) || [];
+  const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
+  const sutKayitlari = useLiveFarmQuery(() => db.sutKayitlari.toArray()) || [];
+  const agirlikKayitlari = useLiveFarmQuery(() => db.agirlikKayitlari.toArray()) || [];
+  const gruplar = useLiveFarmQuery(() => db.gruplar.toArray()) || [];
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAnimalId, setSelectedAnimalId] = useState<string | null>(null);

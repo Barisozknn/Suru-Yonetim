@@ -3,7 +3,7 @@ import { X, Save, DollarSign } from 'lucide-react';
 import type { Hayvan, UremeKaydiTur } from '../types';
 import { db } from '../lib/db';
 import { v4 as uuidv4 } from 'uuid';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 
 interface Props {
   hayvan: Hayvan;
@@ -31,7 +31,7 @@ const MaleReproductionModal: React.FC<Props> = ({ hayvan, onClose }) => {
   // Damızlık Muayenesi alanları
   const [skrotumCevresiCm, setSkrotumCevresiCm] = useState('');
 
-  const disiHayvanlar = useLiveQuery(() => 
+  const disiHayvanlar = useLiveFarmQuery(() => 
     db.hayvanlar.filter(h => h.cinsiyet === 'Dişi' && h.durum === 'Aktif' && (h.tur === 'İnek' || h.tur === 'Düve')).toArray()
   ) || [];
 

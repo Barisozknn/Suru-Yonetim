@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import React, { useState, useEffect } from 'react';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { Plus, TestTube, Activity, Heart, Info, CalendarDays } from 'lucide-react';
 import MaleReproductionModal from './MaleReproductionModal';
@@ -12,12 +12,25 @@ interface Props {
 const MaleReproductionTimeline: React.FC<Props> = ({ hayvan }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const uremeKayitlari = useLiveQuery(() =>
+  const uremeKayitlari = useLiveFarmQuery(() =>
     db.uremeKayitlari
       .where('hayvanId').equals(hayvan.id)
       .reverse()
       .sortBy('tarih')
   ) || [];
+
+  useEffect(() => {
+    if (hayvan.tur === 'Tosun' && uremeKayitlari.length > 0) {
+      const hasBreedingRecord = uremeKayitlari.some(k => k.tur === 'Doğal Aşım' || k.tur === 'Sperma Alımı');
+      if (hasBreedingRecord) {
+        db.hayvanlar.update(hayvan.id, { tur: 'Boğa' }).then(() => {
+          db.hayvanlar.get(hayvan.id).then(h => {
+             if (h) db.syncQueue.add({ table: 'hayvanlar', action: 'UPDATE', payload: h, created_at: Date.now() });
+          });
+        });
+      }
+    }
+  }, [hayvan.tur, hayvan.id, uremeKayitlari]);
 
   const asimSayisi = uremeKayitlari.filter(k => k.tur === 'Doğal Aşım').length;
   const spermaSayisi = uremeKayitlari.filter(k => k.tur === 'Sperma Alımı').length;

@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { X, Plus, AlertCircle, ArrowDownUp, Trash2, Edit2 } from 'lucide-react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import type { Yem } from '../types';
 import FeedMovementModal from './FeedMovementModal';
 import { v4 as uuidv4 } from 'uuid';
 
 const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
-  const yemler = useLiveQuery(() => db.yemler.toArray()) || [];
+  const yemler = useLiveFarmQuery(() => db.yemler.toArray()) || [];
   const [selectedYem, setSelectedYem] = useState<Yem | null>(null);
   
   // New Feed Form state

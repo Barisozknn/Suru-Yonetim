@@ -129,7 +129,7 @@ export const runDailyAutomations = async () => {
 
     const { getUpcomingBirths } = await import('./dashboardCalculations');
     const uremeKayitlari = await db.uremeKayitlari.toArray();
-    const yaklasanDogumSayisi = getUpcomingBirths(uremeKayitlari, 7).length;
+    const yaklasanDogumSayisi = getUpcomingBirths(uremeKayitlari, hayvanlar, 7).length;
     notifyUpcomingBirths(yaklasanDogumSayisi);
 
     if (updatedCount > 0) {

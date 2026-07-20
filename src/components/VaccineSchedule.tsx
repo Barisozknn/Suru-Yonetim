@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import type { PlanlananAsi } from '../types';
 import { X, CheckCircle2, Clock, AlertTriangle, Syringe, Filter } from 'lucide-react';
@@ -26,7 +26,7 @@ const STATUS_CONFIG = {
 };
 
 const VaccineSchedule: React.FC = () => {
-  const asilar = useLiveQuery(() => db.planlananAsilar.orderBy('planlanaTarih').toArray()) || [];
+  const asilar = useLiveFarmQuery(() => db.planlananAsilar.orderBy('planlanaTarih').toArray()) || [];
   const [filtre, setFiltre] = useState<Filtre>('Tümü');
 
   const filtrelenmis = asilar.filter(a => {

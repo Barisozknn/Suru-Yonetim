@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Save, Heart, Info, CalendarCheck, ShieldAlert, GitMerge, Droplet, Activity, Droplets } from 'lucide-react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import type { UremeKaydi, UremeKaydiTur, Hayvan, BuzagiKaydi } from '../types';
 import { v4 as uuidv4 } from 'uuid';
@@ -45,12 +45,12 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
   });
   const [maliyet, setMaliyet] = useState(existing?.maliyet?.toString() || '');
   
-  const erkekHayvanlar = useLiveQuery(
+  const erkekHayvanlar = useLiveFarmQuery(
     () => db.hayvanlar.where('tur').anyOf(['Boğa', 'Tosun']).toArray(),
     []
   ) || [];
   
-  const disiHayvan = useLiveQuery(() => db.hayvanlar.get(hayvanId), [hayvanId]);
+  const disiHayvan = useLiveFarmQuery(() => db.hayvanlar.get(hayvanId), [hayvanId]);
   
   const [yeniBuzagiKupeNo, setYeniBuzagiKupeNo] = useState('');
   const [yeniBuzagiCinsiyet, setYeniBuzagiCinsiyet] = useState<'Erkek' | 'Dişi'>('Dişi');

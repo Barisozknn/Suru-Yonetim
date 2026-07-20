@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { FileUp, Search, Calendar, FileSpreadsheet, FileText, AlertCircle, X } from 'lucide-react';
 import { exportData, downloadTemplate } from '../services/dataExportService';
@@ -25,7 +25,7 @@ const DataManagement: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const hayvanlar = useLiveQuery(() => db.hayvanlar.toArray()) || [];
+  const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
 
   const activeKategori = KATEGORILER.find(k => k.id === selectedKategori);
 

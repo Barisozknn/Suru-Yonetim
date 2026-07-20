@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import type { SaglikOlayi, SaglikOlayiTur } from '../types';
 import { Syringe, Stethoscope, Pill, Scissors, FileText, Plus, Trash2, AlertTriangle } from 'lucide-react';
@@ -34,7 +34,7 @@ interface Props {
 }
 
 const HealthTimeline: React.FC<Props> = ({ hayvanId }) => {
-  const olaylar = useLiveQuery(
+  const olaylar = useLiveFarmQuery(
     () => db.saglikOlaylari.where('hayvanId').equals(hayvanId).reverse().sortBy('tarih'),
     [hayvanId]
   ) || [];

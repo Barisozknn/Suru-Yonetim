@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { Search, Syringe, CalendarDays, Activity } from 'lucide-react';
 import VaccineSchedule from '../components/VaccineSchedule';
@@ -13,7 +13,7 @@ const HealthManagement: React.FC = () => {
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'Takvim' | 'Protokoller'>('Takvim');
 
-  const hayvanlar = useLiveQuery(() => db.hayvanlar.toArray()) || [];
+  const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
   
   const filteredHayvanlar = searchTerm.length > 1 
     ? hayvanlar.filter(h => h.kupeNo.toLowerCase().includes(searchTerm.toLowerCase()))

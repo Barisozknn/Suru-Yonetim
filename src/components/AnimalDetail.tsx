@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Info, GitMerge, FileText, Activity, Edit2, TrendingUp, Save } from 'lucide-react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import AnimalForm from './AnimalForm';
 import PedigreeTree from './PedigreeTree';
@@ -11,7 +11,8 @@ import ReproductionTimeline from './ReproductionTimeline';
 import CalfFormModal from './CalfFormModal';
 import MaleReproductionTimeline from './MaleReproductionTimeline';
 import { calculateAgeInDays, calculateGrowthStatus } from '../utils/calfCalculations';
-import { CalendarDays, Droplets } from 'lucide-react';
+import { calculateFemalePerformance, calculateMalePerformance, formatDaysToText } from '../utils/performanceCalculations';
+import { CalendarDays, Droplets, Trophy } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface AnimalDetailProps {
@@ -21,13 +22,15 @@ interface AnimalDetailProps {
 
 const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
   const navigate = useNavigate();
-  const hayvan = useLiveQuery(() => db.hayvanlar.get(id), [id]);
-  const grup = useLiveQuery(
+  const hayvan = useLiveFarmQuery(() => db.hayvanlar.get(id), [id]);
+  const grup = useLiveFarmQuery(
     async () => hayvan?.grupId ? await db.gruplar.get(hayvan.grupId) : undefined,
     [hayvan?.grupId]
   );
 
-  const buzagiKaydi = useLiveQuery(() => db.buzagiKayitlari.where('hayvanId').equals(id).first(), [id]);
+  const buzagiKaydi = useLiveFarmQuery(() => db.buzagiKayitlari.where('hayvanId').equals(id).first(), [id]);
+  const uremeKayitlari = useLiveFarmQuery(() => db.uremeKayitlari.where('hayvanId').equals(id).toArray(), [id]) || [];
+  const agirlikKayitlari = useLiveFarmQuery(() => db.agirlikKayitlari.where('hayvanId').equals(id).toArray(), [id]) || [];
 
   const [activeTab, setActiveTab] = useState<'ozet' | 'verim' | 'soy' | 'saglik' | 'ureme' | 'notlar'>('ozet');
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
@@ -113,6 +116,12 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
     { id: 'notlar', label: 'Notlar', icon: <FileText className="w-4 h-4" /> },
   ];
 
+  const isFemale = ['İnek', 'Düve'].includes(hayvan.tur);
+  const isMale = ['Tosun', 'Boğa'].includes(hayvan.tur);
+
+  const femalePerf = isFemale ? calculateFemalePerformance(hayvan, uremeKayitlari) : null;
+  const malePerf = isMale ? calculateMalePerformance(hayvan, uremeKayitlari, buzagiKaydi, agirlikKayitlari) : null;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -185,6 +194,80 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
               <label className="text-sm font-bold text-nature-700 uppercase tracking-wider">Güncel Ağırlık</label>
               <p className="text-3xl font-black text-nature-800">{hayvan.guncelAgirlikKg} <span className="text-lg font-bold">kg</span></p>
             </div>
+
+            {/* Dişi Performans Kartı */}
+            {isFemale && femalePerf && (
+              <div className="sm:col-span-2 bg-purple-50 p-5 rounded-2xl border border-purple-200 mt-2">
+                <div className="flex items-center space-x-2 text-purple-800 mb-4">
+                  <Trophy className="w-6 h-6" />
+                  <h3 className="text-lg font-black">Performans Verileri</h3>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="bg-white p-3 rounded-xl border border-purple-100">
+                    <p className="text-xs font-bold text-earth-500 mb-1">Güncel Laktasyon Süresi</p>
+                    <p className="font-bold text-earth-900">{formatDaysToText(femalePerf.laktasyonSuresiGun)}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-xl border border-purple-100">
+                    <p className="text-xs font-bold text-earth-500 mb-1">Ort. Laktasyon Süresi</p>
+                    <p className="font-bold text-earth-900">
+                      {femalePerf.ortalamaLaktasyonSuresiGun !== null ? `${femalePerf.ortalamaLaktasyonSuresiGun} Gün` : '-'}
+                    </p>
+                  </div>
+                  <div className="bg-white p-3 rounded-xl border border-purple-100">
+                    <p className="text-xs font-bold text-earth-500 mb-1">Laktasyon Sayısı</p>
+                    <p className="font-bold text-earth-900">{femalePerf.laktasyonSayisi > 0 ? femalePerf.laktasyonSayisi : '-'}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-xl border border-purple-100">
+                    <p className="text-xs font-bold text-earth-500 mb-1">İlk Tohumlama Yaşı</p>
+                    <p className="font-bold text-earth-900">{formatDaysToText(femalePerf.ilkTohumlamaYasiGun)}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-xl border border-purple-100">
+                    <p className="text-xs font-bold text-earth-500 mb-1">İlk Gebelik Yaşı</p>
+                    <p className="font-bold text-earth-900">{formatDaysToText(femalePerf.ilkGebelikYasiGun)}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-xl border border-purple-100">
+                    <p className="text-xs font-bold text-earth-500 mb-1">İlkine Buzağılama Yaşı</p>
+                    <p className="font-bold text-earth-900">{formatDaysToText(femalePerf.ilkBuzagilamaYasiGun)}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-xl border border-purple-100">
+                    <p className="text-xs font-bold text-earth-500 mb-1">Buzağılama Aralığı</p>
+                    <p className="font-bold text-earth-900">{formatDaysToText(femalePerf.buzagilamaArasiSureGun)}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-xl border border-purple-100">
+                    <p className="text-xs font-bold text-earth-500 mb-1">Servis Periyodu</p>
+                    <p className="font-bold text-earth-900">
+                      {femalePerf.servisPeriyoduGun !== null ? `${femalePerf.servisPeriyoduGun} Gün` : '-'}
+                    </p>
+                  </div>
+                  <div className="bg-white p-3 rounded-xl border border-purple-100">
+                    <p className="text-xs font-bold text-earth-500 mb-1">Gebelik Başına Tohum.</p>
+                    <p className="font-bold text-earth-900">{femalePerf.gebelikBasinaTohumlama !== null ? femalePerf.gebelikBasinaTohumlama : '-'}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Erkek Performans Kartı */}
+            {isMale && malePerf && (
+              <div className="sm:col-span-2 bg-indigo-50 p-5 rounded-2xl border border-indigo-200 mt-2">
+                <div className="flex items-center space-x-2 text-indigo-800 mb-4">
+                  <Trophy className="w-6 h-6" />
+                  <h3 className="text-lg font-black">Performans Verileri</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="bg-white p-3 rounded-xl border border-indigo-100">
+                    <p className="text-xs font-bold text-earth-500 mb-1">İlkine Damızlıkta Kullanma Yaşı</p>
+                    <p className="font-bold text-earth-900">{formatDaysToText(malePerf.ilkDamizlikYasiGun)}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-xl border border-indigo-100">
+                    <p className="text-xs font-bold text-earth-500 mb-1">Günlük Canlı Ağırlık Artışı</p>
+                    <p className="font-bold text-earth-900">
+                      {malePerf.gunlukAgirlikArtisiKg !== null ? `${malePerf.gunlukAgirlikArtisiKg} kg/gün` : '-'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Buzağı Gelişim Kartı */}
             {(hayvan.tur === 'Buzağı' || calculateAgeInDays(hayvan.dogumTarihi) <= 180) && (

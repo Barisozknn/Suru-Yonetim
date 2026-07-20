@@ -1,15 +1,27 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { User, Session } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
 
 export interface UremeAyarlari {
   gebelikSuresi: number;
   kizginlikDongusu: number;
   kuruyaCikarma: number;
   yenidenTohumlamaUyarisi: number;
+  irkAyarlari?: Record<string, {
+    gebelikSuresi: number;
+    kizginlikDongusu: number;
+    kuruyaCikarma: number;
+    yenidenTohumlamaUyarisi: number;
+  }>;
 }
 
 interface StoreState {
+  activeCiftlikId: string | null;
+  setActiveCiftlikId: (id: string | null) => void;
+  ciftlikler: { id: string; ad: string }[];
+  setCiftlikler: (ciftlikler: { id: string; ad: string }[]) => void;
+
   // Auth
   user: User | null;
   session: Session | null;
@@ -49,6 +61,11 @@ interface StoreState {
 export const useStore = create<StoreState>()(
   persist(
     (set) => ({
+      activeCiftlikId: null,
+      setActiveCiftlikId: (id) => set({ activeCiftlikId: id }),
+      ciftlikler: [],
+      setCiftlikler: (ciftlikler) => set({ ciftlikler }),
+
       user: null,
       session: null,
       setUser: (user) => set({ user }),
@@ -84,7 +101,8 @@ export const useStore = create<StoreState>()(
         gebelikSuresi: 283,
         kizginlikDongusu: 21,
         kuruyaCikarma: 60,
-        yenidenTohumlamaUyarisi: 45
+        yenidenTohumlamaUyarisi: 45,
+        irkAyarlari: {}
       },
       setUremeAyarlari: (ayarlar) => set((state) => ({ 
         uremeAyarlari: { ...state.uremeAyarlari, ...ayarlar } 
@@ -96,6 +114,8 @@ export const useStore = create<StoreState>()(
       // Sadece bu alanları persist et — auth verisi ve filtreler kasıtlı olarak hariç
       // Güvenlik: user/session token'ları localStorage'da saklanmamalı (Supabase zaten kendi yönetiyor)
       partialize: (state) => ({
+        activeCiftlikId: state.activeCiftlikId,
+        ciftlikler: state.ciftlikler,
         sutLitreFiyati: state.sutLitreFiyati,
         rationSelectedGrupId: state.rationSelectedGrupId,
         rationVerimYonu: state.rationVerimYonu,
@@ -108,3 +128,44 @@ export const useStore = create<StoreState>()(
     }
   )
 );
+
+
+let debounceTimer: ReturnType<typeof setTimeout>;
+useStore.subscribe((state, prevState) => {
+  if (!state.user) return;
+  
+  const ayarlar = { 
+    sutLitreFiyati: state.sutLitreFiyati, 
+    rationSelectedGrupId: state.rationSelectedGrupId, 
+    rationVerimYonu: state.rationVerimYonu, 
+    rationAvgWeight: state.rationAvgWeight, 
+    rationMilkYield: state.rationMilkYield, 
+    rationAdg: state.rationAdg, 
+    rationListesi: state.rationListesi, 
+    uremeAyarlari: state.uremeAyarlari 
+  };
+  
+  const prevAyarlar = { 
+    sutLitreFiyati: prevState.sutLitreFiyati, 
+    rationSelectedGrupId: prevState.rationSelectedGrupId, 
+    rationVerimYonu: prevState.rationVerimYonu, 
+    rationAvgWeight: prevState.rationAvgWeight, 
+    rationMilkYield: prevState.rationMilkYield, 
+    rationAdg: prevState.rationAdg, 
+    rationListesi: prevState.rationListesi, 
+    uremeAyarlari: prevState.uremeAyarlari 
+  };
+  
+  if (JSON.stringify(ayarlar) !== JSON.stringify(prevAyarlar)) {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      supabase.from('kullanici_ayarlari').upsert({ 
+        user_id: state.user!.id, 
+        ayarlar, 
+        updated_at: new Date().toISOString() 
+      }).then(({ error }) => {
+        if (error) console.error('Ayarlar kaydedilemedi:', error);
+      });
+    }, 2000);
+  }
+});

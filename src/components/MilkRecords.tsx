@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import type { SutKaydi, Hayvan } from '../types';
@@ -11,7 +11,7 @@ interface Props {
 }
 
 const MilkRecords: React.FC<Props> = ({ hayvan }) => {
-  const kayitlar = useLiveQuery(() => 
+  const kayitlar = useLiveFarmQuery(() => 
     db.sutKayitlari.where('hayvanId').equals(hayvan.id).sortBy('tarih')
   ) || [];
 
@@ -28,7 +28,7 @@ const MilkRecords: React.FC<Props> = ({ hayvan }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<SutKaydi>>({});
 
-  const saglikOlaylari = useLiveQuery(() => 
+  const saglikOlaylari = useLiveFarmQuery(() => 
     db.saglikOlaylari.where('hayvanId').equals(hayvan.id).toArray()
   ) || [];
 

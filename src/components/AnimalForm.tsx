@@ -3,10 +3,31 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Camera, Save, X, ImagePlus, UserCircle2 } from 'lucide-react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import BarcodeScanner from './BarcodeScanner';
 import { v4 as uuidv4 } from 'uuid';
+
+export const STANDART_IRKLAR = [
+  "Holstein", "Jersey", "Ayrshire", "Simmental", "Montofon", "Şarole", 
+  "Angus", "Limuzin", "Hereford", "Belçika Mavisi", "Yerli Kara", 
+  "Boz Irk", "Doğu Anadolu Kırmızısı", "Melez"
+];
+
+const parseInitialIrk = (irk: string | undefined) => {
+  if (!irk) return { selectValue: '', digerValue: '', melezValue: '' };
+  if (STANDART_IRKLAR.includes(irk)) return { selectValue: irk, digerValue: '', melezValue: '' };
+  
+  if (irk.startsWith('Melez (') && irk.endsWith(')')) {
+    return { 
+      selectValue: 'Melez', 
+      digerValue: '', 
+      melezValue: irk.slice(7, -1) 
+    };
+  }
+  
+  return { selectValue: 'Diğer', digerValue: irk, melezValue: '' };
+};
 
 const schema = z.object({
   kupeNo: z.string().min(3, 'Küpe numarası en az 3 karakter olmalıdır'),
@@ -35,9 +56,14 @@ interface AnimalFormProps {
 }
 
 const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess }) => {
-  const gruplar = useLiveQuery(() => db.gruplar.toArray());
+  const gruplar = useLiveFarmQuery(() => db.gruplar.toArray());
   const [scannerTarget, setScannerTarget] = useState<'kupeNo' | 'anneKupeNo' | 'babaKupeNo' | null>(null);
   const [fotografOnizleme, setFotografOnizleme] = useState<string>(initialData?.fotografUrl || '');
+  
+  const initialIrkData = parseInitialIrk(initialData?.irk);
+  const [digerIrk, setDigerIrk] = useState<string>(initialIrkData.digerValue);
+  const [melezDetay, setMelezDetay] = useState<string>(initialIrkData.melezValue);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -55,7 +81,10 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: initialData || {
+    defaultValues: initialData ? {
+      ...initialData,
+      irk: initialIrkData.selectValue
+    } : {
       tur: 'İnek',
       cinsiyet: 'Dişi',
       durum: 'Aktif',
@@ -90,6 +119,16 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
 
   const onSubmit = async (data: FormData) => {
     try {
+      if (data.irk === 'Diğer') {
+        if (!digerIrk || digerIrk.length < 2) {
+          alert('Lütfen diğer ırk adını en az 2 karakter olacak şekilde giriniz.');
+          return;
+        }
+        data.irk = digerIrk;
+      } else if (data.irk === 'Melez' && melezDetay.trim().length > 0) {
+        data.irk = `Melez (${melezDetay.trim()})`;
+      }
+
       const isUpdate = !!initialData;
       const id = isUpdate ? initialData.id : uuidv4();
       
@@ -187,12 +226,60 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
 
             <div className="space-y-1">
               <label className="text-sm font-semibold text-earth-700">Irk *</label>
-              <input 
+              <select 
                 {...register('irk')} 
-                className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500"
-                placeholder="Örn: Holstein"
-              />
+                className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500 bg-white"
+              >
+                <option value="">Irk Seçiniz...</option>
+                <optgroup label="Sütçü Irklar">
+                  <option value="Holstein">Holstein</option>
+                  <option value="Jersey">Jersey</option>
+                  <option value="Ayrshire">Ayrshire</option>
+                </optgroup>
+                <optgroup label="Kombine (Süt ve Et) Irklar">
+                  <option value="Simmental">Simmental</option>
+                  <option value="Montofon">Montofon (Brown Swiss)</option>
+                  <option value="Şarole">Şarole</option>
+                </optgroup>
+                <optgroup label="Etçi Irklar">
+                  <option value="Angus">Angus</option>
+                  <option value="Limuzin">Limuzin</option>
+                  <option value="Hereford">Hereford</option>
+                  <option value="Belçika Mavisi">Belçika Mavisi</option>
+                </optgroup>
+                <optgroup label="Yerli & Diğer">
+                  <option value="Yerli Kara">Yerli Kara</option>
+                  <option value="Boz Irk">Boz Irk</option>
+                  <option value="Doğu Anadolu Kırmızısı">Doğu Anadolu Kırmızısı</option>
+                  <option value="Melez">Melez (Çapraz)</option>
+                  <option value="Diğer">Diğer</option>
+                </optgroup>
+              </select>
               {errors.irk && <p className="text-xs text-red-500">{errors.irk.message}</p>}
+              
+              {watch('irk') === 'Diğer' && (
+                <div className="mt-2">
+                  <input 
+                    type="text"
+                    value={digerIrk}
+                    onChange={(e) => setDigerIrk(e.target.value)}
+                    className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500"
+                    placeholder="Lütfen ırk adını yazınız..."
+                  />
+                </div>
+              )}
+              
+              {watch('irk') === 'Melez' && (
+                <div className="mt-2">
+                  <input 
+                    type="text"
+                    value={melezDetay}
+                    onChange={(e) => setMelezDetay(e.target.value)}
+                    className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500"
+                    placeholder="Hangi ırkların melezi? (Opsiyonel)"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="space-y-1">

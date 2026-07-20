@@ -10,7 +10,6 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
-import TeamInvite from './pages/TeamInvite';
 import Settings from './pages/Settings';
 import Assistant from './pages/Assistant';
 import UpdatePrompt from './components/UpdatePrompt';
@@ -58,6 +57,9 @@ function App() {
       setUser(session?.user ?? null);
     });
 
+    // Migrate old data if necessary
+    import('./utils/migrateData').then(m => m.migrateOrphanDataToDefaultFarm());
+
     // Run daily automations
     runDailyAutomations();
 
@@ -92,7 +94,6 @@ function App() {
             <Route path="/finans" element={<FinancialAnalysis />} />
             <Route path="/asistan" element={<Assistant />} />
             <Route path="/ayarlar" element={<Settings />} />
-            <Route path="/invite" element={<TeamInvite />} />
           </Route>
         </Route>
         

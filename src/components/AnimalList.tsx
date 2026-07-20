@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { Search, Filter, Activity, Skull, ShoppingCart, AlertTriangle, Plus, LayoutGrid, List } from 'lucide-react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import AnimalForm from './AnimalForm';
 
@@ -21,8 +21,8 @@ const AnimalList: React.FC<AnimalListProps> = ({ onSelect }) => {
     setDurumFiltresi
   } = useStore();
 
-  const gruplar = useLiveQuery(() => db.gruplar.toArray()) || [];
-  const saglikOlaylari = useLiveQuery(() => db.saglikOlaylari.toArray()) || [];
+  const gruplar = useLiveFarmQuery(() => db.gruplar.toArray()) || [];
+  const saglikOlaylari = useLiveFarmQuery(() => db.saglikOlaylari.toArray()) || [];
 
   // Arinma kontrolu
   const arinmadakiHayvanIds = new Set(saglikOlaylari.filter(o => {
@@ -38,7 +38,7 @@ const AnimalList: React.FC<AnimalListProps> = ({ onSelect }) => {
     return gruplar.find(g => g.id === id);
   };
 
-  const hayvanlar = useLiveQuery(async () => {
+  const hayvanlar = useLiveFarmQuery(async () => {
     const tumHayvanlar = await db.hayvanlar.toArray();
     return tumHayvanlar.filter((h) => {
       const aramaEslesiyor = h.kupeNo.toLowerCase().includes(aramaMetni.toLowerCase());

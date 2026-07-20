@@ -1,4 +1,5 @@
 export interface Hayvan {
+  ciftlikId?: string;
   id: string;
   kupeNo: string;
   tur: 'İnek' | 'Tosun' | 'Boğa' | 'Öküz' | 'Düve' | 'Dana' | 'Buzağı';
@@ -18,6 +19,7 @@ export interface Hayvan {
 }
 
 export interface Grup {
+  ciftlikId?: string;
   id: string;
   ad: string;
   tur: 'İnek' | 'Tosun' | 'Boğa' | 'Öküz' | 'Düve' | 'Dana' | 'Buzağı' | 'Karma';
@@ -29,6 +31,7 @@ export interface Grup {
 }
 
 export interface Yem {
+  ciftlikId?: string;
   id: string;
   ad: string;
   tur: string;
@@ -45,6 +48,7 @@ export interface Yem {
 }
 
 export interface YemHareketi {
+  ciftlikId?: string;
   id: string;
   yemId: string;
   islemTuru: 'GİRİŞ' | 'ÇIKIŞ';
@@ -54,6 +58,7 @@ export interface YemHareketi {
 }
 
 export interface SutKaydi {
+  ciftlikId?: string;
   id: string;
   hayvanId: string;
   tarih: string;
@@ -65,6 +70,7 @@ export interface SutKaydi {
 }
 
 export interface AgirlikKaydi {
+  ciftlikId?: string;
   id: string;
   hayvanId: string;
   tarih: string;
@@ -74,6 +80,7 @@ export interface AgirlikKaydi {
 export type SaglikOlayiTur = 'Muayene' | 'Aşı' | 'İlaç' | 'Operasyon' | 'Diğer';
 
 export interface SaglikOlayi {
+  ciftlikId?: string;
   id: string;
   hayvanId: string;
   tarih: string;
@@ -86,6 +93,7 @@ export interface SaglikOlayi {
 }
 
 export interface AsiUygulama {
+  ciftlikId?: string;
   ad: string;
   gunFarki: number; // doğum tarihinden kaç gün sonra
   tekrarGun?: number; // kaç günde bir tekrarlanacağı (opsiyonel)
@@ -95,6 +103,7 @@ export interface AsiUygulama {
 }
 
 export interface AsiProtokolu {
+  ciftlikId?: string;
   id: string;
   ad: string;
   hedefTur: 'İnek' | 'Tosun' | 'Boğa' | 'Öküz' | 'Düve' | 'Dana' | 'Buzağı' | 'Tümü';
@@ -102,6 +111,7 @@ export interface AsiProtokolu {
 }
 
 export interface PlanlananAsi {
+  ciftlikId?: string;
   id: string;
   hayvanId: string;
   hayvanKupeNo: string;
@@ -116,6 +126,7 @@ export interface PlanlananAsi {
 export type UremeKaydiTur = 'Kızgınlık' | 'Tohumlama/Aşım' | 'Gebelik Kontrolü' | 'Kuruya Çıkarma' | 'Doğum' | 'Doğal Aşım' | 'Sperma Alımı' | 'Damızlık Muayenesi';
 
 export interface UremeKaydi {
+  ciftlikId?: string;
   id: string;
   hayvanId: string;
   tarih: string;
@@ -132,6 +143,7 @@ export interface UremeKaydi {
 }
 
 export interface BuzagiKaydi {
+  ciftlikId?: string;
   id: string;
   hayvanId: string;
   dogumDegerlendirmesi?: 'Sağlıklı' | 'Güç Doğum' | 'Ölü Doğum' | 'Düşük';
@@ -146,6 +158,7 @@ export interface BuzagiKaydi {
 }
 
 export interface Mesaj {
+  ciftlikId?: string;
   role: 'user' | 'assistant' | 'system' | 'tool';
   content: string;
   createdAt: number;
@@ -154,6 +167,7 @@ export interface Mesaj {
 }
 
 export interface Sohbet {
+  ciftlikId?: string;
   id: string;
   baslik: string;
   olusturulmaTarihi: number;
@@ -162,6 +176,7 @@ export interface Sohbet {
 }
 
 export interface EkFinansalIslem {
+  ciftlikId?: string;
   id: string;
   tarih: string; // ISO string
   tip: 'Gelir' | 'Gider';
@@ -171,7 +186,16 @@ export interface EkFinansalIslem {
 }
 
 export interface GunlukYemMaliyeti {
+  ciftlikId?: string;
   id: string;
   tarih: string; // ISO date format YYYY-MM-DD
   toplamMaliyet: number;
+}
+
+
+export interface Ciftlik {
+  id: string;
+  ad: string;
+  olusturulmaTarihi: string;
+  user_id?: string;
 }

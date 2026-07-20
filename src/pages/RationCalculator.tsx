@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { useStore } from '../store/useStore';
 import { Calculator, Plus, X, Activity, Droplets, Beef } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 const RationCalculator: React.FC = () => {
-  const gruplar = useLiveQuery(() => db.gruplar.toArray()) || [];
-  const yemler = useLiveQuery(() => db.yemler.toArray()) || [];
-  const hayvanlar = useLiveQuery(() => db.hayvanlar.toArray()) || [];
+  const gruplar = useLiveFarmQuery(() => db.gruplar.toArray()) || [];
+  const yemler = useLiveFarmQuery(() => db.yemler.toArray()) || [];
+  const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
 
   const {
     rationSelectedGrupId: selectedGrupId,

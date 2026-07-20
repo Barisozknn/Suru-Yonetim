@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { CalendarDays, Heart, CalendarCheck, Droplets } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { getUremeAyarForIrk } from '../utils/reproductionSettings';
 
 type EventType = 'Kızgınlık Beklentisi' | 'Kuruya Çıkarma Önerisi' | 'Tahmini Doğum';
 
@@ -29,8 +30,8 @@ const EVENT_CONFIG: Record<EventType, { icon: React.ReactNode; color: string; bg
 
 const ReproductionSchedule: React.FC = () => {
   const navigate = useNavigate();
-  const hayvanlar = useLiveQuery(() => db.hayvanlar.toArray()) || [];
-  const uremeKayitlari = useLiveQuery(() => db.uremeKayitlari.orderBy('tarih').reverse().toArray()) || [];
+  const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
+  const uremeKayitlari = useLiveFarmQuery(() => db.uremeKayitlari.orderBy('tarih').reverse().toArray()) || [];
 
   const [filtre, setFiltre] = useState<EventType | 'Tümü'>('Tümü');
   const { uremeAyarlari } = useStore();
@@ -40,6 +41,8 @@ const ReproductionSchedule: React.FC = () => {
 
   for (const hayvan of hayvanlar) {
     if (hayvan.cinsiyet === 'Erkek') continue;
+    
+    const irkAyari = getUremeAyarForIrk(hayvan.irk, uremeAyarlari);
 
     // Hayvanın olaylarını tarihe göre azalan (en yeni en başta) sırala
     const olaylar = uremeKayitlari.filter(o => o.hayvanId === hayvan.id);
@@ -51,8 +54,8 @@ const ReproductionSchedule: React.FC = () => {
       if (sonOlay.durum === 'Gebe') {
         const sonTohumlama = olaylar.find(o => o.tur === 'Tohumlama/Aşım');
         if (sonTohumlama) {
-          const tahminiDogum = addDays(sonTohumlama.tarih, uremeAyarlari.gebelikSuresi);
-          const onerilenKuruyaCikarma = addDays(tahminiDogum, -uremeAyarlari.kuruyaCikarma);
+          const tahminiDogum = addDays(sonTohumlama.tarih, irkAyari.gebelikSuresi);
+          const onerilenKuruyaCikarma = addDays(tahminiDogum, -irkAyari.kuruyaCikarma);
 
           planlar.push({ hayvanId: hayvan.id, kupeNo: hayvan.kupeNo, tur: hayvan.tur, tarih: tahminiDogum, olayTuru: 'Tahmini Doğum' });
 
@@ -61,24 +64,24 @@ const ReproductionSchedule: React.FC = () => {
           }
         }
       } else if (sonOlay.durum === 'Boş' || sonOlay.durum === 'Belirsiz') {
-        const beklenen = addDays(sonOlay.tarih, uremeAyarlari.kizginlikDongusu);
+        const beklenen = addDays(sonOlay.tarih, irkAyari.kizginlikDongusu);
         planlar.push({ hayvanId: hayvan.id, kupeNo: hayvan.kupeNo, tur: hayvan.tur, tarih: beklenen, olayTuru: 'Kızgınlık Beklentisi' });
       }
     } else if (sonOlay.tur === 'Kızgınlık') {
-      const beklenen = addDays(sonOlay.tarih, uremeAyarlari.kizginlikDongusu);
+      const beklenen = addDays(sonOlay.tarih, irkAyari.kizginlikDongusu);
       planlar.push({ hayvanId: hayvan.id, kupeNo: hayvan.kupeNo, tur: hayvan.tur, tarih: beklenen, olayTuru: 'Kızgınlık Beklentisi' });
     } else if (sonOlay.tur === 'Kuruya Çıkarma') {
       const sonTohumlama = olaylar.find(o => o.tur === 'Tohumlama/Aşım');
       let tahminiDogum: string;
       if (sonTohumlama) {
-        tahminiDogum = addDays(sonTohumlama.tarih, uremeAyarlari.gebelikSuresi);
+        tahminiDogum = addDays(sonTohumlama.tarih, irkAyari.gebelikSuresi);
       } else {
         // Eğer tohumlama kaydı yoksa kuruya çıkarma tarihine 60 gün ekle (kuru dönemi)
-        tahminiDogum = addDays(sonOlay.tarih, uremeAyarlari.kuruyaCikarma);
+        tahminiDogum = addDays(sonOlay.tarih, irkAyari.kuruyaCikarma);
       }
       planlar.push({ hayvanId: hayvan.id, kupeNo: hayvan.kupeNo, tur: hayvan.tur, tarih: tahminiDogum, olayTuru: 'Tahmini Doğum' });
     } else if (sonOlay.tur === 'Tohumlama/Aşım') {
-      const beklenen = addDays(sonOlay.tarih, uremeAyarlari.kizginlikDongusu);
+      const beklenen = addDays(sonOlay.tarih, irkAyari.kizginlikDongusu);
       planlar.push({ hayvanId: hayvan.id, kupeNo: hayvan.kupeNo, tur: hayvan.tur, tarih: beklenen, olayTuru: 'Kızgınlık Beklentisi' });
     }
   }

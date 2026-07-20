@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Save, Syringe, Stethoscope, Pill, Scissors, FileText } from 'lucide-react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import type { SaglikOlayi, SaglikOlayiTur } from '../types';
 import { v4 as uuidv4 } from 'uuid';
@@ -38,7 +38,7 @@ const HealthEventModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => {
   const [isKisirlastirma, setIsKisirlastirma] = useState(existing?.detaylar?.kisirlastirma || false);
   const [saving, setSaving] = useState(false);
 
-  const hayvan = useLiveQuery(() => db.hayvanlar.get(hayvanId), [hayvanId]);
+  const hayvan = useLiveFarmQuery(() => db.hayvanlar.get(hayvanId), [hayvanId]);
 
   const handleSave = async () => {
     if (!aciklama.trim()) {

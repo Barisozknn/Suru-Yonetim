@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { calculateGrowthStatus, calculateAgeInDays } from '../utils/calfCalculations';
 import { X, Droplet, Droplets, AlertCircle, Activity, ClipboardEdit } from 'lucide-react';
@@ -14,8 +14,8 @@ interface Props {
 const CalfList: React.FC<Props> = ({ onClose, onSelectCalf }) => {
   const navigate = useNavigate();
   const [selectedCalfForTracking, setSelectedCalfForTracking] = useState<string | null>(null);
-  const hayvanlar = useLiveQuery(() => db.hayvanlar.toArray()) || [];
-  const buzagiKayitlari = useLiveQuery(() => db.buzagiKayitlari.toArray()) || [];
+  const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
+  const buzagiKayitlari = useLiveFarmQuery(() => db.buzagiKayitlari.toArray()) || [];
 
   // Sadece Buzağıları veya 6 aydan (180 gün) küçük olanları filtrele
   const buzagilar = hayvanlar

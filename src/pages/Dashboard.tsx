@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { 
   Users, Activity, AlertTriangle, TrendingDown, Heart,
@@ -16,30 +16,33 @@ import {
   calculateEstimatedFeedCostPerLiter,
   calculateTotalDailyFeedCost,
   getUpcomingHeatChecks,
-  getUpcomingReInseminations
+  getUpcomingReInseminations,
+  calculateHerdAveragePerformance
 } from '../utils/dashboardCalculations';
 import { Link } from 'react-router-dom';
 import { SmartCalendar } from '../components/SmartCalendar';
 import { useStore } from '../store/useStore';
+import FarmSwitcher from '../components/FarmSwitcher';
 
 const Dashboard: React.FC = () => {
-  const hayvanlar = useLiveQuery(() => db.hayvanlar.toArray()) || [];
-  const sutKayitlari = useLiveQuery(() => db.sutKayitlari.toArray()) || [];
-  const asilar = useLiveQuery(() => db.planlananAsilar.toArray()) || [];
-  const uremeKayitlari = useLiveQuery(() => db.uremeKayitlari.toArray()) || [];
-  const yemler = useLiveQuery(() => db.yemler.toArray()) || [];
-  const gruplar = useLiveQuery(() => db.gruplar.toArray()) || [];
+  const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
+  const sutKayitlari = useLiveFarmQuery(() => db.sutKayitlari.toArray()) || [];
+  const asilar = useLiveFarmQuery(() => db.planlananAsilar.toArray()) || [];
+  const uremeKayitlari = useLiveFarmQuery(() => db.uremeKayitlari.toArray()) || [];
+  const yemler = useLiveFarmQuery(() => db.yemler.toArray()) || [];
+  const gruplar = useLiveFarmQuery(() => db.gruplar.toArray()) || [];
   const { uremeAyarlari } = useStore();
 
   const totalAnimals = calculateTotalAnimals(hayvanlar);
   const speciesDist = calculateSpeciesDistribution(hayvanlar);
   const avgMilk = calculateAverageMilkYield7Days(sutKayitlari);
   const activeAlerts = getActiveHealthAlertsCount(asilar, hayvanlar);
-  const expectedBirths = getExpectedBirths30DaysCount(uremeKayitlari);
-  const heatChecks = getUpcomingHeatChecks(uremeKayitlari);
-  const reInseminations = getUpcomingReInseminations(uremeKayitlari);
+  const expectedBirths = getExpectedBirths30DaysCount(uremeKayitlari, hayvanlar);
+  const heatChecks = getUpcomingHeatChecks(uremeKayitlari, hayvanlar);
+  const reInseminations = getUpcomingReInseminations(uremeKayitlari, hayvanlar);
   const feedCost = calculateEstimatedFeedCostPerLiter(yemler, gruplar, sutKayitlari, hayvanlar);
   const totalFeedCost = calculateTotalDailyFeedCost(yemler, gruplar, hayvanlar);
+  const herdPerformance = calculateHerdAveragePerformance(hayvanlar, uremeKayitlari);
 
   const today = new Date();
   today.setHours(0,0,0,0);
@@ -48,15 +51,18 @@ const Dashboard: React.FC = () => {
 
   const gecikmisAsilar = asilar.filter(a => !a.yapildiMi && new Date(a.planlanaTarih) < today).slice(0, 3);
   
-  const yaklasanDogumlar = getUpcomingBirths(uremeKayitlari, 30).slice(0, 3);
+  const yaklasanDogumlar = getUpcomingBirths(uremeKayitlari, hayvanlar, 30).slice(0, 3);
 
   return (
     <div className="w-full h-full flex flex-col p-6 space-y-6">
 
-      <div>
-        <h1 className="text-3xl font-black text-earth-900 tracking-tight">Anasayfa</h1>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-black text-earth-900 tracking-tight">Anasayfa</h1>
           <p className="text-earth-500 font-medium mt-1">Sürünüzün genel durum özeti</p>
         </div>
+        <FarmSwitcher />
+      </div>
 
       {/* KPI Kartları */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -97,6 +103,40 @@ const Dashboard: React.FC = () => {
           <div>
             <p className="text-sm font-bold text-earth-500 uppercase">Yaklaşan Doğumlar</p>
             <p className="text-3xl font-black text-earth-900">{expectedBirths} <span className="text-base font-normal text-earth-500">(30 Gün)</span></p>
+          </div>
+        </div>
+      </div>
+
+      {/* Sürü Üreme Performansı (İnekler) */}
+      <div className="bg-purple-50 border border-purple-200 rounded-2xl p-6">
+        <div className="flex items-center space-x-2 mb-4">
+          <CalendarCheck className="w-6 h-6 text-purple-700" />
+          <h2 className="text-xl font-black text-purple-900">Sürü Üreme Performansı (İnek Ortalamaları)</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white p-4 rounded-xl border border-purple-100 shadow-sm">
+            <p className="text-xs font-bold text-earth-500 uppercase tracking-wider mb-1">Servis Periyodu Ort.</p>
+            <p className="text-2xl font-black text-purple-700">
+              {herdPerformance.servisPeriyoduOrt !== null ? `${herdPerformance.servisPeriyoduOrt} Gün` : '-'}
+            </p>
+          </div>
+          <div className="bg-white p-4 rounded-xl border border-purple-100 shadow-sm">
+            <p className="text-xs font-bold text-earth-500 uppercase tracking-wider mb-1">Laktasyon Süresi Ort.</p>
+            <p className="text-2xl font-black text-purple-700">
+              {herdPerformance.ortalamaLaktasyonSuresiOrt !== null ? `${herdPerformance.ortalamaLaktasyonSuresiOrt} Gün` : '-'}
+            </p>
+          </div>
+          <div className="bg-white p-4 rounded-xl border border-purple-100 shadow-sm">
+            <p className="text-xs font-bold text-earth-500 uppercase tracking-wider mb-1">Gebelik Başına Tohum.</p>
+            <p className="text-2xl font-black text-purple-700">
+              {herdPerformance.gebelikBasinaTohumlamaOrt !== null ? herdPerformance.gebelikBasinaTohumlamaOrt : '-'}
+            </p>
+          </div>
+          <div className="bg-white p-4 rounded-xl border border-purple-100 shadow-sm">
+            <p className="text-xs font-bold text-earth-500 uppercase tracking-wider mb-1">Buzağılama Aralığı Ort.</p>
+            <p className="text-2xl font-black text-purple-700">
+              {herdPerformance.buzagilamaAraligiOrt !== null ? `${herdPerformance.buzagilamaAraligiOrt} Gün` : '-'}
+            </p>
           </div>
         </div>
       </div>

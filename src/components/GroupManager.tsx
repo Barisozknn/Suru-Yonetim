@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Plus, Trash2, Users } from 'lucide-react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import GroupMilkModal from './GroupMilkModal';
@@ -8,9 +8,9 @@ import GroupAnimalManagerModal from './GroupAnimalManagerModal';
 import { parseRasyonCost } from '../utils/dashboardCalculations';
 
 const GroupManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
-  const gruplar = useLiveQuery(() => db.gruplar.toArray()) || [];
-  const hayvanlar = useLiveQuery(() => db.hayvanlar.toArray()) || [];
-  const yemler = useLiveQuery(() => db.yemler.toArray()) || [];
+  const gruplar = useLiveFarmQuery(() => db.gruplar.toArray()) || [];
+  const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
+  const yemler = useLiveFarmQuery(() => db.yemler.toArray()) || [];
   
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupTur, setNewGroupTur] = useState('Karma');

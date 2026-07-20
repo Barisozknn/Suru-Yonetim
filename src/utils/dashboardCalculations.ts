@@ -1,5 +1,7 @@
 import type { Hayvan, SutKaydi, PlanlananAsi, UremeKaydi, Yem, Grup } from '../types';
 import { useStore } from '../store/useStore';
+import { calculateFemalePerformance } from './performanceCalculations';
+import { getUremeAyarForIrk } from './reproductionSettings';
 
 export const calculateTotalAnimals = (hayvanlar: Hayvan[]): number => {
   return hayvanlar.length;
@@ -62,16 +64,16 @@ export const getActiveHealthAlertsCount = (asilar: PlanlananAsi[], hayvanlar: Ha
   return count;
 };
 
-export const getUpcomingBirths = (uremeKayitlari: UremeKaydi[], maxDays: number = 30) => {
+export const getUpcomingBirths = (uremeKayitlari: UremeKaydi[], hayvanlar: Hayvan[], maxDays: number = 30) => {
   const today = new Date();
   today.setHours(0,0,0,0);
+  
   const inDays = new Date(today);
-  inDays.setDate(inDays.getDate() + maxDays);
+  inDays.setDate(today.getDate() + maxDays);
   const pastDays = new Date(today);
-  pastDays.setDate(pastDays.getDate() - 60);
+  pastDays.setDate(today.getDate() - 15);
 
   const results: { hayvanId: string; dogumTarihi: Date }[] = [];
-  
   const grouped = uremeKayitlari.reduce((acc, curr) => {
     if (!acc[curr.hayvanId]) acc[curr.hayvanId] = [];
     acc[curr.hayvanId].push(curr);
@@ -81,6 +83,9 @@ export const getUpcomingBirths = (uremeKayitlari: UremeKaydi[], maxDays: number 
   const { uremeAyarlari } = useStore.getState();
 
   for (const [hayvanId, olaylar] of Object.entries(grouped)) {
+    const hayvan = hayvanlar.find(h => h.id === hayvanId);
+    const irkAyari = getUremeAyarForIrk(hayvan?.irk, uremeAyarlari);
+
     olaylar.sort((a, b) => new Date(b.tarih).getTime() - new Date(a.tarih).getTime());
     const sonOlay = olaylar[0];
     let tahminiDogum: Date | null = null;
@@ -88,12 +93,12 @@ export const getUpcomingBirths = (uremeKayitlari: UremeKaydi[], maxDays: number 
     if (sonOlay.tur === 'Kuruya Çıkarma') {
       const sonTohumlama = olaylar.find(o => o.tur === 'Tohumlama/Aşım');
       tahminiDogum = new Date(sonTohumlama ? sonTohumlama.tarih : sonOlay.tarih);
-      tahminiDogum.setDate(tahminiDogum.getDate() + (sonTohumlama ? uremeAyarlari.gebelikSuresi : uremeAyarlari.kuruyaCikarma));
+      tahminiDogum.setDate(tahminiDogum.getDate() + (sonTohumlama ? irkAyari.gebelikSuresi : irkAyari.kuruyaCikarma));
     } else if (sonOlay.tur === 'Gebelik Kontrolü' && sonOlay.durum === 'Gebe') {
       const sonTohumlama = olaylar.find(o => o.tur === 'Tohumlama/Aşım');
       if (sonTohumlama) {
         tahminiDogum = new Date(sonTohumlama.tarih);
-        tahminiDogum.setDate(tahminiDogum.getDate() + uremeAyarlari.gebelikSuresi);
+        tahminiDogum.setDate(tahminiDogum.getDate() + irkAyari.gebelikSuresi);
       }
     }
     
@@ -105,11 +110,11 @@ export const getUpcomingBirths = (uremeKayitlari: UremeKaydi[], maxDays: number 
   return results.sort((a, b) => a.dogumTarihi.getTime() - b.dogumTarihi.getTime());
 };
 
-export const getExpectedBirths30DaysCount = (uremeKayitlari: UremeKaydi[]): number => {
-  return getUpcomingBirths(uremeKayitlari, 30).length;
+export const getExpectedBirths30DaysCount = (uremeKayitlari: UremeKaydi[], hayvanlar: Hayvan[]): number => {
+  return getUpcomingBirths(uremeKayitlari, hayvanlar, 30).length;
 };
 
-export const getUpcomingHeatChecks = (uremeKayitlari: UremeKaydi[]) => {
+export const getUpcomingHeatChecks = (uremeKayitlari: UremeKaydi[], hayvanlar: Hayvan[]) => {
   const today = new Date();
   today.setHours(0,0,0,0);
   const in7Days = new Date(today);
@@ -127,23 +132,26 @@ export const getUpcomingHeatChecks = (uremeKayitlari: UremeKaydi[]) => {
   const { uremeAyarlari } = useStore.getState();
 
   for (const [hayvanId, kayitlar] of Object.entries(grouped)) {
+    const hayvan = hayvanlar.find(h => h.id === hayvanId);
+    const irkAyari = getUremeAyarForIrk(hayvan?.irk, uremeAyarlari);
+
     kayitlar.sort((a, b) => new Date(b.tarih).getTime() - new Date(a.tarih).getTime());
     const lastEvent = kayitlar[0];
 
     if (lastEvent.tur === 'Tohumlama/Aşım' || lastEvent.tur === 'Kızgınlık') {
       const heatDate = new Date(lastEvent.tarih);
-      heatDate.setDate(heatDate.getDate() + uremeAyarlari.kizginlikDongusu);
+      heatDate.setDate(heatDate.getDate() + irkAyari.kizginlikDongusu);
       if (heatDate >= past7Days && heatDate <= in7Days) results.push({ hayvanId, date: heatDate });
     } else if (lastEvent.tur === 'Gebelik Kontrolü' && (lastEvent.durum === 'Boş' || lastEvent.durum === 'Belirsiz')) {
       const heatDate = new Date(lastEvent.tarih);
-      heatDate.setDate(heatDate.getDate() + uremeAyarlari.kizginlikDongusu);
+      heatDate.setDate(heatDate.getDate() + irkAyari.kizginlikDongusu);
       if (heatDate >= past7Days && heatDate <= in7Days) results.push({ hayvanId, date: heatDate });
     }
   }
   return results.sort((a, b) => a.date.getTime() - b.date.getTime());
 };
 
-export const getUpcomingReInseminations = (uremeKayitlari: UremeKaydi[]) => {
+export const getUpcomingReInseminations = (uremeKayitlari: UremeKaydi[], hayvanlar: Hayvan[]) => {
   const today = new Date();
   today.setHours(0,0,0,0);
   const in7Days = new Date(today);
@@ -161,12 +169,15 @@ export const getUpcomingReInseminations = (uremeKayitlari: UremeKaydi[]) => {
   const { uremeAyarlari } = useStore.getState();
 
   for (const [hayvanId, kayitlar] of Object.entries(grouped)) {
+    const hayvan = hayvanlar.find(h => h.id === hayvanId);
+    const irkAyari = getUremeAyarForIrk(hayvan?.irk, uremeAyarlari);
+
     kayitlar.sort((a, b) => new Date(b.tarih).getTime() - new Date(a.tarih).getTime());
     const lastEvent = kayitlar[0];
 
     if (lastEvent.tur === 'Doğum') {
       const reDate = new Date(lastEvent.tarih);
-      reDate.setDate(reDate.getDate() + uremeAyarlari.yenidenTohumlamaUyarisi);
+      reDate.setDate(reDate.getDate() + irkAyari.yenidenTohumlamaUyarisi);
       if (reDate >= past7Days && reDate <= in7Days) results.push({ hayvanId, date: reDate });
     }
   }
@@ -256,4 +267,51 @@ export const calculateTotalDailyFeedCost = (
   });
 
   return totalDailyCost;
+};
+
+export const calculateHerdAveragePerformance = (hayvanlar: Hayvan[], uremeKayitlari: UremeKaydi[]) => {
+  const inekler = hayvanlar.filter(h => h.tur === 'İnek' && h.durum === 'Aktif');
+  
+  if (inekler.length === 0) {
+    return {
+      servisPeriyoduOrt: null,
+      ortalamaLaktasyonSuresiOrt: null,
+      gebelikBasinaTohumlamaOrt: null,
+      buzagilamaAraligiOrt: null
+    };
+  }
+
+  let totalServis = 0; let servisCount = 0;
+  let totalLaktasyon = 0; let laktasyonCount = 0;
+  let totalTohum = 0; let tohumCount = 0;
+  let totalBuzagilama = 0; let buzagilamaCount = 0;
+
+  inekler.forEach(inek => {
+    const inekKayitlar = uremeKayitlari.filter(k => k.hayvanId === inek.id);
+    const perf = calculateFemalePerformance(inek, inekKayitlar);
+
+    if (perf.servisPeriyoduGun !== null) {
+      totalServis += perf.servisPeriyoduGun;
+      servisCount++;
+    }
+    if (perf.ortalamaLaktasyonSuresiGun !== null) {
+      totalLaktasyon += perf.ortalamaLaktasyonSuresiGun;
+      laktasyonCount++;
+    }
+    if (perf.gebelikBasinaTohumlama !== null) {
+      totalTohum += perf.gebelikBasinaTohumlama;
+      tohumCount++;
+    }
+    if (perf.buzagilamaArasiSureGun !== null) {
+      totalBuzagilama += perf.buzagilamaArasiSureGun;
+      buzagilamaCount++;
+    }
+  });
+
+  return {
+    servisPeriyoduOrt: servisCount > 0 ? Math.floor(totalServis / servisCount) : null,
+    ortalamaLaktasyonSuresiOrt: laktasyonCount > 0 ? Math.floor(totalLaktasyon / laktasyonCount) : null,
+    gebelikBasinaTohumlamaOrt: tohumCount > 0 ? Number((totalTohum / tohumCount).toFixed(1)) : null,
+    buzagilamaAraligiOrt: buzagilamaCount > 0 ? Math.floor(totalBuzagilama / buzagilamaCount) : null
+  };
 };
