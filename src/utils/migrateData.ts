@@ -53,6 +53,18 @@ export const migrateOrphanDataToDefaultFarm = async () => {
         // Dexie bulk put for updates
         const updatedRecords = recordsToUpdate.map((r: any) => ({ ...r, ciftlikId: defaultFarmId }));
         await table.bulkPut(updatedRecords);
+
+        // Buluta da senkronize et ki tekrar çektiğimizde bozulmasın
+        if (state.user) {
+          for (const record of updatedRecords) {
+            await db.syncQueue.add({
+              table: tableName,
+              action: 'UPDATE',
+              payload: record,
+              created_at: Date.now()
+            });
+          }
+        }
       }
     } catch (err) {
       console.warn(`Migration error on table ${tableName}:`, err);

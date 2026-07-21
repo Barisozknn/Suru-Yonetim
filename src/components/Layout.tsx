@@ -41,11 +41,18 @@ const Layout: React.FC = () => {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Sayfa ilk açıldığında online ise bekleyen verileri gönder ve buluttan en güncel verileri çek
     if (navigator.onLine) {
       setIsSyncing(true);
       processSyncQueue()
-        .then(() => pullInitialData())
+        .then(async () => {
+           const { db } = await import('../lib/db');
+           const count = await db.syncQueue.count();
+           if (count === 0) {
+             await pullInitialData();
+           } else {
+             console.warn("Kuyrukta bekleyen/hatalı işlemler var, buluttan indirme atlandı (yerel veriler korundu).");
+           }
+        })
         .finally(() => setIsSyncing(false));
     }
 

@@ -27,19 +27,19 @@ const mapToSupabaseHayvan = (obj: any) => ({
   kupe_no: obj.kupeNo,
   tur: obj.tur,
   irk: obj.irk,
-  dogum_tarihi: obj.dogumTarihi,
+  dogum_tarihi: obj.dogumTarihi || null,
   cinsiyet: obj.cinsiyet,
   guncel_agirlik_kg: obj.guncelAgirlikKg,
-  grup_id: obj.grupId,
+  grup_id: obj.grupId || null,
   durum: obj.durum,
-  anne_kupe_no: obj.anneKupeNo,
-  baba_kupe_no: obj.babaKupeNo,
-  fotograf_url: obj.fotografUrl,
-  notlar: obj.notlar,
-  satis_fiyati: obj.satisFiyati,
-  satis_tarihi: obj.satisTarihi,
+  anne_kupe_no: obj.anneKupeNo || null,
+  baba_kupe_no: obj.babaKupeNo || null,
+  fotograf_url: obj.fotografUrl || null,
+  notlar: obj.notlar || null,
+  satis_fiyati: obj.satisFiyati || null,
+  satis_tarihi: obj.satisTarihi || null,
   user_id: obj.user_id,
-  ciftlik_id: obj.ciftlikId
+  ciftlik_id: obj.ciftlikId || null
 });
 
 const mapFromSupabaseGrup = (row: any) => ({
@@ -415,14 +415,40 @@ export const pullInitialData = async () => {
   }
 };
 
+// Bağımlılık sırası: bağımlı tablolar her zaman parent tablolardan sonra işlenmeli
+const TABLE_PRIORITY: Record<string, number> = {
+  ciftlikler: 0,
+  gruplar: 1,
+  hayvanlar: 2,
+  yemler: 3,
+  yemHareketleri: 4,
+  sutKayitlari: 4,
+  agirlikKayitlari: 4,
+  saglikOlaylari: 4,
+  asiProtokolleri: 4,
+  planlananAsilar: 5,
+  uremeKayitlari: 5,
+  buzagiKayitlari: 5,
+  sohbetler: 6,
+  ekFinansalIslemler: 6,
+  gunlukYemMaliyetleri: 6,
+};
+
 export const processSyncQueue = async () => {
   if (!navigator.onLine) return;
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
 
-  const queue = await db.syncQueue.orderBy('created_at').toArray();
-  if (queue.length === 0) return;
+  const rawQueue = await db.syncQueue.orderBy('created_at').toArray();
+  if (rawQueue.length === 0) return;
+
+  // Bağımlılık sırasına göre sırala (aynı öncelik için oluşturulma zamanına göre)
+  const queue = rawQueue.sort((a, b) => {
+    const pa = TABLE_PRIORITY[a.table] ?? 10;
+    const pb = TABLE_PRIORITY[b.table] ?? 10;
+    return pa !== pb ? pa - pb : a.created_at - b.created_at;
+  });
 
   for (const op of queue) {
     try {
@@ -484,7 +510,8 @@ export const processSyncQueue = async () => {
       }
     } catch (err) {
       console.error('Senkronizasyon hatası:', err);
-      break; // Hata durumunda kuyruğu durdur
+      // Hata durumunda sadece bu öğeyi atla, diğerlerini eşitlemeye devam et
+      continue;
     }
   }
 };
