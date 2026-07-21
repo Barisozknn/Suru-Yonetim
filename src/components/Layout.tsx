@@ -5,7 +5,7 @@ import {
   Syringe, CalendarDays, Settings, Sparkles, Wifi, WifiOff, RefreshCw,
   Droplets, Wallet
 } from 'lucide-react';
-import { processSyncQueue } from '../services/syncService';
+import { processSyncQueue, pullInitialData } from '../services/syncService';
 
 const NAV_ITEMS = [
   { path: '/', label: 'Ana Sayfa', icon: <Home className="w-[22px] h-[22px]" /> },
@@ -40,6 +40,15 @@ const Layout: React.FC = () => {
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+
+    // Sayfa ilk açıldığında online ise bekleyen verileri gönder ve buluttan en güncel verileri çek
+    if (navigator.onLine) {
+      setIsSyncing(true);
+      processSyncQueue()
+        .then(() => pullInitialData())
+        .finally(() => setIsSyncing(false));
+    }
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
