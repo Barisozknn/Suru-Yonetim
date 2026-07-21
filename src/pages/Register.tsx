@@ -25,7 +25,7 @@ const Register: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-earth-50 px-4">
       <div className="bg-white p-8 rounded-2xl shadow-lg border border-earth-200 max-w-md w-full">
-        <h2 className="text-3xl font-black text-nature-800 text-center mb-6">Sürü Yönetimi</h2>
+        <h2 className="text-3xl font-black text-nature-800 text-center mb-6">SürüMetri</h2>
         <h3 className="text-xl font-bold text-earth-900 text-center mb-6">Kayıt Ol</h3>
         
         {success ? (
