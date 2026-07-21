@@ -8,10 +8,10 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt', // Yeni sürüm gelince kullanıcıya sor
-      includeAssets: ['favicon.svg', 'icons/*.png'],
+      includeAssets: ['favicon.png', 'apple-touch-icon.png', 'icons/*.png'],
       manifest: {
-        name: 'Sürü Yönetimi',
-        short_name: 'SürüYönetimi',
+        name: 'SürüMetri',
+        short_name: 'SürüMetri',
         description: 'Profesyonel süt ve besi sığırcılığı yönetim uygulaması',
         theme_color: '#2f5c35',
         background_color: '#fbfbfb',

@@ -8,19 +8,19 @@ import {
 import { processSyncQueue } from '../services/syncService';
 
 const NAV_ITEMS = [
-  { path: '/', label: 'Ana Sayfa', icon: <Home className="w-5 h-5" /> },
-  { path: '/hayvanlar', label: 'Hayvan Listesi', icon: <Users className="w-5 h-5" /> },
-  { path: '/gruplar', label: 'Grup Yönetimi', icon: <Layers className="w-5 h-5" /> },
-  { path: '/yem', label: 'Yem Deposu', icon: <Wheat className="w-5 h-5" /> },
-  { path: '/saglik', label: 'Sağlık Yönetimi', icon: <Syringe className="w-5 h-5" /> },
-  { path: '/ureme', label: 'Üreme Yönetimi', icon: <CalendarDays className="w-5 h-5" /> },
-  { path: '/buzagi', label: 'Buzağı Büyütme', icon: <Droplets className="w-5 h-5" /> },
-  { path: '/soy-agaci', label: 'Soy Ağacı', icon: <Network className="w-5 h-5" /> },
-  { path: '/sut-agirlik', label: 'Süt & Ağırlık Özet', icon: <Activity className="w-5 h-5" /> },
-  { path: '/rasyon', label: 'Rasyon Hesaplama', icon: <Calculator className="w-5 h-5" /> },
-  { path: '/finans', label: 'Gelir Gider Analizi', icon: <Wallet className="w-5 h-5" /> },
-  { path: '/asistan', label: 'AI Asistan', icon: <Sparkles className="w-5 h-5" /> },
-  { path: '/ayarlar', label: 'Ayarlar', icon: <Settings className="w-5 h-5" /> },
+  { path: '/', label: 'Ana Sayfa', icon: <Home className="w-[22px] h-[22px]" /> },
+  { path: '/hayvanlar', label: 'Hayvan Listesi', icon: <Users className="w-[22px] h-[22px]" /> },
+  { path: '/gruplar', label: 'Grup Yönetimi', icon: <Layers className="w-[22px] h-[22px]" /> },
+  { path: '/yem', label: 'Yem Deposu', icon: <Wheat className="w-[22px] h-[22px]" /> },
+  { path: '/saglik', label: 'Sağlık Yönetimi', icon: <Syringe className="w-[22px] h-[22px]" /> },
+  { path: '/ureme', label: 'Üreme Yönetimi', icon: <CalendarDays className="w-[22px] h-[22px]" /> },
+  { path: '/buzagi', label: 'Buzağı Büyütme', icon: <Droplets className="w-[22px] h-[22px]" /> },
+  { path: '/soy-agaci', label: 'Soy Ağacı', icon: <Network className="w-[22px] h-[22px]" /> },
+  { path: '/sut-agirlik', label: 'Süt & Ağırlık Özet', icon: <Activity className="w-[22px] h-[22px]" /> },
+  { path: '/rasyon', label: 'Rasyon Hesaplama', icon: <Calculator className="w-[22px] h-[22px]" /> },
+  { path: '/finans', label: 'Gelir Gider Analizi', icon: <Wallet className="w-[22px] h-[22px]" /> },
+  { path: '/asistan', label: 'AI Asistan', icon: <Sparkles className="w-[22px] h-[22px]" /> },
+  { path: '/ayarlar', label: 'Ayarlar', icon: <Settings className="w-[22px] h-[22px]" /> },
 ];
 
 const Layout: React.FC = () => {
@@ -53,13 +53,13 @@ const Layout: React.FC = () => {
 
 
   const NavContent = () => (
-    <nav className="flex-1 px-3 py-3 space-y-[3px] overflow-y-auto overflow-x-hidden flex flex-col custom-scrollbar">
+    <nav className="flex-1 px-3 py-1 flex flex-col justify-center gap-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
       {NAV_ITEMS.map((item) => (
         <NavLink
           key={item.path}
           to={item.path}
           className={({ isActive }) => `
-            flex items-center space-x-3 px-4 py-[9px] rounded-xl text-[14.5px] font-bold transition
+            flex items-center space-x-3 px-4 py-2 rounded-xl text-[14.5px] font-bold transition
             ${isActive 
               ? 'bg-nature-600 text-white shadow-md' 
               : 'text-earth-600 hover:bg-nature-50 hover:text-nature-700'
@@ -80,8 +80,7 @@ const Layout: React.FC = () => {
       <aside className="hidden md:flex w-64 flex-shrink-0 bg-white border-r border-earth-200 flex-col shadow-sm relative z-20 h-full overflow-hidden">
         <div className="p-4 border-b border-earth-100 flex items-center justify-between shrink-0">
           <div>
-            <h1 className="text-xl font-black text-nature-800 tracking-tight">Sürü<span className="text-earth-500">Yönetimi</span></h1>
-            <p className="text-[10px] font-bold text-earth-400 mt-1 uppercase tracking-widest">Profesyonel Mod</p>
+            <h1 className="text-xl font-black text-nature-800 tracking-tight">Sürü<span className="text-earth-500">Metri</span></h1>
           </div>
         </div>
         <NavContent />
@@ -104,7 +103,7 @@ const Layout: React.FC = () => {
           <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 -ml-2 rounded-lg hover:bg-nature-600 transition">
             <Menu className="w-6 h-6" />
           </button>
-          <h1 className="text-xl font-black">Sürü<span className="text-nature-300">Yönetimi</span></h1>
+          <h1 className="text-xl font-black">Sürü<span className="text-nature-300">Metri</span></h1>
         </div>
         <div>
           {isSyncing ? <RefreshCw className="w-5 h-5 animate-spin text-blue-300" /> : isOnline ? <Wifi className="w-5 h-5 text-green-300" /> : <WifiOff className="w-5 h-5 text-red-300" />}
