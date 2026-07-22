@@ -128,6 +128,7 @@ export const useStore = create<StoreState>()(
         rationAdg: state.rationAdg,
         rationListesi: state.rationListesi,
         uremeAyarlari: state.uremeAyarlari,
+        isGuest: state.isGuest,
       }),
     }
   )
