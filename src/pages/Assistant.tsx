@@ -328,11 +328,11 @@ const Assistant: React.FC = () => {
   };
   
   return (
-    <div className="h-[calc(100vh-6rem)] md:h-[calc(100vh-4rem)] flex flex-col md:flex-row bg-white rounded-2xl shadow-sm border border-earth-200 overflow-hidden relative">
+    <div className="h-[calc(100vh-6rem)] md:h-[calc(100vh-4rem)] flex flex-col md:flex-row bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 overflow-hidden relative">
         
         {/* Desktop Sidebar */}
-        <div className="hidden md:flex w-64 border-r border-earth-200 bg-nature-50 flex-col flex-shrink-0">
-           <div className="p-4 border-b border-earth-200">
+        <div className="hidden md:flex w-64 border-r border-earth-200 dark:border-gray-700 bg-nature-50 dark:bg-nature-900/30 flex-col flex-shrink-0">
+           <div className="p-4 border-b border-earth-200 dark:border-gray-700">
                <button onClick={handleCreateNewChat} className="w-full flex items-center justify-center space-x-2 bg-[#1b5235] text-white py-3 px-4 rounded-xl font-bold hover:bg-[#143e28] transition shadow-sm">
                   <Plus className="w-5 h-5" />
                   <span>Yeni Sohbet</span>
@@ -340,12 +340,12 @@ const Assistant: React.FC = () => {
            </div>
            <div className="flex-1 overflow-y-auto p-4 space-y-2">
                {sohbetler.map(sohbet => (
-                   <div key={sohbet.id} onClick={() => setActiveChatId(sohbet.id)} className={`flex items-start justify-between p-3 rounded-xl cursor-pointer transition ${activeChatId === sohbet.id ? 'bg-nature-100 border border-nature-200' : 'hover:bg-earth-100 border border-transparent'}`}>
+                   <div key={sohbet.id} onClick={() => setActiveChatId(sohbet.id)} className={`flex items-start justify-between p-3 rounded-xl cursor-pointer transition ${activeChatId === sohbet.id ? 'bg-nature-100 dark:bg-nature-900/50 border border-nature-200 dark:border-nature-800' : 'hover:bg-earth-100 dark:hover:bg-gray-700 border border-transparent'}`}>
                        <div className="flex items-start space-x-3 overflow-hidden">
-                           <MessageSquare className={`w-5 h-5 flex-shrink-0 mt-0.5 ${activeChatId === sohbet.id ? 'text-nature-600' : 'text-earth-500'}`} />
+                           <MessageSquare className={`w-5 h-5 flex-shrink-0 mt-0.5 ${activeChatId === sohbet.id ? 'text-nature-600 dark:text-nature-400' : 'text-earth-500 dark:text-gray-400'}`} />
                            <div className="overflow-hidden">
-                               <p className={`font-bold truncate text-sm ${activeChatId === sohbet.id ? 'text-nature-900' : 'text-earth-800'}`}>{sohbet.baslik}</p>
-                               <p className="text-xs text-earth-500 mt-1">{formatDateTime(sohbet.olusturulmaTarihi)}</p>
+                               <p className={`font-bold truncate text-sm ${activeChatId === sohbet.id ? 'text-nature-900 dark:text-nature-100' : 'text-earth-800 dark:text-gray-200'}`}>{sohbet.baslik}</p>
+                               <p className="text-xs text-earth-500 dark:text-gray-400 mt-1">{formatDateTime(sohbet.olusturulmaTarihi)}</p>
                            </div>
                        </div>
                        <button onClick={(e) => handleDeleteChat(sohbet.id, e)} className="p-1.5 text-earth-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
@@ -363,16 +363,16 @@ const Assistant: React.FC = () => {
               className="fixed inset-0" 
               onClick={() => setIsMobileHistoryOpen(false)}
             />
-            <div className="relative bg-white rounded-t-3xl p-5 shadow-2xl max-h-[85vh] flex flex-col space-y-4 border-t border-earth-200 z-10 animate-in slide-in-from-bottom duration-300">
+            <div className="relative bg-white dark:bg-gray-800 rounded-t-3xl p-5 shadow-2xl max-h-[85vh] flex flex-col space-y-4 border-t border-earth-200 dark:border-gray-700 z-10 animate-in slide-in-from-bottom duration-300">
               {/* Header */}
-              <div className="flex items-center justify-between pb-2 border-b border-earth-100">
-                <div className="flex items-center space-x-2 text-earth-900 font-bold text-base">
-                  <MessageSquare className="w-5 h-5 text-earth-700" />
+              <div className="flex items-center justify-between pb-2 border-b border-earth-100 dark:border-gray-700">
+                <div className="flex items-center space-x-2 text-earth-900 dark:text-gray-100 font-bold text-base">
+                  <MessageSquare className="w-5 h-5 text-earth-700 dark:text-gray-300" />
                   <span>Sohbetler</span>
                 </div>
                 <button 
                   onClick={() => setIsMobileHistoryOpen(false)}
-                  className="p-1 text-earth-500 hover:bg-earth-100 rounded-full transition"
+                  className="p-1 text-earth-500 dark:text-gray-400 hover:bg-earth-100 dark:hover:bg-gray-700 rounded-full transition"
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -433,14 +433,14 @@ const Assistant: React.FC = () => {
         <div className="flex-1 flex flex-col min-w-0">
           
           {/* Header Bar */}
-          <div className="px-4 py-3 border-b border-earth-200 bg-white flex items-center justify-between shrink-0">
-            <h2 className="text-base md:text-lg font-bold text-earth-900 text-center flex-1 md:text-left">
+          <div className="px-4 py-3 border-b border-earth-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-between shrink-0">
+            <h2 className="text-base md:text-lg font-bold text-earth-900 dark:text-gray-100 text-center flex-1 md:text-left">
               Sohbet
             </h2>
             <div className="flex items-center space-x-1.5 md:hidden">
               <button 
                 onClick={() => setIsMobileHistoryOpen(true)}
-                className="p-2 text-earth-700 hover:bg-earth-100 rounded-lg transition"
+                className="p-2 text-earth-700 dark:text-gray-300 hover:bg-earth-100 dark:hover:bg-gray-700 rounded-lg transition"
                 title="Sohbetler"
               >
                 <Menu className="w-6 h-6" />
@@ -448,7 +448,7 @@ const Assistant: React.FC = () => {
               {activeChatId && (
                 <button 
                   onClick={(e) => handleDeleteChat(activeChatId, e)}
-                  className="p-2 text-earth-700 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+                  className="p-2 text-earth-700 dark:text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
                   title="Sohbeti Sil"
                 >
                   <Trash2 className="w-5 h-5" />
@@ -458,18 +458,18 @@ const Assistant: React.FC = () => {
           </div>
 
           {/* Messages & Context Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-earth-50">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-earth-50 dark:bg-gray-900">
             
             {/* Empty State when no messages */}
             {displayMessages.length === 0 && (
               <div className="flex flex-col items-center justify-center text-center p-6 py-12 my-auto">
                 <div className="w-14 h-14 bg-earth-100/80 rounded-full flex items-center justify-center mb-4 text-earth-400">
-                  <Sparkles className="w-8 h-8 text-earth-500" />
+                  <Sparkles className="w-8 h-8 text-earth-500 dark:text-gray-400" />
                 </div>
-                <h3 className="text-base md:text-lg font-bold text-earth-900 mb-2 max-w-md leading-snug">
+                <h3 className="text-base md:text-lg font-bold text-earth-900 dark:text-gray-100 mb-2 max-w-md leading-snug">
                   Merhaba! Sürü yönetimi ve hayvanlarınız ile ilgili tüm sorularınızı sorabilirsiniz.
                 </h3>
-                <p className="text-xs md:text-sm text-earth-500 max-w-md leading-relaxed">
+                <p className="text-xs md:text-sm text-earth-500 dark:text-gray-400 max-w-md leading-relaxed">
                   Hayvan verilerinizi, aşı ve sağlık geçmişini, üreme durumlarını ve sürü performansınızı sormaktan çekinmeyin.
                 </p>
               </div>
@@ -480,19 +480,19 @@ const Assistant: React.FC = () => {
               <div key={idx} className={`flex items-start space-x-3 ${msg.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
                 
                 {msg.role === 'user' && (
-                   <div className="flex-shrink-0 p-2 rounded-full bg-earth-200 text-earth-700">
+                   <div className="flex-shrink-0 p-2 rounded-full bg-earth-200 text-earth-700 dark:text-gray-300">
                      <User className="w-5 h-5" />
                    </div>
                 )}
                 
                 <div className={`max-w-[90%] flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                    <div className={`rounded-2xl p-4 shadow-sm ${msg.role === 'user' ? 'bg-nature-600 text-white rounded-tr-sm' : 'bg-white border border-earth-200 text-earth-800 rounded-tl-sm'}`}>
+                    <div className={`rounded-2xl p-4 shadow-sm ${msg.role === 'user' ? 'bg-nature-600 text-white rounded-tr-sm' : 'bg-white dark:bg-gray-800 border border-earth-200 dark:border-gray-700 text-earth-800 dark:text-gray-200 rounded-tl-sm'}`}>
                       <div className="prose prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-earth-900 prose-pre:text-earth-100 prose-th:bg-earth-100 prose-td:border-b prose-table:border-collapse prose-table:w-full">
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                       </div>
                     </div>
                     {msg.createdAt && (
-                        <span className="text-[10px] text-earth-500 mt-1 px-1 font-medium">{formatTime(msg.createdAt)}</span>
+                        <span className="text-[10px] text-earth-500 dark:text-gray-400 mt-1 px-1 font-medium">{formatTime(msg.createdAt)}</span>
                     )}
                 </div>
 
@@ -501,16 +501,16 @@ const Assistant: React.FC = () => {
 
             {isLoading && (
               <div className="flex items-start space-x-3">
-                <div className="bg-white border border-earth-200 rounded-2xl rounded-tl-sm p-4 flex items-center space-x-2 text-earth-500 shadow-sm">
-                  <Loader2 className="w-4 h-4 animate-spin text-nature-600" />
-                  <span className="text-sm font-bold animate-pulse text-earth-700">Analiz ediliyor...</span>
+                <div className="bg-white dark:bg-gray-800 border border-earth-200 dark:border-gray-700 rounded-2xl rounded-tl-sm p-4 flex items-center space-x-2 text-earth-500 dark:text-gray-400 shadow-sm">
+                  <Loader2 className="w-4 h-4 animate-spin text-nature-600 dark:text-nature-400" />
+                  <span className="text-sm font-bold animate-pulse text-earth-700 dark:text-gray-300">Analiz ediliyor...</span>
                 </div>
               </div>
             )}
             
             {error && (
               <div className="flex justify-center">
-                <div className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm flex items-center space-x-2 border border-red-200">
+                <div className="bg-red-50 dark:bg-red-900/20 text-red-600 px-4 py-2 rounded-lg text-sm flex items-center space-x-2 border border-red-200">
                   <span>{error}</span>
                 </div>
               </div>
@@ -520,12 +520,12 @@ const Assistant: React.FC = () => {
 
           {/* Quick Questions pills */}
           {displayMessages.length === 0 && !activeChatId && (
-            <div className="px-4 py-2.5 bg-white border-t border-earth-100 flex gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide shrink-0">
+            <div className="px-4 py-2.5 bg-white dark:bg-gray-800 border-t border-earth-100 dark:border-gray-700 flex gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide shrink-0">
               {SAMPLE_QUESTIONS.map((q, idx) => (
                 <button 
                   key={idx} 
                   onClick={() => handleSend(q)}
-                  className="px-3.5 py-1.5 bg-earth-50 text-earth-700 border border-earth-200 rounded-full text-xs font-semibold hover:bg-nature-50 hover:text-nature-700 hover:border-nature-200 transition whitespace-nowrap"
+                  className="px-3.5 py-1.5 bg-earth-50 dark:bg-gray-900 text-earth-700 dark:text-gray-300 border border-earth-200 dark:border-gray-700 rounded-full text-xs font-semibold hover:bg-nature-50 dark:hover:bg-nature-900/30 hover:text-nature-700 hover:border-nature-200 transition whitespace-nowrap"
                 >
                   {q}
                 </button>
@@ -534,7 +534,7 @@ const Assistant: React.FC = () => {
           )}
 
           {/* Input Form Section */}
-          <div className="p-3 md:p-4 bg-white border-t border-earth-200 flex-shrink-0">
+          <div className="p-3 md:p-4 bg-white dark:bg-gray-800 border-t border-earth-200 dark:border-gray-700 flex-shrink-0">
             <form 
               onSubmit={(e) => { e.preventDefault(); handleSend(); }}
               className="relative flex items-center"
@@ -545,7 +545,7 @@ const Assistant: React.FC = () => {
                 onChange={(e) => setInput(e.target.value)}
                 disabled={isLoading}
                 placeholder="Yapay zekaya bir soru sorun..."
-                className="w-full pl-5 pr-14 py-3.5 bg-white border border-earth-300 rounded-2xl md:rounded-full focus:outline-none focus:ring-2 focus:ring-nature-500 focus:border-nature-500 text-earth-900 text-sm md:text-base disabled:opacity-50 transition shadow-sm"
+                className="w-full pl-5 pr-14 py-3.5 bg-white dark:bg-gray-800 border border-earth-300 dark:border-gray-600 rounded-2xl md:rounded-full focus:outline-none focus:ring-2 focus:ring-nature-500 focus:border-nature-500 text-earth-900 dark:text-gray-100 text-sm md:text-base disabled:opacity-50 transition shadow-sm"
               />
               <button 
                 type="submit" 

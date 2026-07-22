@@ -144,14 +144,14 @@ const VaccineProtocolManager: React.FC = () => {
 
   return (
     <div className="w-full h-full">
-      <div className="bg-white rounded-2xl w-full h-full shadow-sm border border-earth-200 flex flex-col">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full h-full shadow-sm border border-earth-200 dark:border-gray-700 flex flex-col">
 
-        <div className="p-4 border-b border-earth-200 flex justify-between items-center bg-nature-50 rounded-t-2xl">
+        <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex justify-between items-center bg-nature-50 dark:bg-nature-900/30 rounded-t-2xl">
           <div className="flex items-center space-x-2">
             <Syringe className="w-6 h-6 text-blue-600" />
             <div>
-              <h2 className="text-xl font-black text-earth-900">Aşı Protokolleri</h2>
-              <p className="text-xs text-earth-500">Şablon oluştur ve hayvanlara/gruplara ata</p>
+              <h2 className="text-xl font-black text-earth-900 dark:text-gray-100">Aşı Protokolleri</h2>
+              <p className="text-xs text-earth-500 dark:text-gray-400">Şablon oluştur ve hayvanlara/gruplara ata</p>
             </div>
           </div>
         </div>
@@ -160,12 +160,12 @@ const VaccineProtocolManager: React.FC = () => {
 
           {/* Protokol Listesi */}
           {protokoller.map(p => (
-            <div key={p.id} className="border border-earth-200 rounded-xl overflow-hidden">
-              <div className="flex justify-between items-center p-3 bg-earth-50 cursor-pointer hover:bg-earth-100 transition"
+            <div key={p.id} className="border border-earth-200 dark:border-gray-700 rounded-xl overflow-hidden">
+              <div className="flex justify-between items-center p-3 bg-earth-50 dark:bg-gray-900 cursor-pointer hover:bg-earth-100 dark:hover:bg-gray-700 transition"
                 onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
                 <div>
-                  <span className="font-bold text-earth-900">{p.ad}</span>
-                  <span className="ml-2 text-xs text-earth-500 bg-white border border-earth-200 px-2 py-0.5 rounded-full">{p.hedefTur}</span>
+                  <span className="font-bold text-earth-900 dark:text-gray-100">{p.ad}</span>
+                  <span className="ml-2 text-xs text-earth-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-earth-200 dark:border-gray-700 px-2 py-0.5 rounded-full">{p.hedefTur}</span>
                   <span className="ml-2 text-xs text-earth-400">{(p.uygulamalar || []).length} uygulama</span>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -182,18 +182,18 @@ const VaccineProtocolManager: React.FC = () => {
                     className="p-1.5 text-earth-400 hover:text-red-500 transition">
                     <Trash2 className="w-4 h-4" />
                   </button>
-                  {expandedId === p.id ? <ChevronUp className="w-4 h-4 text-earth-500" /> : <ChevronDown className="w-4 h-4 text-earth-500" />}
+                  {expandedId === p.id ? <ChevronUp className="w-4 h-4 text-earth-500 dark:text-gray-400" /> : <ChevronDown className="w-4 h-4 text-earth-500 dark:text-gray-400" />}
                 </div>
               </div>
 
               {expandedId === p.id && (
-                <div className="p-3 bg-white">
+                <div className="p-3 bg-white dark:bg-gray-800">
                   <div className="space-y-1">
                     {(p.uygulamalar || []).map((u, i) => (
                       <div key={i} className="flex items-center space-x-3 text-sm">
                         <span className="w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-bold">{i + 1}</span>
-                        <span className="font-medium text-earth-800">{u.ad}</span>
-                        <span className="text-earth-500">— Doğumdan {u.gunFarki}. gün</span>
+                        <span className="font-medium text-earth-800 dark:text-gray-200">{u.ad}</span>
+                        <span className="text-earth-500 dark:text-gray-400">— Doğumdan {u.gunFarki}. gün</span>
                       </div>
                     ))}
                   </div>
@@ -202,13 +202,13 @@ const VaccineProtocolManager: React.FC = () => {
 
               {/* Atama Modal */}
               {atamaModalId === p.id && (
-                <div className="p-3 bg-blue-50 border-t border-blue-200 space-y-3">
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border-t border-blue-200 space-y-3">
                   <p className="text-xs font-bold text-blue-700">Protokolü Ata:</p>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-earth-600 font-semibold block mb-1">Tek Hayvana</label>
+                      <label className="text-xs text-earth-600 dark:text-gray-400 font-semibold block mb-1">Tek Hayvana</label>
                       <select onChange={e => e.target.value && handleAtaHayvana(p, e.target.value)}
-                        className="w-full text-sm border border-earth-300 rounded-lg p-1.5">
+                        className="w-full text-sm border border-earth-300 dark:border-gray-600 rounded-lg p-1.5">
                         <option value="">Hayvan seç...</option>
                         {hayvanlar.filter(h => h.durum === 'Aktif').map(h => (
                           <option key={h.id} value={h.id}>{h.kupeNo} — {h.irk}</option>
@@ -216,9 +216,9 @@ const VaccineProtocolManager: React.FC = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="text-xs text-earth-600 font-semibold block mb-1">Gruba Toplu</label>
+                      <label className="text-xs text-earth-600 dark:text-gray-400 font-semibold block mb-1">Gruba Toplu</label>
                       <select onChange={e => e.target.value && handleAtaGruba(p, e.target.value)}
-                        className="w-full text-sm border border-earth-300 rounded-lg p-1.5">
+                        className="w-full text-sm border border-earth-300 dark:border-gray-600 rounded-lg p-1.5">
                         <option value="">Grup seç...</option>
                         <option value="all">Bütün Gruplar (Sürü)</option>
                         {gruplar.map(g => (
@@ -227,7 +227,7 @@ const VaccineProtocolManager: React.FC = () => {
                       </select>
                     </div>
                   </div>
-                  <button onClick={() => setAtamaModalId(null)} className="text-xs text-earth-500 hover:underline">İptal</button>
+                  <button onClick={() => setAtamaModalId(null)} className="text-xs text-earth-500 dark:text-gray-400 hover:underline">İptal</button>
                 </div>
               )}
             </div>
@@ -242,13 +242,13 @@ const VaccineProtocolManager: React.FC = () => {
 
           {/* Yeni / Düzenle Protokol Formu */}
           {showForm && (
-            <div className="border-2 border-blue-300 rounded-xl p-3 sm:p-4 bg-blue-50 space-y-3 w-full max-w-full overflow-hidden shadow-sm">
+            <div className="border-2 border-blue-300 rounded-xl p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 space-y-3 w-full max-w-full overflow-hidden shadow-sm">
               <h3 className="font-bold text-blue-800">{editingId ? 'Protokolü Düzenle' : 'Yeni Protokol'}</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input value={ad} onChange={e => setAd(e.target.value)} placeholder="Protokol adı (örn: Buzağı 3'lü Karma)"
-                  className="col-span-1 sm:col-span-2 p-2 border border-earth-300 rounded-lg text-sm bg-white" />
+                  className="col-span-1 sm:col-span-2 p-2 border border-earth-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800" />
                 <select value={hedefTur} onChange={e => setHedefTur(e.target.value as AsiProtokolu['hedefTur'])}
-                  className="p-2 border border-earth-300 rounded-lg text-sm bg-white">
+                  className="p-2 border border-earth-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800">
                   <option value="Tümü">Tümü</option>
                   <option value="İnek">İnek</option>
                   <option value="Tosun">Tosun</option>
@@ -261,13 +261,13 @@ const VaccineProtocolManager: React.FC = () => {
               </div>
 
               <div className="space-y-3">
-                <label className="text-xs font-bold text-earth-700 uppercase">Uygulamalar</label>
+                <label className="text-xs font-bold text-earth-700 dark:text-gray-300 uppercase">Uygulamalar</label>
                 {uygulamalar.map((u, i) => (
-                  <div key={i} className="p-3 bg-white border border-blue-200 rounded-xl space-y-3 relative shadow-xs">
+                  <div key={i} className="p-3 bg-white dark:bg-gray-800 border border-blue-200 rounded-xl space-y-3 relative shadow-xs">
                     <div className="flex items-center space-x-2">
                       <span className="text-xs font-bold text-blue-700 w-5">{i + 1}.</span>
                       <input value={u.ad} onChange={e => { const arr = [...uygulamalar]; arr[i].ad = e.target.value; setUygulamalar(arr); }}
-                        placeholder="Aşı adı" className="flex-1 p-2 border border-earth-300 rounded-lg text-sm" />
+                        placeholder="Aşı adı" className="flex-1 p-2 border border-earth-300 dark:border-gray-600 rounded-lg text-sm" />
                       {uygulamalar.length > 1 && (
                         <button onClick={() => setUygulamalar(uygulamalar.filter((_, j) => j !== i))} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
                           <X className="w-4 h-4" />
@@ -276,22 +276,22 @@ const VaccineProtocolManager: React.FC = () => {
                     </div>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 items-center text-xs">
-                      <div className="flex items-center space-x-1.5 bg-earth-50 p-2 rounded-lg border border-earth-200">
-                        <span className="text-earth-600 font-semibold whitespace-nowrap">Doğumdan</span>
+                      <div className="flex items-center space-x-1.5 bg-earth-50 dark:bg-gray-900 p-2 rounded-lg border border-earth-200 dark:border-gray-700">
+                        <span className="text-earth-600 dark:text-gray-400 font-semibold whitespace-nowrap">Doğumdan</span>
                         <input type="number" min={0} value={u.gunFarki} onChange={e => { const arr = [...uygulamalar]; arr[i].gunFarki = parseInt(e.target.value)||0; setUygulamalar(arr); }}
-                          className="w-14 p-1 border border-earth-300 rounded text-center font-bold text-nature-700 bg-white" />
-                        <span className="text-earth-600 font-semibold whitespace-nowrap">gün sonra</span>
+                          className="w-14 p-1 border border-earth-300 dark:border-gray-600 rounded text-center font-bold text-nature-700 dark:text-nature-300 bg-white dark:bg-gray-800" />
+                        <span className="text-earth-600 dark:text-gray-400 font-semibold whitespace-nowrap">gün sonra</span>
                       </div>
                       
                       <div className="flex items-center space-x-1.5 bg-blue-50/70 p-2 rounded-lg border border-blue-200 flex-wrap">
-                        <span className="text-earth-600 font-semibold whitespace-nowrap">Tekrar:</span>
+                        <span className="text-earth-600 dark:text-gray-400 font-semibold whitespace-nowrap">Tekrar:</span>
                         <input type="number" min={0} placeholder="Gün" value={u.tekrarGun || ''} onChange={e => { const arr = [...uygulamalar]; arr[i].tekrarGun = parseInt(e.target.value) || undefined; setUygulamalar(arr); }}
-                          className="w-14 p-1 border border-blue-300 rounded text-center font-bold text-blue-700 bg-white placeholder:text-blue-300" />
-                        <span className="text-earth-600 font-semibold whitespace-nowrap">günde bir</span>
+                          className="w-14 p-1 border border-blue-300 rounded text-center font-bold text-blue-700 bg-white dark:bg-gray-800 placeholder:text-blue-300" />
+                        <span className="text-earth-600 dark:text-gray-400 font-semibold whitespace-nowrap">günde bir</span>
 
                         {(u.tekrarGun || 0) > 0 && (
                           <div className="flex items-center space-x-1.5 mt-1 w-full pt-1 border-t border-blue-200/60">
-                            <label className="flex items-center space-x-1 cursor-pointer bg-white px-2 py-0.5 rounded border border-blue-200">
+                            <label className="flex items-center space-x-1 cursor-pointer bg-white dark:bg-gray-800 px-2 py-0.5 rounded border border-blue-200">
                               <input type="checkbox" checked={u.surekliTekrar || false} onChange={e => { const arr = [...uygulamalar]; arr[i].surekliTekrar = e.target.checked; setUygulamalar(arr); }} className="w-3 h-3 text-blue-600" />
                               <span className="text-xs font-semibold text-blue-700">Sürekli</span>
                             </label>
@@ -299,19 +299,19 @@ const VaccineProtocolManager: React.FC = () => {
                               <div className="flex items-center space-x-1">
                                 <span className="text-earth-400">veya</span>
                                 <input type="number" min={1} placeholder="Adet" value={u.tekrarSayisi || ''} onChange={e => { const arr = [...uygulamalar]; arr[i].tekrarSayisi = parseInt(e.target.value) || undefined; setUygulamalar(arr); }}
-                                  className="w-12 p-1 border border-earth-300 rounded text-center bg-white" />
-                                <span className="text-earth-500">kez</span>
+                                  className="w-12 p-1 border border-earth-300 dark:border-gray-600 rounded text-center bg-white dark:bg-gray-800" />
+                                <span className="text-earth-500 dark:text-gray-400">kez</span>
                               </div>
                             )}
                           </div>
                         )}
                       </div>
                       
-                      <div className="flex items-center space-x-2 bg-earth-50 p-2 rounded-lg border border-earth-200">
-                        <span className="text-earth-600 font-semibold whitespace-nowrap">Maliyet:</span>
+                      <div className="flex items-center space-x-2 bg-earth-50 dark:bg-gray-900 p-2 rounded-lg border border-earth-200 dark:border-gray-700">
+                        <span className="text-earth-600 dark:text-gray-400 font-semibold whitespace-nowrap">Maliyet:</span>
                         <div className="relative flex-1">
                           <input type="number" min={0} step="0.01" value={u.maliyet || ''} onChange={e => { const arr = [...uygulamalar]; arr[i].maliyet = parseFloat(e.target.value) || undefined; setUygulamalar(arr); }}
-                            className="w-full p-1 pl-5 border border-earth-300 rounded text-xs bg-white font-semibold text-earth-800" placeholder="0.00" />
+                            className="w-full p-1 pl-5 border border-earth-300 dark:border-gray-600 rounded text-xs bg-white dark:bg-gray-800 font-semibold text-earth-800 dark:text-gray-200" placeholder="0.00" />
                           <span className="absolute left-1.5 top-1 text-earth-400 font-bold text-xs">₺</span>
                         </div>
                       </div>
@@ -325,7 +325,7 @@ const VaccineProtocolManager: React.FC = () => {
               </div>
 
               <div className="flex space-x-2 pt-2">
-                <button onClick={resetForm} className="px-4 py-1.5 text-earth-600 text-sm font-semibold hover:bg-earth-100 rounded-lg transition">İptal</button>
+                <button onClick={resetForm} className="px-4 py-1.5 text-earth-600 dark:text-gray-400 text-sm font-semibold hover:bg-earth-100 dark:hover:bg-gray-700 rounded-lg transition">İptal</button>
                 <button onClick={handleSaveProtokol} disabled={saving}
                   className="flex items-center space-x-1 px-4 py-1.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition shadow-sm">
                   <Save className="w-4 h-4" /><span>Kaydet</span>
@@ -335,7 +335,7 @@ const VaccineProtocolManager: React.FC = () => {
           )}
         </div>
 
-        <div className="p-4 border-t border-earth-200">
+        <div className="p-4 border-t border-earth-200 dark:border-gray-700">
           <button onClick={() => setShowForm(true)} disabled={showForm}
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700 disabled:opacity-50 transition">
             <Plus className="w-4 h-4" /><span>Yeni Protokol</span>

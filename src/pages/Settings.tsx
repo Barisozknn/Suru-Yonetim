@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import DataManagement from '../components/DataManagement';
-import { Trash2, LogOut, CalendarClock, Save, CloudOff, UserX, LogIn, User, Download, Upload } from 'lucide-react';
+import { Trash2, LogOut, CalendarClock, Save, CloudOff, UserX, LogIn, User, Download, Upload, Moon, Sun } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useStore } from '../store/useStore';
@@ -8,7 +8,7 @@ import { STANDART_IRKLAR } from '../components/AnimalForm';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
-  const { user, uremeAyarlari, setUremeAyarlari } = useStore();
+  const { user, uremeAyarlari, setUremeAyarlari, theme, setTheme } = useStore();
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [localUremeAyarlari, setLocalUremeAyarlari] = useState(uremeAyarlari);
@@ -262,31 +262,31 @@ const Settings: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-black text-earth-900 tracking-tight">Ayarlar</h1>
-          <p className="text-earth-500 font-medium mt-1">Veri yönetimi ve sistem tercihleri</p>
+          <h1 className="text-3xl font-black text-earth-900 dark:text-gray-100 tracking-tight">Ayarlar</h1>
+          <p className="text-earth-500 dark:text-gray-400 font-medium mt-1">Veri yönetimi ve sistem tercihleri</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Üreme ve Uyarı Ayarları */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-earth-200 space-y-6 md:col-span-2">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 space-y-6 md:col-span-2 transition-colors">
           <div className="flex items-center space-x-3 mb-2">
             <div className="p-2 bg-pink-100 text-pink-600 rounded-lg">
               <CalendarClock className="w-6 h-6" />
             </div>
-            <h2 className="text-xl font-bold text-earth-900">Üreme ve Uyarı Ayarları</h2>
+            <h2 className="text-xl font-bold text-earth-900 dark:text-gray-100">Üreme ve Uyarı Ayarları</h2>
           </div>
           
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-            <p className="text-sm text-earth-600">
+            <p className="text-sm text-earth-600 dark:text-gray-400">
               İşletmenize veya hayvan ırkına özel döngü sürelerini buradan belirleyebilirsiniz.
             </p>
             <div className="flex items-center space-x-2">
-              <label className="text-sm font-bold text-earth-700 whitespace-nowrap">Irk Seçimi:</label>
+              <label className="text-sm font-bold text-earth-700 dark:text-gray-300 whitespace-nowrap">Irk Seçimi:</label>
               <select 
                 value={selectedIrk}
                 onChange={(e) => setSelectedIrk(e.target.value)}
-                className="p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500 bg-white"
+                className="p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 bg-white dark:bg-gray-700 text-earth-900 dark:text-white"
               >
                 <option value="Varsayılan">Varsayılan (Tüm Irklar)</option>
                 <optgroup label="Özel Ayar Tanımlanabilecek Irklar">
@@ -300,39 +300,39 @@ const Settings: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-earth-700">Gebelik Süresi (Gün)</label>
+              <label className="text-xs font-bold text-earth-700 dark:text-gray-300">Gebelik Süresi (Gün)</label>
               <input 
                 type="number" 
                 value={currentValues.gebelikSuresi}
                 onChange={e => updateCurrentValues('gebelikSuresi', Number(e.target.value))}
-                className="w-full p-3 border-2 border-earth-200 rounded-xl focus:ring-2 focus:ring-nature-500 outline-none"
+                className="w-full p-3 border-2 border-earth-200 dark:border-gray-700 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-nature-500 outline-none"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-earth-700">Kızgınlık Döngüsü (Gün)</label>
+              <label className="text-xs font-bold text-earth-700 dark:text-gray-300">Kızgınlık Döngüsü (Gün)</label>
               <input 
                 type="number" 
                 value={currentValues.kizginlikDongusu}
                 onChange={e => updateCurrentValues('kizginlikDongusu', Number(e.target.value))}
-                className="w-full p-3 border-2 border-earth-200 rounded-xl focus:ring-2 focus:ring-nature-500 outline-none"
+                className="w-full p-3 border-2 border-earth-200 dark:border-gray-700 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-nature-500 outline-none"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-earth-700">Kuruya Çıkarma (Doğumdan X gün önce)</label>
+              <label className="text-xs font-bold text-earth-700 dark:text-gray-300">Kuruya Çıkarma (Doğumdan X gün önce)</label>
               <input 
                 type="number" 
                 value={currentValues.kuruyaCikarma}
                 onChange={e => updateCurrentValues('kuruyaCikarma', Number(e.target.value))}
-                className="w-full p-3 border-2 border-earth-200 rounded-xl focus:ring-2 focus:ring-nature-500 outline-none"
+                className="w-full p-3 border-2 border-earth-200 dark:border-gray-700 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-nature-500 outline-none"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-earth-700">Yeniden Tohumlama (Doğumdan X gün sonra)</label>
+              <label className="text-xs font-bold text-earth-700 dark:text-gray-300">Yeniden Tohumlama (Doğumdan X gün sonra)</label>
               <input 
                 type="number" 
                 value={currentValues.yenidenTohumlamaUyarisi}
                 onChange={e => updateCurrentValues('yenidenTohumlamaUyarisi', Number(e.target.value))}
-                className="w-full p-3 border-2 border-earth-200 rounded-xl focus:ring-2 focus:ring-nature-500 outline-none"
+                className="w-full p-3 border-2 border-earth-200 dark:border-gray-700 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-nature-500 outline-none"
               />
             </div>
           </div>
@@ -348,21 +348,60 @@ const Settings: React.FC = () => {
           </div>
         </div>
 
+        {/* Görünüm Ayarları */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 space-y-6 md:col-span-2 transition-colors">
+          <div className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-lg">
+              <Moon className="w-6 h-6" />
+            </div>
+            <h2 className="text-xl font-bold text-earth-900 dark:text-gray-100">Görünüm Ayarları</h2>
+          </div>
+          
+          <p className="text-sm text-earth-600 dark:text-gray-400">
+            Uygulamanın arayüz temasını buradan değiştirebilirsiniz.
+          </p>
+
+          <div className="grid grid-cols-2 gap-4 pt-2">
+            <button 
+              onClick={() => setTheme('light')}
+              className={`flex items-center justify-center space-x-3 p-4 rounded-xl border-2 transition-all ${
+                theme === 'light' 
+                  ? 'border-nature-500 bg-nature-50 text-nature-700 dark:bg-nature-900/30 dark:border-nature-400 dark:text-nature-400' 
+                  : 'border-earth-200 dark:border-gray-700 text-earth-600 dark:text-gray-400 hover:bg-earth-50 dark:hover:bg-gray-700'
+              }`}
+            >
+              <Sun className="w-6 h-6" />
+              <span className="font-bold">Aydınlık Mod</span>
+            </button>
+            <button 
+              onClick={() => setTheme('dark')}
+              className={`flex items-center justify-center space-x-3 p-4 rounded-xl border-2 transition-all ${
+                theme === 'dark' 
+                  ? 'border-nature-500 bg-nature-50 text-nature-700 dark:bg-nature-900/30 dark:border-nature-400 dark:text-nature-400' 
+                  : 'border-earth-200 dark:border-gray-700 text-earth-600 dark:text-gray-400 hover:bg-earth-50 dark:hover:bg-gray-700'
+              }`}
+            >
+              <Moon className="w-6 h-6" />
+              <span className="font-bold">Karanlık Mod</span>
+            </button>
+          </div>
+        </div>
+
         {/* Veri Yönetimi */}
         <div className="md:col-span-2">
           <DataManagement />
         </div>
         
         {/* Hesap Yönetimi */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-earth-200 space-y-6 md:col-span-2">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 space-y-6 md:col-span-2 transition-colors">
           <div className="flex items-center space-x-3 mb-2">
             <div className={`p-2 rounded-lg ${useStore.getState().isGuest ? 'bg-nature-100 text-nature-600' : 'bg-orange-100 text-orange-600'}`}>
               {useStore.getState().isGuest ? <User className="w-6 h-6" /> : <LogOut className="w-6 h-6" />}
             </div>
-            <h2 className="text-xl font-bold text-earth-900">Hesap Yönetimi</h2>
+            <h2 className="text-xl font-bold text-earth-900 dark:text-gray-100">Hesap Yönetimi</h2>
           </div>
           
-          <p className="text-sm text-earth-600">
+          <p className="text-sm text-earth-600 dark:text-gray-400">
             {useStore.getState().isGuest 
               ? 'Verilerinizi buluta yedeklemek ve cihazlar arası eşitlemek için bir hesaba giriş yapın.' 
               : 'Sistemden güvenli bir şekilde çıkış yapın.'}
@@ -372,8 +411,8 @@ const Settings: React.FC = () => {
             onClick={handleLogout}
             className={`flex items-center justify-center space-x-2 w-full md:w-auto px-6 py-3 border rounded-xl font-bold transition ${
               useStore.getState().isGuest
-                ? 'bg-nature-50 text-nature-700 border-nature-200 hover:bg-nature-100'
-                : 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100'
+                ? 'bg-nature-50 dark:bg-nature-900/20 text-nature-700 dark:text-nature-400 border-nature-200 dark:border-nature-800 hover:bg-nature-100 dark:hover:bg-nature-900/40'
+                : 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800 hover:bg-orange-100 dark:hover:bg-orange-900/40'
             }`}
           >
             {useStore.getState().isGuest ? <LogIn className="w-5 h-5" /> : <LogOut className="w-5 h-5" />}
@@ -382,15 +421,15 @@ const Settings: React.FC = () => {
         </div>
 
         {/* JSON Yedekleme */}
-        <div className="bg-indigo-50 p-6 rounded-2xl shadow-sm border border-indigo-200 space-y-6 md:col-span-2">
+        <div className="bg-indigo-50 dark:bg-indigo-900/20 p-6 rounded-2xl shadow-sm border border-indigo-200 dark:border-indigo-800/50 space-y-6 md:col-span-2 transition-colors">
           <div className="flex items-center space-x-3 mb-2">
             <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
               <Download className="w-6 h-6" />
             </div>
-            <h2 className="text-xl font-bold text-indigo-900">Tam Yedekleme (JSON)</h2>
+            <h2 className="text-xl font-bold text-indigo-900 dark:text-indigo-300">Tam Yedekleme (JSON)</h2>
           </div>
           
-          <p className="text-sm text-indigo-700">
+          <p className="text-sm text-indigo-700 dark:text-indigo-400">
             Sistemdeki tüm verilerinizi (Çiftlikler, Hayvanlar, Ayarlar vb.) tek bir JSON dosyası olarak cihazınıza indirebilir ve başka bir cihazda geri yükleyebilirsiniz.
           </p>
 
@@ -405,7 +444,7 @@ const Settings: React.FC = () => {
 
             <button 
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center justify-center space-x-2 w-full sm:w-auto px-6 py-3 border-2 border-indigo-600 text-indigo-700 bg-white rounded-xl font-bold hover:bg-indigo-50 transition shadow-sm"
+              className="flex items-center justify-center space-x-2 w-full sm:w-auto px-6 py-3 border-2 border-indigo-600 dark:border-indigo-500 text-indigo-700 dark:text-indigo-400 bg-white dark:bg-transparent rounded-xl font-bold hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition shadow-sm"
             >
               <Upload className="w-5 h-5" />
               <span>Verileri Yükle</span>
@@ -421,15 +460,15 @@ const Settings: React.FC = () => {
         </div>
 
         {/* Tehlikeli Alan */}
-        <div className="bg-red-50 p-6 rounded-2xl shadow-sm border border-red-200 space-y-6 md:col-span-2">
+        <div className="bg-red-50 dark:bg-red-900/20 p-6 rounded-2xl shadow-sm border border-red-200 dark:border-red-800/50 space-y-6 md:col-span-2 transition-colors">
           <div className="flex items-center space-x-3 mb-2">
             <div className="p-2 bg-red-100 text-red-600 rounded-lg">
               <Trash2 className="w-6 h-6" />
             </div>
-            <h2 className="text-xl font-bold text-red-900">Tehlikeli Alan</h2>
+            <h2 className="text-xl font-bold text-red-900 dark:text-red-400">Tehlikeli Alan</h2>
           </div>
           
-          <p className="text-sm text-red-700">Dikkat: Bu alandaki işlemler geri alınamaz verilerinizin silinmesine yol açar.</p>
+          <p className="text-sm text-red-700 dark:text-red-400">Dikkat: Bu alandaki işlemler geri alınamaz verilerinizin silinmesine yol açar.</p>
 
           <div className="space-y-4 pt-2">
             {(useStore.getState().isGuest || !user) && (
@@ -453,10 +492,10 @@ const Settings: React.FC = () => {
                 </button>
                 
                 <div className="pt-4 mt-4 border-t border-red-200">
-                  <p className="text-sm text-red-700 font-bold mb-3 flex items-center"><UserX className="w-4 h-4 mr-2"/> Hesabı Tamamen Kapat</p>
+                  <p className="text-sm text-red-700 dark:text-red-400 font-bold mb-3 flex items-center"><UserX className="w-4 h-4 mr-2"/> Hesabı Tamamen Kapat</p>
                   <button 
                     onClick={handleDeleteAccount}
-                    className="flex items-center justify-center space-x-2 w-full py-3 border-2 border-red-600 text-red-700 rounded-xl font-bold hover:bg-red-600 hover:text-white transition shadow-sm"
+                    className="flex items-center justify-center space-x-2 w-full py-3 border-2 border-red-600 dark:border-red-500 text-red-700 dark:text-red-400 rounded-xl font-bold hover:bg-red-600 hover:text-white dark:hover:bg-red-600 dark:hover:text-white transition shadow-sm"
                   >
                     <UserX className="w-5 h-5" />
                     <span>Hesabımı ve Tüm Verilerimi Sil</span>

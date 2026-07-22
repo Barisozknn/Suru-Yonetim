@@ -93,7 +93,7 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
   };
 
   if (hayvan === undefined) {
-    return <div className="text-center py-12 text-earth-600 font-bold">Yükleniyor...</div>;
+    return <div className="text-center py-12 text-earth-600 dark:text-gray-400 font-bold">Yükleniyor...</div>;
   }
 
   if (!hayvan) {
@@ -129,16 +129,16 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
         <div className="flex items-center space-x-4">
           <button
             onClick={onBack}
-            className="p-2 bg-earth-200 text-earth-700 rounded-full hover:bg-nature-500 hover:text-white transition"
+            className="p-2 bg-earth-200 text-earth-700 dark:text-gray-300 rounded-full hover:bg-nature-500 hover:text-white transition"
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
           <div>
-            <h2 className="text-2xl font-black text-earth-900">{hayvan.kupeNo}</h2>
-            <p className="text-earth-600 font-medium">{hayvan.tur} &bull; {hayvan.irk}</p>
+            <h2 className="text-2xl font-black text-earth-900 dark:text-gray-100">{hayvan.kupeNo}</h2>
+            <p className="text-earth-600 dark:text-gray-400 font-medium">{hayvan.tur} &bull; {hayvan.irk}</p>
           </div>
         </div>
-        <button onClick={() => setIsEditFormOpen(true)} className="flex items-center space-x-2 px-4 py-2 border border-nature-500 text-nature-700 rounded-lg font-bold hover:bg-nature-50 transition">
+        <button onClick={() => setIsEditFormOpen(true)} className="flex items-center space-x-2 px-4 py-2 border border-nature-500 text-nature-700 dark:text-nature-300 rounded-lg font-bold hover:bg-nature-50 dark:hover:bg-nature-900/30 transition">
           <Edit2 className="w-4 h-4" />
           <span className="hidden sm:inline">Düzenle</span>
         </button>
@@ -152,7 +152,7 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
             onClick={() => setActiveTab(tab.id as any)}
             className={`flex items-center space-x-2 px-4 py-3 rounded-lg font-bold whitespace-nowrap transition ${activeTab === tab.id
                 ? 'bg-nature-600 text-white shadow-md'
-                : 'bg-white text-earth-600 border border-earth-200 hover:bg-earth-100'
+                : 'bg-white dark:bg-gray-800 text-earth-600 dark:text-gray-400 border border-earth-200 dark:border-gray-700 hover:bg-earth-100 dark:hover:bg-gray-700'
               }`}
           >
             {tab.icon}
@@ -162,37 +162,37 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-earth-200 min-h-[300px]">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 min-h-[300px]">
         {activeTab === 'ozet' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {/* Fotoğraf */}
             {hayvan.fotografUrl && (
               <div className="sm:col-span-2 flex justify-center">
-                <img src={hayvan.fotografUrl} alt={hayvan.kupeNo} className="w-40 h-40 rounded-2xl object-cover border-4 border-nature-200 shadow-md" />
+                <img src={hayvan.fotografUrl} alt={hayvan.kupeNo} className="w-40 h-40 rounded-2xl object-cover border-4 border-nature-200 dark:border-nature-800 shadow-md" />
               </div>
             )}
             <div className="space-y-1">
-              <label className="text-sm font-bold text-earth-500 uppercase tracking-wider">Durum</label>
-              <p className="text-lg font-semibold text-earth-900">{hayvan.durum}</p>
+              <label className="text-sm font-bold text-earth-500 dark:text-gray-400 uppercase tracking-wider">Durum</label>
+              <p className="text-lg font-semibold text-earth-900 dark:text-gray-100">{hayvan.durum}</p>
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-bold text-earth-500 uppercase tracking-wider">Grup</label>
-              <p className="text-lg font-semibold text-earth-900">{grup?.ad || 'Atanmamış'}</p>
+              <label className="text-sm font-bold text-earth-500 dark:text-gray-400 uppercase tracking-wider">Grup</label>
+              <p className="text-lg font-semibold text-earth-900 dark:text-gray-100">{grup?.ad || 'Atanmamış'}</p>
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-bold text-earth-500 uppercase tracking-wider">Cinsiyet</label>
-              <p className="text-lg font-semibold text-earth-900">{hayvan.cinsiyet}</p>
+              <label className="text-sm font-bold text-earth-500 dark:text-gray-400 uppercase tracking-wider">Cinsiyet</label>
+              <p className="text-lg font-semibold text-earth-900 dark:text-gray-100">{hayvan.cinsiyet}</p>
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-bold text-earth-500 uppercase tracking-wider">Doğum Tarihi</label>
-              <p className="text-lg font-semibold text-earth-900">
+              <label className="text-sm font-bold text-earth-500 dark:text-gray-400 uppercase tracking-wider">Doğum Tarihi</label>
+              <p className="text-lg font-semibold text-earth-900 dark:text-gray-100">
                 {new Date(hayvan.dogumTarihi).toLocaleDateString('tr-TR')}
-                <span className="text-sm font-bold text-earth-500 ml-2">({getYasMetni(hayvan.dogumTarihi)})</span>
+                <span className="text-sm font-bold text-earth-500 dark:text-gray-400 ml-2">({getYasMetni(hayvan.dogumTarihi)})</span>
               </p>
             </div>
-            <div className="space-y-1 sm:col-span-2 bg-nature-50 p-4 rounded-xl border border-nature-200 flex justify-between items-center">
-              <label className="text-sm font-bold text-nature-700 uppercase tracking-wider">Güncel Ağırlık</label>
-              <p className="text-3xl font-black text-nature-800">{hayvan.guncelAgirlikKg} <span className="text-lg font-bold">kg</span></p>
+            <div className="space-y-1 sm:col-span-2 bg-nature-50 dark:bg-nature-900/30 p-4 rounded-xl border border-nature-200 dark:border-nature-800 flex justify-between items-center">
+              <label className="text-sm font-bold text-nature-700 dark:text-nature-300 uppercase tracking-wider">Güncel Ağırlık</label>
+              <p className="text-3xl font-black text-nature-800 dark:text-nature-200">{hayvan.guncelAgirlikKg} <span className="text-lg font-bold">kg</span></p>
             </div>
 
             {/* Dişi Performans Kartı */}
@@ -203,45 +203,45 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
                   <h3 className="text-lg font-black">Performans Verileri</h3>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div className="bg-white p-3 rounded-xl border border-purple-100">
-                    <p className="text-xs font-bold text-earth-500 mb-1">Güncel Laktasyon Süresi</p>
-                    <p className="font-bold text-earth-900">{formatDaysToText(femalePerf.laktasyonSuresiGun)}</p>
+                  <div className="bg-white dark:bg-gray-800 p-3 rounded-xl border border-purple-100">
+                    <p className="text-xs font-bold text-earth-500 dark:text-gray-400 mb-1">Güncel Laktasyon Süresi</p>
+                    <p className="font-bold text-earth-900 dark:text-gray-100">{formatDaysToText(femalePerf.laktasyonSuresiGun)}</p>
                   </div>
-                  <div className="bg-white p-3 rounded-xl border border-purple-100">
-                    <p className="text-xs font-bold text-earth-500 mb-1">Ort. Laktasyon Süresi</p>
-                    <p className="font-bold text-earth-900">
+                  <div className="bg-white dark:bg-gray-800 p-3 rounded-xl border border-purple-100">
+                    <p className="text-xs font-bold text-earth-500 dark:text-gray-400 mb-1">Ort. Laktasyon Süresi</p>
+                    <p className="font-bold text-earth-900 dark:text-gray-100">
                       {femalePerf.ortalamaLaktasyonSuresiGun !== null ? `${femalePerf.ortalamaLaktasyonSuresiGun} Gün` : '-'}
                     </p>
                   </div>
-                  <div className="bg-white p-3 rounded-xl border border-purple-100">
-                    <p className="text-xs font-bold text-earth-500 mb-1">Laktasyon Sayısı</p>
-                    <p className="font-bold text-earth-900">{femalePerf.laktasyonSayisi > 0 ? femalePerf.laktasyonSayisi : '-'}</p>
+                  <div className="bg-white dark:bg-gray-800 p-3 rounded-xl border border-purple-100">
+                    <p className="text-xs font-bold text-earth-500 dark:text-gray-400 mb-1">Laktasyon Sayısı</p>
+                    <p className="font-bold text-earth-900 dark:text-gray-100">{femalePerf.laktasyonSayisi > 0 ? femalePerf.laktasyonSayisi : '-'}</p>
                   </div>
-                  <div className="bg-white p-3 rounded-xl border border-purple-100">
-                    <p className="text-xs font-bold text-earth-500 mb-1">İlk Tohumlama Yaşı</p>
-                    <p className="font-bold text-earth-900">{formatDaysToText(femalePerf.ilkTohumlamaYasiGun)}</p>
+                  <div className="bg-white dark:bg-gray-800 p-3 rounded-xl border border-purple-100">
+                    <p className="text-xs font-bold text-earth-500 dark:text-gray-400 mb-1">İlk Tohumlama Yaşı</p>
+                    <p className="font-bold text-earth-900 dark:text-gray-100">{formatDaysToText(femalePerf.ilkTohumlamaYasiGun)}</p>
                   </div>
-                  <div className="bg-white p-3 rounded-xl border border-purple-100">
-                    <p className="text-xs font-bold text-earth-500 mb-1">İlk Gebelik Yaşı</p>
-                    <p className="font-bold text-earth-900">{formatDaysToText(femalePerf.ilkGebelikYasiGun)}</p>
+                  <div className="bg-white dark:bg-gray-800 p-3 rounded-xl border border-purple-100">
+                    <p className="text-xs font-bold text-earth-500 dark:text-gray-400 mb-1">İlk Gebelik Yaşı</p>
+                    <p className="font-bold text-earth-900 dark:text-gray-100">{formatDaysToText(femalePerf.ilkGebelikYasiGun)}</p>
                   </div>
-                  <div className="bg-white p-3 rounded-xl border border-purple-100">
-                    <p className="text-xs font-bold text-earth-500 mb-1">İlkine Buzağılama Yaşı</p>
-                    <p className="font-bold text-earth-900">{formatDaysToText(femalePerf.ilkBuzagilamaYasiGun)}</p>
+                  <div className="bg-white dark:bg-gray-800 p-3 rounded-xl border border-purple-100">
+                    <p className="text-xs font-bold text-earth-500 dark:text-gray-400 mb-1">İlkine Buzağılama Yaşı</p>
+                    <p className="font-bold text-earth-900 dark:text-gray-100">{formatDaysToText(femalePerf.ilkBuzagilamaYasiGun)}</p>
                   </div>
-                  <div className="bg-white p-3 rounded-xl border border-purple-100">
-                    <p className="text-xs font-bold text-earth-500 mb-1">Buzağılama Aralığı</p>
-                    <p className="font-bold text-earth-900">{formatDaysToText(femalePerf.buzagilamaArasiSureGun)}</p>
+                  <div className="bg-white dark:bg-gray-800 p-3 rounded-xl border border-purple-100">
+                    <p className="text-xs font-bold text-earth-500 dark:text-gray-400 mb-1">Buzağılama Aralığı</p>
+                    <p className="font-bold text-earth-900 dark:text-gray-100">{formatDaysToText(femalePerf.buzagilamaArasiSureGun)}</p>
                   </div>
-                  <div className="bg-white p-3 rounded-xl border border-purple-100">
-                    <p className="text-xs font-bold text-earth-500 mb-1">Servis Periyodu</p>
-                    <p className="font-bold text-earth-900">
+                  <div className="bg-white dark:bg-gray-800 p-3 rounded-xl border border-purple-100">
+                    <p className="text-xs font-bold text-earth-500 dark:text-gray-400 mb-1">Servis Periyodu</p>
+                    <p className="font-bold text-earth-900 dark:text-gray-100">
                       {femalePerf.servisPeriyoduGun !== null ? `${femalePerf.servisPeriyoduGun} Gün` : '-'}
                     </p>
                   </div>
-                  <div className="bg-white p-3 rounded-xl border border-purple-100">
-                    <p className="text-xs font-bold text-earth-500 mb-1">Gebelik Başına Tohum.</p>
-                    <p className="font-bold text-earth-900">{femalePerf.gebelikBasinaTohumlama !== null ? femalePerf.gebelikBasinaTohumlama : '-'}</p>
+                  <div className="bg-white dark:bg-gray-800 p-3 rounded-xl border border-purple-100">
+                    <p className="text-xs font-bold text-earth-500 dark:text-gray-400 mb-1">Gebelik Başına Tohum.</p>
+                    <p className="font-bold text-earth-900 dark:text-gray-100">{femalePerf.gebelikBasinaTohumlama !== null ? femalePerf.gebelikBasinaTohumlama : '-'}</p>
                   </div>
                 </div>
               </div>
@@ -249,19 +249,19 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
 
             {/* Erkek Performans Kartı */}
             {isMale && malePerf && (
-              <div className="sm:col-span-2 bg-indigo-50 p-5 rounded-2xl border border-indigo-200 mt-2">
+              <div className="sm:col-span-2 bg-indigo-50 dark:bg-indigo-900/20 p-5 rounded-2xl border border-indigo-200 mt-2">
                 <div className="flex items-center space-x-2 text-indigo-800 mb-4">
                   <Trophy className="w-6 h-6" />
                   <h3 className="text-lg font-black">Performans Verileri</h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-white p-3 rounded-xl border border-indigo-100">
-                    <p className="text-xs font-bold text-earth-500 mb-1">İlkine Damızlıkta Kullanma Yaşı</p>
-                    <p className="font-bold text-earth-900">{formatDaysToText(malePerf.ilkDamizlikYasiGun)}</p>
+                  <div className="bg-white dark:bg-gray-800 p-3 rounded-xl border border-indigo-100">
+                    <p className="text-xs font-bold text-earth-500 dark:text-gray-400 mb-1">İlkine Damızlıkta Kullanma Yaşı</p>
+                    <p className="font-bold text-earth-900 dark:text-gray-100">{formatDaysToText(malePerf.ilkDamizlikYasiGun)}</p>
                   </div>
-                  <div className="bg-white p-3 rounded-xl border border-indigo-100">
-                    <p className="text-xs font-bold text-earth-500 mb-1">Günlük Canlı Ağırlık Artışı</p>
-                    <p className="font-bold text-earth-900">
+                  <div className="bg-white dark:bg-gray-800 p-3 rounded-xl border border-indigo-100">
+                    <p className="text-xs font-bold text-earth-500 dark:text-gray-400 mb-1">Günlük Canlı Ağırlık Artışı</p>
+                    <p className="font-bold text-earth-900 dark:text-gray-100">
                       {malePerf.gunlukAgirlikArtisiKg !== null ? `${malePerf.gunlukAgirlikArtisiKg} kg/gün` : '-'}
                     </p>
                   </div>
@@ -271,7 +271,7 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
 
             {/* Buzağı Gelişim Kartı */}
             {(hayvan.tur === 'Buzağı' || calculateAgeInDays(hayvan.dogumTarihi) <= 180) && (
-              <div className="sm:col-span-2 bg-blue-50 p-5 rounded-2xl border border-blue-200 mt-4">
+              <div className="sm:col-span-2 bg-blue-50 dark:bg-blue-900/20 p-5 rounded-2xl border border-blue-200 mt-4">
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center space-x-2 text-blue-800">
                     <Droplets className="w-6 h-6" />
@@ -283,17 +283,17 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="bg-white p-3 rounded-xl border border-blue-100 flex items-center space-x-3">
+                  <div className="bg-white dark:bg-gray-800 p-3 rounded-xl border border-blue-100 flex items-center space-x-3">
                     <Droplets className={`w-8 h-8 ${buzagiKaydi?.agizSutuVerildi ? 'text-blue-500' : 'text-earth-300'}`} />
                     <div>
-                      <p className="text-xs font-bold text-earth-500">Ağız Sütü</p>
-                      <p className="font-bold text-earth-900">{buzagiKaydi?.agizSutuVerildi ? `${buzagiKaydi.agizSutuMiktarLt || '-'} Lt (${buzagiKaydi.agizSutuSaatSonra || '-'} Saat)` : 'Verilmedi'}</p>
+                      <p className="text-xs font-bold text-earth-500 dark:text-gray-400">Ağız Sütü</p>
+                      <p className="font-bold text-earth-900 dark:text-gray-100">{buzagiKaydi?.agizSutuVerildi ? `${buzagiKaydi.agizSutuMiktarLt || '-'} Lt (${buzagiKaydi.agizSutuSaatSonra || '-'} Saat)` : 'Verilmedi'}</p>
                     </div>
                   </div>
 
-                  <div className="bg-white p-3 rounded-xl border border-blue-100 flex flex-col justify-center">
-                    <p className="text-xs font-bold text-earth-500 mb-1">Doğum / Sütten Kesim Hedefi</p>
-                    <p className="font-bold text-earth-900">
+                  <div className="bg-white dark:bg-gray-800 p-3 rounded-xl border border-blue-100 flex flex-col justify-center">
+                    <p className="text-xs font-bold text-earth-500 dark:text-gray-400 mb-1">Doğum / Sütten Kesim Hedefi</p>
+                    <p className="font-bold text-earth-900 dark:text-gray-100">
                       {buzagiKaydi?.dogumAgirligiKg || '-'} kg <span className="text-earth-400 font-normal mx-1">/</span> {buzagiKaydi?.hedefSuttenKesimAgirligiKg || '-'} kg
                     </p>
                   </div>
@@ -311,9 +311,9 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
                   )}
 
                   {hayvan.notlar && (
-                    <div className="sm:col-span-3 bg-white p-3 rounded-xl border border-blue-100 mt-2">
-                      <p className="text-xs font-bold text-earth-500 mb-1">Doğum Değerlendirmesi / Notlar</p>
-                      <p className="text-sm font-semibold text-earth-900">{hayvan.notlar}</p>
+                    <div className="sm:col-span-3 bg-white dark:bg-gray-800 p-3 rounded-xl border border-blue-100 mt-2">
+                      <p className="text-xs font-bold text-earth-500 dark:text-gray-400 mb-1">Doğum Değerlendirmesi / Notlar</p>
+                      <p className="text-sm font-semibold text-earth-900 dark:text-gray-100">{hayvan.notlar}</p>
                     </div>
                   )}
                 </div>
@@ -344,7 +344,7 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
             ['Boğa', 'Tosun'].includes(hayvan.tur) ? (
               <MaleReproductionTimeline hayvan={hayvan} />
             ) : (
-              <div className="text-center py-12 text-earth-500 bg-earth-50 rounded-xl border border-earth-200">
+              <div className="text-center py-12 text-earth-500 dark:text-gray-400 bg-earth-50 dark:bg-gray-900 rounded-xl border border-earth-200 dark:border-gray-700">
                 <CalendarDays className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>Bu hayvan damızlık vasıfta veya yaşta değildir. Sadece Boğa ve Tosunlar için üreme kaydı girilebilir.</p>
               </div>
@@ -355,10 +355,10 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
         )}
 
         {activeTab === 'notlar' && (
-          <div className="bg-white p-6 rounded-xl border border-earth-200 shadow-sm flex flex-col h-[500px]">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-earth-200 dark:border-gray-700 shadow-sm flex flex-col h-[500px]">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-earth-900 flex items-center space-x-2">
-                <FileText className="w-5 h-5 text-earth-500" />
+              <h3 className="font-bold text-earth-900 dark:text-gray-100 flex items-center space-x-2">
+                <FileText className="w-5 h-5 text-earth-500 dark:text-gray-400" />
                 <span>Hayvan Notları</span>
               </h3>
               <button
@@ -371,7 +371,7 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
               </button>
             </div>
             <textarea
-              className="flex-1 w-full p-4 border border-earth-300 rounded-xl focus:ring-2 focus:ring-nature-500 focus:border-transparent resize-none text-earth-800 bg-earth-50"
+              className="flex-1 w-full p-4 border border-earth-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-nature-500 focus:border-transparent resize-none text-earth-800 dark:text-gray-200 bg-earth-50 dark:bg-gray-900"
               placeholder="Bu hayvana ait özel notlarınızı, tedavi detaylarını, alışkanlıklarını veya diğer bilgileri buraya yazabilirsiniz..."
               value={notlarText}
               onChange={(e) => setNotlarText(e.target.value)}

@@ -42,7 +42,7 @@ const AnimalDetailWrapper = () => {
 
 
 function App() {
-  const { setUser, setSession } = useStore();
+  const { setUser, setSession, theme } = useStore();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -69,6 +69,13 @@ function App() {
     return () => subscription.unsubscribe();
   }, [setSession, setUser]);
 
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
 
   return (
     <BrowserRouter>

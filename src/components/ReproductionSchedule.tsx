@@ -23,9 +23,9 @@ const addDays = (dateStr: string, days: number) => {
 };
 
 const EVENT_CONFIG: Record<EventType, { icon: React.ReactNode; color: string; bg: string }> = {
-  'Kızgınlık Beklentisi': { icon: <Heart className="w-4 h-4" />, color: 'text-pink-600', bg: 'bg-pink-50 border-pink-200' },
-  'Tahmini Doğum': { icon: <Droplets className="w-4 h-4" />, color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
-  'Kuruya Çıkarma Önerisi': { icon: <CalendarCheck className="w-4 h-4" />, color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200' },
+  'Kızgınlık Beklentisi': { icon: <Heart className="w-4 h-4" />, color: 'text-pink-600', bg: 'bg-pink-50 dark:bg-pink-900/20 border-pink-200' },
+  'Tahmini Doğum': { icon: <Droplets className="w-4 h-4" />, color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-900/20 border-green-200' },
+  'Kuruya Çıkarma Önerisi': { icon: <CalendarCheck className="w-4 h-4" />, color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-900/20 border-orange-200' },
 };
 
 const ReproductionSchedule: React.FC = () => {
@@ -93,23 +93,23 @@ const ReproductionSchedule: React.FC = () => {
 
   return (
     <div className="w-full">
-      <div className="bg-white rounded-2xl shadow-sm border border-earth-200 flex flex-col h-full">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex flex-col h-full">
 
-        <div className="p-4 border-b border-earth-200 flex justify-between items-center bg-pink-50 rounded-t-2xl flex-shrink-0">
+        <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex justify-between items-center bg-pink-50 dark:bg-pink-900/20 rounded-t-2xl flex-shrink-0">
           <div className="flex items-center space-x-2">
             <CalendarDays className="w-6 h-6 text-pink-600" />
             <div>
-              <h2 className="text-xl font-black text-earth-900">Üreme Takvimi</h2>
-              <p className="text-xs text-earth-500">Yaklaşan doğumlar, kuruya çıkarma ve kızgınlık beklentileri</p>
+              <h2 className="text-xl font-black text-earth-900 dark:text-gray-100">Üreme Takvimi</h2>
+              <p className="text-xs text-earth-500 dark:text-gray-400">Yaklaşan doğumlar, kuruya çıkarma ve kızgınlık beklentileri</p>
             </div>
           </div>
         </div>
 
         {/* Filtreler */}
-        <div className="flex items-center space-x-2 p-4 border-b border-earth-100 overflow-x-auto">
+        <div className="flex items-center space-x-2 p-4 border-b border-earth-100 dark:border-gray-700 overflow-x-auto">
           {(['Tümü', 'Kızgınlık Beklentisi', 'Kuruya Çıkarma Önerisi', 'Tahmini Doğum'] as const).map(f => (
             <button key={f} onClick={() => setFiltre(f)}
-              className={`px-3 py-1.5 text-sm font-bold rounded-lg whitespace-nowrap transition ${filtre === f ? 'bg-earth-800 text-white' : 'bg-earth-100 text-earth-600 hover:bg-earth-200'}`}>
+              className={`px-3 py-1.5 text-sm font-bold rounded-lg whitespace-nowrap transition ${filtre === f ? 'bg-earth-800 text-white' : 'bg-earth-100 dark:bg-gray-800 text-earth-600 dark:text-gray-400 hover:bg-earth-200'}`}>
               {f}
             </button>
           ))}
@@ -130,20 +130,20 @@ const ReproductionSchedule: React.FC = () => {
               <div 
                 key={idx} 
                 onClick={() => navigate(`/hayvanlar?id=${plan.hayvanId}&tab=ureme`)}
-                className={`flex items-center space-x-3 p-3 rounded-xl border cursor-pointer hover:shadow-md transition ${isOverdue ? 'bg-red-50 border-red-300 shadow-sm hover:bg-red-100' : `${config.bg} hover:brightness-95`}`}
+                className={`flex items-center space-x-3 p-3 rounded-xl border cursor-pointer hover:shadow-md transition ${isOverdue ? 'bg-red-50 dark:bg-red-900/20 border-red-300 shadow-sm hover:bg-red-100' : `${config.bg} hover:brightness-95`}`}
               >
                 <div className={`flex-shrink-0 ${isOverdue ? 'text-red-600' : config.color}`}>{config.icon}</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2 flex-wrap gap-1">
-                    <span className="font-bold text-earth-900 text-sm">{plan.kupeNo}</span>
-                    <span className="text-xs text-earth-500 font-mono bg-white/70 px-2 py-0.5 rounded border border-earth-200">{plan.tur}</span>
+                    <span className="font-bold text-earth-900 dark:text-gray-100 text-sm">{plan.kupeNo}</span>
+                    <span className="text-xs text-earth-500 dark:text-gray-400 font-mono bg-white/70 px-2 py-0.5 rounded border border-earth-200 dark:border-gray-700">{plan.tur}</span>
                   </div>
                   <div className="flex items-center space-x-3 mt-0.5">
                     <span className={`text-xs font-bold ${isOverdue ? 'text-red-700' : config.color}`}>{plan.olayTuru}</span>
                   </div>
                 </div>
                 <div className="text-right flex flex-col items-end">
-                  <span className={`text-sm font-bold ${isOverdue ? 'text-red-700' : 'text-earth-800'}`}>{new Date(plan.tarih).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                  <span className={`text-sm font-bold ${isOverdue ? 'text-red-700' : 'text-earth-800 dark:text-gray-200'}`}>{new Date(plan.tarih).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                   {isOverdue && <span className="text-[10px] font-bold text-red-600 uppercase mt-1 bg-red-100 px-2 py-0.5 rounded-full border border-red-200">Gecikti</span>}
                 </div>
               </div>

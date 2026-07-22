@@ -109,54 +109,54 @@ const GroupManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
 
     if (!isEditing) {
       return (
-        <div className="mt-3 p-3 bg-nature-50 border border-nature-200 rounded-lg">
+        <div className="mt-3 p-3 bg-nature-50 dark:bg-nature-900/30 border border-nature-200 dark:border-nature-800 rounded-lg">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs font-bold text-nature-700 uppercase mb-1">Atanmış Rasyon</p>
+              <p className="text-xs font-bold text-nature-700 dark:text-nature-300 uppercase mb-1">Atanmış Rasyon</p>
               {grup.rasyonAdi ? (
                 <>
                   <div className="flex items-center space-x-2">
-                    <p className="font-bold text-earth-900">{grup.rasyonAdi}</p>
+                    <p className="font-bold text-earth-900 dark:text-gray-100">{grup.rasyonAdi}</p>
                     {parseRasyonCost(grup.rasyonOzet, yemler) > 0 && (
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700 border border-orange-200">
                         {parseRasyonCost(grup.rasyonOzet, yemler).toLocaleString('tr-TR', {style:'currency', currency:'TRY'})} / Gün
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-earth-600 mt-1">{grup.rasyonOzet}</p>
+                  <p className="text-sm text-earth-600 dark:text-gray-400 mt-1">{grup.rasyonOzet}</p>
                   <p className="text-xs text-earth-400 mt-2">Son Güncelleme: {new Date(grup.rasyonTarihi).toLocaleDateString('tr-TR')}</p>
                 </>
               ) : (
-                <p className="text-sm text-earth-500 italic">Henüz rasyon atanmamış.</p>
+                <p className="text-sm text-earth-500 dark:text-gray-400 italic">Henüz rasyon atanmamış.</p>
               )}
             </div>
-            <button onClick={() => setIsEditing(true)} className="text-sm text-nature-600 font-bold hover:underline">Düzenle</button>
+            <button onClick={() => setIsEditing(true)} className="text-sm text-nature-600 dark:text-nature-400 font-bold hover:underline">Düzenle</button>
           </div>
         </div>
       );
     }
 
     return (
-      <div className="mt-3 p-3 bg-white border border-earth-300 rounded-lg space-y-3">
+      <div className="mt-3 p-3 bg-white dark:bg-gray-800 border border-earth-300 dark:border-gray-600 rounded-lg space-y-3">
         <div>
-          <label className="block text-xs font-bold text-earth-700 mb-1">Rasyon Adı</label>
-          <input value={rAdi} onChange={e => setRAdi(e.target.value)} placeholder="Örn: Sağmal Erken Dönem" className="w-full p-2 border border-earth-300 rounded-lg text-sm" />
+          <label className="block text-xs font-bold text-earth-700 dark:text-gray-300 mb-1">Rasyon Adı</label>
+          <input value={rAdi} onChange={e => setRAdi(e.target.value)} placeholder="Örn: Sağmal Erken Dönem" className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg text-sm" />
         </div>
         <div>
-          <label className="block text-xs font-bold text-earth-700 mb-1">Rasyon İçeriği (Özet)</label>
-          <div className="flex space-x-2 mb-2 bg-earth-50 p-2 rounded-lg border border-earth-200 items-center">
-             <span className="text-xs font-bold text-earth-600 hidden sm:block">Hızlı Ekle:</span>
-             <select value={hizliYemId} onChange={e=>setHizliYemId(e.target.value)} className="flex-1 p-1.5 text-sm border border-earth-300 rounded outline-none">
+          <label className="block text-xs font-bold text-earth-700 dark:text-gray-300 mb-1">Rasyon İçeriği (Özet)</label>
+          <div className="flex space-x-2 mb-2 bg-earth-50 dark:bg-gray-900 p-2 rounded-lg border border-earth-200 dark:border-gray-700 items-center">
+             <span className="text-xs font-bold text-earth-600 dark:text-gray-400 hidden sm:block">Hızlı Ekle:</span>
+             <select value={hizliYemId} onChange={e=>setHizliYemId(e.target.value)} className="flex-1 p-1.5 text-sm border border-earth-300 dark:border-gray-600 rounded outline-none">
                 <option value="">Yem Seçin...</option>
                 {yemler.map(y => <option key={y.id} value={y.id}>{y.ad}</option>)}
              </select>
-             <input type="number" step="0.1" placeholder="kg" value={hizliMiktar} onChange={e=>setHizliMiktar(e.target.value)} className="w-20 p-1.5 text-sm border border-earth-300 rounded outline-none" />
+             <input type="number" step="0.1" placeholder="kg" value={hizliMiktar} onChange={e=>setHizliMiktar(e.target.value)} className="w-20 p-1.5 text-sm border border-earth-300 dark:border-gray-600 rounded outline-none" />
              <button onClick={handleHizliEkle} type="button" className="bg-earth-600 text-white px-3 py-1.5 text-sm rounded font-bold hover:bg-earth-700 transition">Ekle</button>
           </div>
-          <textarea value={rOzet} onChange={e => setROzet(e.target.value)} placeholder="Örn: 10kg Silaj, 2kg Yonca, 5kg Süt Yemi" className="w-full p-2 border border-earth-300 rounded-lg text-sm resize-none h-16 focus:ring-2 focus:ring-nature-500 outline-none" />
+          <textarea value={rOzet} onChange={e => setROzet(e.target.value)} placeholder="Örn: 10kg Silaj, 2kg Yonca, 5kg Süt Yemi" className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg text-sm resize-none h-16 focus:ring-2 focus:ring-nature-500 outline-none" />
         </div>
         <div className="flex justify-end space-x-2">
-          <button onClick={() => setIsEditing(false)} className="px-3 py-1 text-sm text-earth-600 hover:bg-earth-100 rounded-md">İptal</button>
+          <button onClick={() => setIsEditing(false)} className="px-3 py-1 text-sm text-earth-600 dark:text-gray-400 hover:bg-earth-100 dark:hover:bg-gray-700 rounded-md">İptal</button>
           <button onClick={onSave} className="px-3 py-1 text-sm bg-nature-600 text-white rounded-md font-bold">Kaydet</button>
         </div>
       </div>
@@ -165,14 +165,14 @@ const GroupManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
 
   return (
     <div className="w-full">
-      <div className="bg-white rounded-2xl shadow-sm border border-earth-200 flex flex-col h-full">
-        <div className="p-4 border-b border-earth-200 flex justify-between items-center bg-nature-50 rounded-t-2xl">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex flex-col h-full">
+        <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex justify-between items-center bg-nature-50 dark:bg-nature-900/30 rounded-t-2xl">
           <div className="flex items-center space-x-2">
-            <Users className="text-nature-700 w-6 h-6" />
-            <h2 className="text-xl font-bold text-earth-900">Grup Yönetimi</h2>
+            <Users className="text-nature-700 dark:text-nature-300 w-6 h-6" />
+            <h2 className="text-xl font-bold text-earth-900 dark:text-gray-100">Grup Yönetimi</h2>
           </div>
           {onClose && (
-            <button onClick={onClose} className="text-earth-500 hover:text-red-500 transition">
+            <button onClick={onClose} className="text-earth-500 dark:text-gray-400 hover:text-red-500 transition">
               <X className="w-6 h-6" />
             </button>
           )}
@@ -180,19 +180,19 @@ const GroupManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
         
         <div className="p-6 overflow-y-auto flex-1 space-y-8">
           
-          <form onSubmit={handleAddGroup} className="bg-earth-50 p-4 rounded-xl border border-earth-200 space-y-4">
-            <h3 className="font-bold text-earth-800">Yeni Grup Oluştur</h3>
+          <form onSubmit={handleAddGroup} className="bg-earth-50 dark:bg-gray-900 p-4 rounded-xl border border-earth-200 dark:border-gray-700 space-y-4">
+            <h3 className="font-bold text-earth-800 dark:text-gray-200">Yeni Grup Oluştur</h3>
             <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
               <input 
                 value={newGroupName} 
                 onChange={e => setNewGroupName(e.target.value)} 
                 placeholder="Grup Adı (Örn: Sağmal 1)" 
-                className="flex-1 p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" 
+                className="flex-1 p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" 
               />
               <select 
                 value={newGroupTur} 
                 onChange={e => setNewGroupTur(e.target.value)}
-                className="p-2 border border-earth-300 rounded-lg outline-none"
+                className="p-2 border border-earth-300 dark:border-gray-600 rounded-lg outline-none"
               >
                 <option value="Karma">Karma</option>
                 <option value="İnek">İnek</option>
@@ -210,33 +210,33 @@ const GroupManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
           </form>
 
           <div>
-            <h3 className="font-bold text-earth-800 border-b pb-2 mb-4">Mevcut Gruplar</h3>
+            <h3 className="font-bold text-earth-800 dark:text-gray-200 border-b pb-2 mb-4">Mevcut Gruplar</h3>
             {gruplar.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center bg-earth-50 rounded-xl border border-earth-100 border-dashed">
-                <div className="bg-white p-4 rounded-full shadow-sm mb-4 text-earth-300">
+              <div className="flex flex-col items-center justify-center py-12 text-center bg-earth-50 dark:bg-gray-900 rounded-xl border border-earth-100 dark:border-gray-700 border-dashed">
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-sm mb-4 text-earth-300">
                   <Users className="w-12 h-12" />
                 </div>
-                <p className="text-lg font-bold text-earth-800 mb-2">Henüz Grup Yok</p>
-                <p className="text-earth-500 text-sm max-w-sm">Sürünüzü organize etmek ve toplu işlemler (ör: süt girişi, rasyon atama) yapabilmek için yukarıdaki formu kullanarak ilk grubunuzu oluşturun.</p>
+                <p className="text-lg font-bold text-earth-800 dark:text-gray-200 mb-2">Henüz Grup Yok</p>
+                <p className="text-earth-500 dark:text-gray-400 text-sm max-w-sm">Sürünüzü organize etmek ve toplu işlemler (ör: süt girişi, rasyon atama) yapabilmek için yukarıdaki formu kullanarak ilk grubunuzu oluşturun.</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {gruplar.map(grup => {
                   const sayi = hayvanlar.filter(h => h.grupId === grup.id).length;
                   return (
-                    <div key={grup.id} className="p-3 border border-earth-200 rounded-lg hover:shadow-sm transition bg-white">
+                    <div key={grup.id} className="p-3 border border-earth-200 dark:border-gray-700 rounded-lg hover:shadow-sm transition bg-white dark:bg-gray-800">
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <div>
-                          <div className="font-bold text-earth-900 text-lg">{grup.ad}</div>
-                          <div className="text-sm text-earth-600">Tür: {grup.tur} &bull; {sayi} Hayvan</div>
+                          <div className="font-bold text-earth-900 dark:text-gray-100 text-lg">{grup.ad}</div>
+                          <div className="text-sm text-earth-600 dark:text-gray-400">Tür: {grup.tur} &bull; {sayi} Hayvan</div>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
-                          <button onClick={() => setSelectedGroupForAnimals(grup)} className="text-xs font-bold text-earth-700 hover:text-earth-900 bg-earth-100 px-3 py-1.5 rounded-full border border-earth-200 transition flex items-center">
+                          <button onClick={() => setSelectedGroupForAnimals(grup)} className="text-xs font-bold text-earth-700 dark:text-gray-300 hover:text-earth-900 bg-earth-100 dark:bg-gray-800 px-3 py-1.5 rounded-full border border-earth-200 dark:border-gray-700 transition flex items-center">
                             <Users className="w-3.5 h-3.5 mr-1" />
                             Hayvan Ekle/Çıkar
                           </button>
                           {!['Tosun', 'Boğa', 'Öküz', 'Buzağı', 'Dana'].includes(grup.tur) && (
-                            <button onClick={() => setSelectedGroupForMilk(grup)} className="text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200 transition">
+                            <button onClick={() => setSelectedGroupForMilk(grup)} className="text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-full border border-blue-200 transition">
                               Toplu Süt Girişi
                             </button>
                           )}

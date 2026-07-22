@@ -58,6 +58,10 @@ interface StoreState {
   // Üreme ve Uyarı Ayarları
   uremeAyarlari: UremeAyarlari;
   setUremeAyarlari: (ayarlar: Partial<UremeAyarlari>) => void;
+
+  // Görünüm / Tema
+  theme: 'light' | 'dark';
+  setTheme: (theme: 'light' | 'dark') => void;
 }
 
 export const useStore = create<StoreState>()(
@@ -111,6 +115,10 @@ export const useStore = create<StoreState>()(
       setUremeAyarlari: (ayarlar) => set((state) => ({ 
         uremeAyarlari: { ...state.uremeAyarlari, ...ayarlar } 
       })),
+
+      // Tema
+      theme: 'light',
+      setTheme: (theme) => set({ theme }),
     }),
     {
       name: 'suru-yonetimi-store', // localStorage key
@@ -129,6 +137,7 @@ export const useStore = create<StoreState>()(
         rationListesi: state.rationListesi,
         uremeAyarlari: state.uremeAyarlari,
         isGuest: state.isGuest,
+        theme: state.theme,
       }),
     }
   )

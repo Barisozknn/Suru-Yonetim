@@ -67,7 +67,7 @@ export const SmartCalendar: React.FC = () => {
         title: `${getHayvanNo(k.hayvanId)}: ${k.kg}kg Tartım`,
         dateStr: k.tarih.split('T')[0],
         icon: <Scale className="w-4 h-4" />,
-        color: 'text-nature-600 bg-nature-100 border-nature-200',
+        color: 'text-nature-600 dark:text-nature-400 bg-nature-100 dark:bg-nature-900/50 border-nature-200 dark:border-nature-800',
         link: `/hayvanlar?id=${k.hayvanId}&tab=verim`
       });
     });
@@ -309,7 +309,7 @@ export const SmartCalendar: React.FC = () => {
 
     // Boş hücreler
     for (let i = 0; i < startOffset; i++) {
-      cells.push(<div key={`empty-${i}`} className="p-2 border-b border-r border-earth-100 bg-earth-50/50 min-h-[80px]"></div>);
+      cells.push(<div key={`empty-${i}`} className="p-2 border-b border-r border-earth-100 dark:border-gray-700 bg-earth-50/50 min-h-[80px]"></div>);
     }
 
     // Günler
@@ -327,19 +327,19 @@ export const SmartCalendar: React.FC = () => {
         <div 
           key={i} 
           onClick={() => setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), i))}
-          className={`p-2 border-b border-r border-earth-100 min-h-[80px] cursor-pointer transition relative group
-            ${isSelected ? 'bg-nature-50' : 'hover:bg-earth-50'}
+          className={`p-2 border-b border-r border-earth-100 dark:border-gray-700 min-h-[80px] cursor-pointer transition relative group
+            ${isSelected ? 'bg-nature-50 dark:bg-nature-900/30' : 'hover:bg-earth-50 dark:hover:bg-gray-700'}
           `}
         >
           <div className="flex justify-between items-start">
             <span className={`w-7 h-7 flex items-center justify-center rounded-full text-sm font-medium
               ${isToday ? 'bg-nature-600 text-white shadow-sm' : 
-                isSelected ? 'text-nature-700 font-bold' : 'text-earth-700'}
+                isSelected ? 'text-nature-700 dark:text-nature-300 font-bold' : 'text-earth-700 dark:text-gray-300'}
             `}>
               {i}
             </span>
             {dayEvents.length > 0 && (
-              <span className="text-[10px] font-bold bg-earth-200 text-earth-700 px-1.5 py-0.5 rounded-md">
+              <span className="text-[10px] font-bold bg-earth-200 text-earth-700 dark:text-gray-300 px-1.5 py-0.5 rounded-md">
                 {dayEvents.length}
               </span>
             )}
@@ -353,7 +353,7 @@ export const SmartCalendar: React.FC = () => {
               </div>
             ))}
             {dayEvents.length > 4 && (
-              <div className="w-4 h-4 rounded-full bg-earth-200 text-earth-600 text-[8px] flex items-center justify-center font-bold">
+              <div className="w-4 h-4 rounded-full bg-earth-200 text-earth-600 dark:text-gray-400 text-[8px] flex items-center justify-center font-bold">
                 +{dayEvents.length - 4}
               </div>
             )}
@@ -367,7 +367,7 @@ export const SmartCalendar: React.FC = () => {
     const remaining = 7 - (totalCells % 7);
     if (remaining < 7) {
       for (let i = 0; i < remaining; i++) {
-        cells.push(<div key={`empty-end-${i}`} className="p-2 border-b border-r border-earth-100 bg-earth-50/50 min-h-[80px]"></div>);
+        cells.push(<div key={`empty-end-${i}`} className="p-2 border-b border-r border-earth-100 dark:border-gray-700 bg-earth-50/50 min-h-[80px]"></div>);
       }
     }
 
@@ -381,61 +381,61 @@ export const SmartCalendar: React.FC = () => {
   const selectedDayEvents = getEventsForDate(selectedDateStr);
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-earth-200 overflow-hidden flex flex-col lg:flex-row min-h-[500px]">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 overflow-hidden flex flex-col lg:flex-row min-h-[500px]">
       
       {/* Sol Taraf - Takvim Izgarası */}
-      <div className="flex-1 border-r border-earth-200">
-        <div className="p-3 sm:p-4 border-b border-earth-200 bg-earth-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex-1 border-r border-earth-200 dark:border-gray-700">
+        <div className="p-3 sm:p-4 border-b border-earth-200 dark:border-gray-700 bg-earth-50 dark:bg-gray-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center justify-between sm:justify-start w-full sm:w-auto">
             <div className="flex items-center space-x-2 sm:space-x-3">
-              <div className="p-2 bg-nature-100 text-nature-600 rounded-lg">
+              <div className="p-2 bg-nature-100 dark:bg-nature-900/50 text-nature-600 dark:text-nature-400 rounded-lg">
                 <CalendarIcon className="w-5 h-5" />
               </div>
-              <h2 className="text-lg sm:text-xl font-black text-earth-900 tracking-tight">Akıllı Takvim</h2>
+              <h2 className="text-lg sm:text-xl font-black text-earth-900 dark:text-gray-100 tracking-tight">Akıllı Takvim</h2>
             </div>
-            <button onClick={goToToday} className="px-3 py-1.5 text-xs font-bold text-nature-700 bg-nature-100 hover:bg-nature-200 rounded-md transition sm:hidden">
+            <button onClick={goToToday} className="px-3 py-1.5 text-xs font-bold text-nature-700 dark:text-nature-300 bg-nature-100 dark:bg-nature-900/50 hover:bg-nature-200 rounded-md transition sm:hidden">
               Bugün
             </button>
           </div>
           
           <div className="flex items-center justify-between sm:justify-end space-x-2 w-full sm:w-auto">
-            <button onClick={goToToday} className="hidden sm:block px-3 py-1.5 text-xs font-bold text-nature-700 bg-nature-100 hover:bg-nature-200 rounded-md transition">
+            <button onClick={goToToday} className="hidden sm:block px-3 py-1.5 text-xs font-bold text-nature-700 dark:text-nature-300 bg-nature-100 dark:bg-nature-900/50 hover:bg-nature-200 rounded-md transition">
               Bugün
             </button>
-            <div className="flex bg-white border border-earth-200 rounded-lg overflow-hidden shadow-sm w-full sm:w-auto justify-between sm:justify-start">
-              <button onClick={prevMonth} className="p-2 hover:bg-earth-50 text-earth-600 transition shrink-0"><ChevronLeft className="w-5 h-5" /></button>
-              <div className="px-3 sm:px-4 py-2 font-bold text-earth-800 text-sm sm:text-base flex-1 sm:flex-none sm:min-w-[140px] text-center border-l border-r border-earth-200 truncate">
+            <div className="flex bg-white dark:bg-gray-800 border border-earth-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm w-full sm:w-auto justify-between sm:justify-start">
+              <button onClick={prevMonth} className="p-2 hover:bg-earth-50 dark:hover:bg-gray-700 text-earth-600 dark:text-gray-400 transition shrink-0"><ChevronLeft className="w-5 h-5" /></button>
+              <div className="px-3 sm:px-4 py-2 font-bold text-earth-800 dark:text-gray-200 text-sm sm:text-base flex-1 sm:flex-none sm:min-w-[140px] text-center border-l border-r border-earth-200 dark:border-gray-700 truncate">
                 {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
               </div>
-              <button onClick={nextMonth} className="p-2 hover:bg-earth-50 text-earth-600 transition shrink-0"><ChevronRight className="w-5 h-5" /></button>
+              <button onClick={nextMonth} className="p-2 hover:bg-earth-50 dark:hover:bg-gray-700 text-earth-600 dark:text-gray-400 transition shrink-0"><ChevronRight className="w-5 h-5" /></button>
             </div>
           </div>
         </div>
         
         <div>
           {/* Gün İsimleri */}
-          <div className="grid grid-cols-7 bg-earth-100/50 border-b border-earth-200">
+          <div className="grid grid-cols-7 bg-earth-100/50 border-b border-earth-200 dark:border-gray-700">
             {dayNames.map(day => (
-              <div key={day} className="py-2 text-center text-xs font-bold text-earth-500 uppercase tracking-wider border-r border-earth-200 last:border-r-0">
+              <div key={day} className="py-2 text-center text-xs font-bold text-earth-500 dark:text-gray-400 uppercase tracking-wider border-r border-earth-200 dark:border-gray-700 last:border-r-0">
                 {day}
               </div>
             ))}
           </div>
           
           {/* Takvim Izgarası */}
-          <div className="grid grid-cols-7 border-l border-t border-earth-100">
+          <div className="grid grid-cols-7 border-l border-t border-earth-100 dark:border-gray-700">
             {renderCells()}
           </div>
         </div>
       </div>
 
       {/* Sağ Taraf - Olaylar Listesi */}
-      <div className="w-full lg:w-96 bg-earth-50 flex flex-col max-h-[600px] lg:max-h-[auto]">
-        <div className="p-5 border-b border-earth-200 bg-white">
-          <h3 className="font-bold text-earth-800 text-lg">
+      <div className="w-full lg:w-96 bg-earth-50 dark:bg-gray-900 flex flex-col max-h-[600px] lg:max-h-[auto]">
+        <div className="p-5 border-b border-earth-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <h3 className="font-bold text-earth-800 dark:text-gray-200 text-lg">
             {selectedDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' })}
           </h3>
-          <p className="text-sm text-earth-500 mt-1">{selectedDayEvents.length} kayıtlı işlem</p>
+          <p className="text-sm text-earth-500 dark:text-gray-400 mt-1">{selectedDayEvents.length} kayıtlı işlem</p>
         </div>
         
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -444,7 +444,7 @@ export const SmartCalendar: React.FC = () => {
               <div 
                 key={event.id} 
                 onClick={() => { if (event.link) navigate(event.link); }}
-                className={`p-4 rounded-xl border bg-white shadow-sm flex items-start space-x-3 ${event.color.split(' ')[2]} ${event.link ? 'cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all' : ''}`}
+                className={`p-4 rounded-xl border bg-white dark:bg-gray-800 shadow-sm flex items-start space-x-3 ${event.color.split(' ')[2]} ${event.link ? 'cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all' : ''}`}
               >
                 <div className={`p-2 rounded-lg flex-shrink-0 ${event.color}`}>
                   {event.icon}
@@ -455,9 +455,9 @@ export const SmartCalendar: React.FC = () => {
                       {event.type}
                     </span>
                   </div>
-                  <p className="font-bold text-earth-900 text-sm">{event.title}</p>
+                  <p className="font-bold text-earth-900 dark:text-gray-100 text-sm">{event.title}</p>
                   {event.details && (
-                    <p className="text-sm text-earth-600 mt-1">{event.details}</p>
+                    <p className="text-sm text-earth-600 dark:text-gray-400 mt-1">{event.details}</p>
                   )}
                 </div>
               </div>

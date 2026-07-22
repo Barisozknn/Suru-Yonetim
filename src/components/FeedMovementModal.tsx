@@ -65,14 +65,14 @@ const FeedMovementModal: React.FC<FeedMovementModalProps> = ({ yem, onClose }) =
 
   return (
     <div className="fixed inset-0 z-50 bg-earth-900/60 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl animate-fade-in">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md shadow-2xl animate-fade-in">
         
-        <div className="p-4 border-b border-earth-200 flex justify-between items-center bg-nature-50 rounded-t-2xl">
+        <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex justify-between items-center bg-nature-50 dark:bg-nature-900/30 rounded-t-2xl">
           <div>
-            <h2 className="text-xl font-black text-earth-900">Stok Hareketi</h2>
-            <p className="text-sm font-medium text-earth-600">{yem.ad}</p>
+            <h2 className="text-xl font-black text-earth-900 dark:text-gray-100">Stok Hareketi</h2>
+            <p className="text-sm font-medium text-earth-600 dark:text-gray-400">{yem.ad}</p>
           </div>
-          <button onClick={onClose} className="text-earth-500 hover:text-red-500 transition">
+          <button onClick={onClose} className="text-earth-500 dark:text-gray-400 hover:text-red-500 transition">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -83,7 +83,7 @@ const FeedMovementModal: React.FC<FeedMovementModalProps> = ({ yem, onClose }) =
             <button 
               type="button"
               onClick={() => setIslemTuru('GİRİŞ')}
-              className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center space-x-2 transition ${islemTuru === 'GİRİŞ' ? 'bg-nature-600 text-white shadow-md' : 'bg-earth-100 text-earth-600 hover:bg-earth-200'}`}
+              className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center space-x-2 transition ${islemTuru === 'GİRİŞ' ? 'bg-nature-600 text-white shadow-md' : 'bg-earth-100 dark:bg-gray-800 text-earth-600 dark:text-gray-400 hover:bg-earth-200'}`}
             >
               <ArrowDown className="w-5 h-5" />
               <span>GİRİŞ (Alım)</span>
@@ -91,7 +91,7 @@ const FeedMovementModal: React.FC<FeedMovementModalProps> = ({ yem, onClose }) =
             <button 
               type="button"
               onClick={() => setIslemTuru('ÇIKIŞ')}
-              className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center space-x-2 transition ${islemTuru === 'ÇIKIŞ' ? 'bg-orange-500 text-white shadow-md' : 'bg-earth-100 text-earth-600 hover:bg-earth-200'}`}
+              className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center space-x-2 transition ${islemTuru === 'ÇIKIŞ' ? 'bg-orange-500 text-white shadow-md' : 'bg-earth-100 dark:bg-gray-800 text-earth-600 dark:text-gray-400 hover:bg-earth-200'}`}
             >
               <ArrowUp className="w-5 h-5" />
               <span>ÇIKIŞ (Tüketim)</span>
@@ -99,7 +99,7 @@ const FeedMovementModal: React.FC<FeedMovementModalProps> = ({ yem, onClose }) =
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-earth-700 mb-1">Miktar (kg)</label>
+            <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Miktar (kg)</label>
             <input 
               required
               type="number" 
@@ -108,7 +108,7 @@ const FeedMovementModal: React.FC<FeedMovementModalProps> = ({ yem, onClose }) =
               value={miktarKg}
               onChange={e => setMiktarKg(Number(e.target.value))}
               placeholder="0.0"
-              className="w-full p-3 border border-earth-300 rounded-xl focus:ring-2 focus:ring-nature-500 outline-none text-lg font-bold text-earth-900"
+              className="w-full p-3 border border-earth-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-nature-500 outline-none text-lg font-bold text-earth-900 dark:text-gray-100"
             />
             {islemTuru === 'ÇIKIŞ' && typeof miktarKg === 'number' && miktarKg > yem.stokKg && (
               <p className="text-red-500 text-xs mt-1 font-bold">Uyarı: Mevcut stoktan fazla çıkış yapıyorsunuz!</p>
@@ -116,17 +116,17 @@ const FeedMovementModal: React.FC<FeedMovementModalProps> = ({ yem, onClose }) =
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-earth-700 mb-1">Açıklama (Opsiyonel)</label>
+            <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Açıklama (Opsiyonel)</label>
             <textarea 
               value={aciklama}
               onChange={e => setAciklama(e.target.value)}
               placeholder="Örn: X firmasından alındı / Sağmal grubuna verildi"
-              className="w-full p-3 border border-earth-300 rounded-xl focus:ring-2 focus:ring-nature-500 outline-none resize-none h-24"
+              className="w-full p-3 border border-earth-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-nature-500 outline-none resize-none h-24"
             />
           </div>
 
           <div className="pt-4 flex justify-end space-x-3">
-            <button type="button" onClick={onClose} className="px-5 py-2 text-earth-600 font-bold hover:bg-earth-100 rounded-lg transition">İptal</button>
+            <button type="button" onClick={onClose} className="px-5 py-2 text-earth-600 dark:text-gray-400 font-bold hover:bg-earth-100 dark:hover:bg-gray-700 rounded-lg transition">İptal</button>
             <button disabled={isSubmitting} type="submit" className={`px-6 py-2 rounded-lg font-bold text-white transition ${islemTuru === 'GİRİŞ' ? 'bg-nature-600 hover:bg-nature-700' : 'bg-orange-500 hover:bg-orange-600'} ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}>
               Kaydet
             </button>

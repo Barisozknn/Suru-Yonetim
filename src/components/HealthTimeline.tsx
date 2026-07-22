@@ -6,11 +6,11 @@ import { Syringe, Stethoscope, Pill, Scissors, FileText, Plus, Trash2, AlertTria
 import HealthEventModal from './HealthEventModal';
 
 const TUR_CONFIG: Record<SaglikOlayiTur, { icon: React.ReactNode; color: string; bg: string }> = {
-  'Muayene': { icon: <Stethoscope className="w-4 h-4" />, color: 'text-nature-600', bg: 'bg-nature-50 border-nature-200' },
-  'Aşı':    { icon: <Syringe className="w-4 h-4" />,     color: 'text-blue-600',   bg: 'bg-blue-50 border-blue-200' },
-  'İlaç':   { icon: <Pill className="w-4 h-4" />,         color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200' },
-  'Operasyon': { icon: <Scissors className="w-4 h-4" />, color: 'text-red-600',   bg: 'bg-red-50 border-red-200' },
-  'Diğer':  { icon: <FileText className="w-4 h-4" />,    color: 'text-earth-600',  bg: 'bg-earth-50 border-earth-200' },
+  'Muayene': { icon: <Stethoscope className="w-4 h-4" />, color: 'text-nature-600 dark:text-nature-400', bg: 'bg-nature-50 dark:bg-nature-900/30 border-nature-200 dark:border-nature-800' },
+  'Aşı':    { icon: <Syringe className="w-4 h-4" />,     color: 'text-blue-600',   bg: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200' },
+  'İlaç':   { icon: <Pill className="w-4 h-4" />,         color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-900/20 border-orange-200' },
+  'Operasyon': { icon: <Scissors className="w-4 h-4" />, color: 'text-red-600',   bg: 'bg-red-50 dark:bg-red-900/20 border-red-200' },
+  'Diğer':  { icon: <FileText className="w-4 h-4" />,    color: 'text-earth-600 dark:text-gray-400',  bg: 'bg-earth-50 dark:bg-gray-900 border-earth-200 dark:border-gray-700' },
 };
 
 // Arınma bitiş tarihini hesapla
@@ -51,7 +51,7 @@ const HealthTimeline: React.FC<Props> = ({ hayvanId }) => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="font-bold text-earth-800 text-lg">Sağlık Geçmişi</h3>
+        <h3 className="font-bold text-earth-800 dark:text-gray-200 text-lg">Sağlık Geçmişi</h3>
         <button
           onClick={() => { setEditTarget(undefined); setModalOpen(true); }}
           className="flex items-center space-x-1.5 px-4 py-2 bg-nature-600 text-white rounded-lg font-bold text-sm hover:bg-nature-700 transition"
@@ -100,7 +100,7 @@ const HealthTimeline: React.FC<Props> = ({ hayvanId }) => {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-earth-500 mt-0.5">{new Date(olay.tarih).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                      <p className="text-xs text-earth-500 dark:text-gray-400 mt-0.5">{new Date(olay.tarih).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                     </div>
                     <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition">
                       <button onClick={() => { setEditTarget(olay); setModalOpen(true); }} className="p-1 text-earth-400 hover:text-earth-700 transition text-xs">✏️</button>
@@ -110,9 +110,9 @@ const HealthTimeline: React.FC<Props> = ({ hayvanId }) => {
                     </div>
                   </div>
                   <div className="flex justify-between items-end mt-1.5 gap-2">
-                    <p className="text-sm text-earth-700 flex-1">{olay.aciklama}</p>
+                    <p className="text-sm text-earth-700 dark:text-gray-300 flex-1">{olay.aciklama}</p>
                     {olay.maliyet !== undefined && olay.maliyet !== null && olay.maliyet > 0 && (
-                      <span className="text-xs font-bold text-earth-600 bg-earth-100 px-2 py-0.5 rounded border border-earth-200 whitespace-nowrap flex-shrink-0">
+                      <span className="text-xs font-bold text-earth-600 dark:text-gray-400 bg-earth-100 dark:bg-gray-800 px-2 py-0.5 rounded border border-earth-200 dark:border-gray-700 whitespace-nowrap flex-shrink-0">
                         ₺{olay.maliyet}
                       </span>
                     )}

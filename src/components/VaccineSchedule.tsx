@@ -19,10 +19,10 @@ const getStatus = (asi: PlanlananAsi): 'yapilmis' | 'gecikmis' | 'bu_hafta' | 'p
 };
 
 const STATUS_CONFIG = {
-  yapilmis: { label: 'Yapıldı', icon: <CheckCircle2 className="w-4 h-4" />, color: 'text-nature-600', bg: 'bg-nature-50 border-nature-200', badge: 'bg-nature-100 text-nature-700' },
-  gecikmis: { label: 'Gecikmiş', icon: <AlertTriangle className="w-4 h-4" />, color: 'text-red-600', bg: 'bg-red-50 border-red-200', badge: 'bg-red-100 text-red-700' },
+  yapilmis: { label: 'Yapıldı', icon: <CheckCircle2 className="w-4 h-4" />, color: 'text-nature-600 dark:text-nature-400', bg: 'bg-nature-50 dark:bg-nature-900/30 border-nature-200 dark:border-nature-800', badge: 'bg-nature-100 dark:bg-nature-900/50 text-nature-700 dark:text-nature-300' },
+  gecikmis: { label: 'Gecikmiş', icon: <AlertTriangle className="w-4 h-4" />, color: 'text-red-600', bg: 'bg-red-50 dark:bg-red-900/20 border-red-200', badge: 'bg-red-100 text-red-700' },
   bu_hafta: { label: 'Bu Hafta', icon: <Clock className="w-4 h-4" />, color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200', badge: 'bg-yellow-100 text-yellow-700' },
-  planlanan: { label: 'Planlanan', icon: <Syringe className="w-4 h-4" />, color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200', badge: 'bg-blue-100 text-blue-700' },
+  planlanan: { label: 'Planlanan', icon: <Syringe className="w-4 h-4" />, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200', badge: 'bg-blue-100 text-blue-700' },
 };
 
 const VaccineSchedule: React.FC = () => {
@@ -58,24 +58,24 @@ const VaccineSchedule: React.FC = () => {
 
   return (
     <div className="w-full">
-      <div className="bg-white rounded-2xl shadow-sm border border-earth-200 flex flex-col h-full">
-        <div className="p-4 border-b border-earth-200 flex justify-between items-center bg-purple-50 rounded-t-2xl flex-shrink-0">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex flex-col h-full">
+        <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex justify-between items-center bg-purple-50 rounded-t-2xl flex-shrink-0">
           <div className="flex items-center space-x-2">
             <Syringe className="w-6 h-6 text-blue-600" />
             <div>
-              <h2 className="text-xl font-black text-earth-900">Aşı Takvimi</h2>
-              <p className="text-xs text-earth-500">Planlanan ve gerçekleşen aşıların özeti</p>
+              <h2 className="text-xl font-black text-earth-900 dark:text-gray-100">Aşı Takvimi</h2>
+              <p className="text-xs text-earth-500 dark:text-gray-400">Planlanan ve gerçekleşen aşıların özeti</p>
             </div>
           </div>
         </div>
 
         {/* Özet Kartları */}
-        <div className="grid grid-cols-4 gap-3 p-4 border-b border-earth-100">
+        <div className="grid grid-cols-4 gap-3 p-4 border-b border-earth-100 dark:border-gray-700">
           {[
-            { key: 'gecikmis', label: 'Gecikmiş', value: ozet.gecikmis, color: 'bg-red-50 text-red-700 border-red-200' },
+            { key: 'gecikmis', label: 'Gecikmiş', value: ozet.gecikmis, color: 'bg-red-50 dark:bg-red-900/20 text-red-700 border-red-200' },
             { key: 'bu_hafta', label: 'Bu Hafta', value: ozet.bu_hafta, color: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
-            { key: 'planlanan', label: 'Planlanan', value: ozet.planlanan, color: 'bg-blue-50 text-blue-700 border-blue-200' },
-            { key: 'yapilmis', label: 'Yapılmış', value: ozet.yapilmis, color: 'bg-nature-50 text-nature-700 border-nature-200' },
+            { key: 'planlanan', label: 'Planlanan', value: ozet.planlanan, color: 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 border-blue-200' },
+            { key: 'yapilmis', label: 'Yapılmış', value: ozet.yapilmis, color: 'bg-nature-50 dark:bg-nature-900/30 text-nature-700 dark:text-nature-300 border-nature-200 dark:border-nature-800' },
           ].map(item => (
             <div key={item.key} className={`text-center p-2 rounded-xl border ${item.color}`}>
               <div className="text-2xl font-black">{item.value}</div>
@@ -85,11 +85,11 @@ const VaccineSchedule: React.FC = () => {
         </div>
 
         {/* Filtreler */}
-        <div className="flex items-center space-x-2 p-4 border-b border-earth-100 overflow-x-auto">
+        <div className="flex items-center space-x-2 p-4 border-b border-earth-100 dark:border-gray-700 overflow-x-auto">
           <Filter className="w-4 h-4 text-earth-400 flex-shrink-0" />
           {(['Tümü', 'Gecikmiş', 'Bu Hafta', 'Planlanan', 'Yapılmış'] as Filtre[]).map(f => (
             <button key={f} onClick={() => setFiltre(f)}
-              className={`px-3 py-1.5 text-sm font-bold rounded-lg whitespace-nowrap transition ${filtre === f ? 'bg-earth-800 text-white' : 'bg-earth-100 text-earth-600 hover:bg-earth-200'}`}>
+              className={`px-3 py-1.5 text-sm font-bold rounded-lg whitespace-nowrap transition ${filtre === f ? 'bg-earth-800 text-white' : 'bg-earth-100 dark:bg-gray-800 text-earth-600 dark:text-gray-400 hover:bg-earth-200'}`}>
               {f}
             </button>
           ))}
@@ -111,12 +111,12 @@ const VaccineSchedule: React.FC = () => {
                 <div className={`flex-shrink-0 ${config.color}`}>{config.icon}</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2 flex-wrap gap-1">
-                    <span className="font-bold text-earth-900 text-sm">{asi.asiAd}</span>
-                    <span className="text-xs text-earth-500 font-mono bg-white/70 px-2 py-0.5 rounded border border-earth-200">{asi.hayvanKupeNo}</span>
+                    <span className="font-bold text-earth-900 dark:text-gray-100 text-sm">{asi.asiAd}</span>
+                    <span className="text-xs text-earth-500 dark:text-gray-400 font-mono bg-white/70 px-2 py-0.5 rounded border border-earth-200 dark:border-gray-700">{asi.hayvanKupeNo}</span>
                     <span className="text-xs text-earth-400">{asi.protokolAd}</span>
                   </div>
                   <div className="flex items-center space-x-3 mt-0.5">
-                    <span className="text-xs text-earth-500">{new Date(asi.planlanaTarih).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
+                    <span className="text-xs text-earth-500 dark:text-gray-400">{new Date(asi.planlanaTarih).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${config.badge}`}>{config.label}</span>
                     {asi.yapilmaTarihi && (
                       <span className="text-xs text-earth-400">Yapıldı: {new Date(asi.yapilmaTarihi).toLocaleDateString('tr-TR')}</span>
@@ -125,7 +125,7 @@ const VaccineSchedule: React.FC = () => {
                 </div>
                 <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition items-center">
                   <button onClick={() => handleToggleYapildi(asi)}
-                    className={`text-xs px-3 py-1.5 rounded-lg font-bold transition ${asi.yapildiMi ? 'bg-earth-100 text-earth-600 hover:bg-earth-200' : 'bg-nature-600 text-white hover:bg-nature-700'}`}>
+                    className={`text-xs px-3 py-1.5 rounded-lg font-bold transition ${asi.yapildiMi ? 'bg-earth-100 dark:bg-gray-800 text-earth-600 dark:text-gray-400 hover:bg-earth-200' : 'bg-nature-600 text-white hover:bg-nature-700'}`}>
                     {asi.yapildiMi ? 'Geri Al' : '✓ Yapıldı'}
                   </button>
                   <button onClick={() => handleSil(asi.id)} className="p-1.5 text-earth-400 hover:text-red-500 transition">

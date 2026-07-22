@@ -3,7 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { 
   Menu, X, Home, Users, Layers, Wheat, Activity, Network, Calculator,
   Syringe, CalendarDays, Settings, Sparkles, Wifi, WifiOff, RefreshCw,
-  Droplets, Wallet, User
+  Droplets, Wallet, User, Sun, Moon
 } from 'lucide-react';
 import { processSyncQueue, pullInitialData, subscribeToRealtimeChanges } from '../services/syncService';
 import { useStore } from '../store/useStore';
@@ -29,7 +29,7 @@ const Layout: React.FC = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isRealtimeActive, setIsRealtimeActive] = useState(false);
-  const isGuest = useStore((state) => state.isGuest);
+  const { isGuest, theme, setTheme } = useStore();
   
   const location = useLocation();
 
@@ -84,6 +84,23 @@ const Layout: React.FC = () => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
+  const toggleTheme = () => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  };
+
+  const ThemeToggle = ({ isMobile }: { isMobile?: boolean }) => (
+    <button 
+      onClick={toggleTheme}
+      className={`flex items-center justify-center p-2 rounded-lg transition-colors ${
+        isMobile 
+          ? 'text-white hover:bg-nature-600 dark:hover:bg-gray-700' 
+          : 'text-earth-500 dark:text-gray-400 hover:bg-earth-100 dark:hover:bg-gray-700'
+      }`}
+      title={theme === 'light' ? 'Karanlık Moda Geç' : 'Aydınlık Moda Geç'}
+    >
+      {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+    </button>
+  );
 
   const NavContent = ({ isMobile }: { isMobile?: boolean }) => (
     <nav className={`flex-1 overflow-x-hidden custom-scrollbar ${isMobile ? 'p-2.5 flex flex-col justify-between gap-1 overflow-y-auto' : 'px-3 py-1 flex flex-col justify-center gap-1 overflow-y-auto'}`}>
@@ -96,8 +113,8 @@ const Layout: React.FC = () => {
             flex items-center space-x-3.5 rounded-xl font-bold transition w-full
             ${isMobile ? 'px-3.5 py-2 text-[14px]' : 'px-4 py-2 text-[14.5px]'}
             ${isActive 
-              ? 'bg-nature-600 text-white shadow-md' 
-              : 'text-earth-600 hover:bg-nature-50 hover:text-nature-700'
+              ? 'bg-nature-600 dark:bg-nature-500 text-white shadow-md' 
+              : 'text-earth-600 dark:text-gray-300 hover:bg-nature-50 dark:hover:bg-gray-700 hover:text-nature-700 dark:hover:text-white'
             }
           `}
         >
@@ -109,18 +126,19 @@ const Layout: React.FC = () => {
   );
 
   return (
-    <div className="h-screen bg-earth-50 flex font-sans overflow-hidden">
+    <div className="h-screen bg-earth-50 dark:bg-gray-900 flex font-sans overflow-hidden transition-colors duration-200">
       
       {/* Masaüstü Sidebar (≥768px) */}
-      <aside className="hidden md:flex w-64 flex-shrink-0 bg-white border-r border-earth-200 flex-col shadow-sm relative z-20 h-full overflow-hidden">
-        <div className="p-4 border-b border-earth-100 flex items-center justify-between shrink-0">
+      <aside className="hidden md:flex w-64 flex-shrink-0 bg-white dark:bg-gray-800 border-r border-earth-200 dark:border-gray-700 flex-col shadow-sm relative z-20 h-full overflow-hidden transition-colors duration-200">
+        <div className="p-4 border-b border-earth-100 dark:border-gray-700 flex items-center justify-between shrink-0">
           <div>
-            <h1 className="text-xl font-black text-nature-800 tracking-tight">Sürü<span className="text-earth-500">Metri</span></h1>
+            <h1 className="text-xl font-black text-nature-800 dark:text-nature-400 tracking-tight">Sürü<span className="text-earth-500 dark:text-gray-400">Metri</span></h1>
           </div>
+          <ThemeToggle />
         </div>
         <NavContent />
-        <div className="p-4 border-t border-earth-100 shrink-0">
-          <div className="flex items-center justify-center space-x-2 text-xs font-bold px-3 py-2.5 bg-earth-50 rounded-lg text-earth-600">
+        <div className="p-4 border-t border-earth-100 dark:border-gray-700 shrink-0">
+          <div className="flex items-center justify-center space-x-2 text-xs font-bold px-3 py-2.5 bg-earth-50 dark:bg-gray-700 rounded-lg text-earth-600 dark:text-gray-300 transition-colors duration-200">
             {isGuest ? (
               <><User className="w-3 h-3 text-earth-500" /> <span>Yerel Mod (Misafir)</span></>
             ) : isSyncing ? (
@@ -144,14 +162,15 @@ const Layout: React.FC = () => {
       </aside>
 
       {/* Mobil Navbar & Hamburger (<768px) */}
-      <header className="md:hidden fixed top-0 left-0 right-0 bg-nature-700 text-white shadow-md z-30 h-16 flex items-center justify-between px-4">
+      <header className="md:hidden fixed top-0 left-0 right-0 bg-nature-700 dark:bg-gray-800 text-white shadow-md z-30 h-16 flex items-center justify-between px-4 transition-colors duration-200">
         <div className="flex items-center space-x-3">
-          <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 -ml-2 rounded-lg hover:bg-nature-600 transition">
+          <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 -ml-2 rounded-lg hover:bg-nature-600 dark:hover:bg-gray-700 transition">
             <Menu className="w-6 h-6" />
           </button>
-          <h1 className="text-xl font-black">Sürü<span className="text-nature-300">Metri</span></h1>
+          <h1 className="text-xl font-black">Sürü<span className="text-nature-300 dark:text-gray-400">Metri</span></h1>
         </div>
         <div className="flex items-center gap-2">
+          <ThemeToggle isMobile />
           {isGuest ? (
             <User className="w-5 h-5 text-earth-300" />
           ) : isSyncing ? (
@@ -173,12 +192,12 @@ const Layout: React.FC = () => {
       {/* Mobil Menü (Drawer) */}
       {isMobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-40 flex">
-          <div className="fixed inset-0 bg-earth-900/60 transition-opacity" onClick={() => setIsMobileMenuOpen(false)}></div>
-          <div className="relative flex-1 flex flex-col h-full w-80 max-w-[85vw] bg-white shadow-2xl animate-in slide-in-from-left duration-300">
+          <div className="fixed inset-0 bg-earth-900/60 dark:bg-black/60 transition-opacity" onClick={() => setIsMobileMenuOpen(false)}></div>
+          <div className="relative flex-1 flex flex-col h-full w-80 max-w-[85vw] bg-white dark:bg-gray-800 shadow-2xl animate-in slide-in-from-left duration-300 transition-colors">
             {/* Üst Çizgi & Başlık */}
-            <div className="p-4 border-b border-earth-200 flex items-center justify-between shrink-0 bg-white">
-              <h1 className="text-xl font-black text-nature-800 tracking-tight">Sürü<span className="text-earth-500">Metri</span></h1>
-              <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-earth-500 hover:bg-earth-100 rounded-lg">
+            <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex items-center justify-between shrink-0 bg-white dark:bg-gray-800 transition-colors">
+              <h1 className="text-xl font-black text-nature-800 dark:text-nature-400 tracking-tight">Sürü<span className="text-earth-500 dark:text-gray-400">Metri</span></h1>
+              <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-earth-500 dark:text-gray-400 hover:bg-earth-100 dark:hover:bg-gray-700 rounded-lg">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -187,8 +206,8 @@ const Layout: React.FC = () => {
             <NavContent isMobile />
             
             {/* Alt Çizgi & Menü Etiketi */}
-            <div className="p-3.5 border-t border-earth-200 shrink-0 bg-earth-50/80">
-              <span className="text-xs font-bold text-earth-500 uppercase tracking-widest block text-center">Menü</span>
+            <div className="p-3.5 border-t border-earth-200 dark:border-gray-700 shrink-0 bg-earth-50/80 dark:bg-gray-800/80 transition-colors">
+              <span className="text-xs font-bold text-earth-500 dark:text-gray-400 uppercase tracking-widest block text-center">Menü</span>
             </div>
           </div>
         </div>

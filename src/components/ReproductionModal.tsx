@@ -166,13 +166,13 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
 
   return (
     <div className="fixed inset-0 z-50 bg-earth-900/60 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
-        <div className="p-4 border-b border-earth-200 flex justify-between items-center bg-pink-50 rounded-t-2xl shrink-0">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
+        <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex justify-between items-center bg-pink-50 dark:bg-pink-900/20 rounded-t-2xl shrink-0">
           <div>
-            <h2 className="text-xl font-black text-earth-900">Üreme Olayı</h2>
-            <p className="text-xs text-earth-500">{existing ? 'Kaydı Düzenle' : 'Yeni Kayıt Ekle'}</p>
+            <h2 className="text-xl font-black text-earth-900 dark:text-gray-100">Üreme Olayı</h2>
+            <p className="text-xs text-earth-500 dark:text-gray-400">{existing ? 'Kaydı Düzenle' : 'Yeni Kayıt Ekle'}</p>
           </div>
-          <button onClick={onClose} className="text-earth-500 hover:text-red-500 transition">
+          <button onClick={onClose} className="text-earth-500 dark:text-gray-400 hover:text-red-500 transition">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -180,7 +180,7 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
         <div className="p-5 space-y-4 overflow-y-auto">
           {/* Tür Seçimi */}
           <div>
-            <label className="text-sm font-bold text-earth-700 mb-2 block">Olay Türü</label>
+            <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-2 block">Olay Türü</label>
             <div className="flex flex-wrap gap-2">
               {(['Kızgınlık', 'Tohumlama/Aşım', 'Gebelik Kontrolü', 'Kuruya Çıkarma', 'Doğum'] as UremeKaydiTur[]).map(t => (
                 <button
@@ -188,7 +188,7 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
                   type="button"
                   onClick={() => { setTur(t); setDetaylar({}); }}
                   className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border font-semibold text-sm transition ${
-                    tur === t ? TUR_COLORS[t] + ' ring-2 ring-offset-1 ring-current' : 'bg-earth-50 text-earth-600 border-earth-200 hover:bg-earth-100'
+                    tur === t ? TUR_COLORS[t] + ' ring-2 ring-offset-1 ring-current' : 'bg-earth-50 dark:bg-gray-900 text-earth-600 dark:text-gray-400 border-earth-200 dark:border-gray-700 hover:bg-earth-100 dark:hover:bg-gray-700'
                   }`}
                 >
                   {TUR_ICONS[t]}
@@ -200,17 +200,17 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
 
           {/* Tarih */}
           <div>
-            <label className="text-sm font-bold text-earth-700 mb-1 block">Tarih</label>
+            <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Tarih</label>
             <input type="date" value={tarih} onChange={e => setTarih(e.target.value)}
-              className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-pink-500" />
+              className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500" />
           </div>
 
           {/* Tür'e özel alanlar */}
           {tur === 'Kızgınlık' && (
             <div>
-              <label className="text-sm font-bold text-earth-700 mb-1 block">Gözlem Yöntemi</label>
+              <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Gözlem Yöntemi</label>
               <select value={detaylar.gozlemYontemi || ''} onChange={e => handleDetayChange('gozlemYontemi', e.target.value)}
-                className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-pink-500">
+                className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500">
                 <option value="">Seçiniz...</option>
                 <option value="Görsel (Atlama)">Görsel (Atlama)</option>
                 <option value="Kızgınlık Bantı/Aktivitometre">Kızgınlık Bantı/Aktivitometre</option>
@@ -222,11 +222,11 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
           {tur === 'Tohumlama/Aşım' && (
             <>
               <div>
-                <label className="text-sm font-bold text-earth-700 mb-1 block">Yöntem</label>
+                <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Yöntem</label>
                 <select 
                   value={detaylar.tohumlamaYontemi || 'Yapay'} 
                   onChange={e => handleDetayChange('tohumlamaYontemi', e.target.value)}
-                  className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                  className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500"
                 >
                   <option value="Yapay">Yapay Tohumlama</option>
                   <option value="Elde">Elde Aşım</option>
@@ -235,11 +235,11 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
 
               {detaylar.tohumlamaYontemi === 'Elde' ? (
                 <div>
-                  <label className="text-sm font-bold text-earth-700 mb-1 block">Boğa / Tosun Seçimi (Arama Özellikli)</label>
+                  <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Boğa / Tosun Seçimi (Arama Özellikli)</label>
                   <div className="relative">
                     <input
                       type="text"
-                      className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-pink-500 font-medium"
+                      className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 font-medium"
                       placeholder="Küpe No veya tür ile ara..."
                       value={erkekSearchTerm}
                       onChange={(e) => {
@@ -255,24 +255,24 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
                           className="fixed inset-0 z-10" 
                           onClick={() => setIsErkekDropdownOpen(false)}
                         ></div>
-                        <div className="absolute z-20 w-full mt-1 bg-white border border-earth-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                        <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-800 border border-earth-200 dark:border-gray-700 rounded-xl shadow-lg max-h-48 overflow-y-auto">
                           {erkekHayvanlar
                             .filter(e => e.kupeNo.toLowerCase().includes(erkekSearchTerm.toLowerCase()) || e.tur.toLowerCase().includes(erkekSearchTerm.toLowerCase()))
                             .map(e => (
                               <div
                                 key={e.id}
-                                className="p-3 hover:bg-earth-50 cursor-pointer text-earth-900 border-b border-earth-100 last:border-0"
+                                className="p-3 hover:bg-earth-50 dark:hover:bg-gray-700 cursor-pointer text-earth-900 dark:text-gray-100 border-b border-earth-100 dark:border-gray-700 last:border-0"
                                 onClick={() => {
                                   handleDetayChange('eldeAsimBogaId', e.id);
                                   setErkekSearchTerm(`${e.kupeNo} (${e.tur} - ${e.irk})`);
                                   setIsErkekDropdownOpen(false);
                                 }}
                               >
-                                {e.kupeNo} <span className="text-earth-500 text-sm ml-2">({e.tur} - {e.irk})</span>
+                                {e.kupeNo} <span className="text-earth-500 dark:text-gray-400 text-sm ml-2">({e.tur} - {e.irk})</span>
                               </div>
                             ))}
                           {erkekHayvanlar.filter(e => e.kupeNo.toLowerCase().includes(erkekSearchTerm.toLowerCase()) || e.tur.toLowerCase().includes(erkekSearchTerm.toLowerCase())).length === 0 && (
-                             <div className="p-3 text-earth-500 text-sm text-center">Sonuç bulunamadı.</div>
+                             <div className="p-3 text-earth-500 dark:text-gray-400 text-sm text-center">Sonuç bulunamadı.</div>
                           )}
                         </div>
                       </>
@@ -282,14 +282,14 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
               ) : (
                 <>
                   <div>
-                    <label className="text-sm font-bold text-earth-700 mb-1 block">Sperma / Boğa Bilgisi</label>
+                    <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Sperma / Boğa Bilgisi</label>
                     <input type="text" value={detaylar.spermaBogaBilgisi || ''} onChange={e => handleDetayChange('spermaBogaBilgisi', e.target.value)}
-                      placeholder="Örn: Holstein - 123456" className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-pink-500" />
+                      placeholder="Örn: Holstein - 123456" className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500" />
                   </div>
                   <div>
-                    <label className="text-sm font-bold text-earth-700 mb-1 block">Teknisyen / Veteriner</label>
+                    <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Teknisyen / Veteriner</label>
                     <input type="text" value={detaylar.teknisyen || ''} onChange={e => handleDetayChange('teknisyen', e.target.value)}
-                      placeholder="Ad Soyad" className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-pink-500" />
+                      placeholder="Ad Soyad" className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500" />
                   </div>
                 </>
               )}
@@ -298,9 +298,9 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
 
           {tur === 'Gebelik Kontrolü' && (
             <div>
-              <label className="text-sm font-bold text-earth-700 mb-1 block">Sonuç</label>
+              <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Sonuç</label>
               <select value={durum} onChange={e => setDurum(e.target.value as any)}
-                className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-pink-500">
+                className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500">
                 <option value="Gebe">Gebe</option>
                 <option value="Boş">Boş</option>
                 <option value="Belirsiz">Belirsiz</option>
@@ -311,9 +311,9 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
           {tur === 'Doğum' && (
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-bold text-earth-700 mb-1 block">Doğum Değerlendirmesi</label>
+                <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Doğum Değerlendirmesi</label>
                 <select value={dogumDegerlendirmesi} onChange={e => setDogumDegerlendirmesi(e.target.value)}
-                  className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-pink-500">
+                  className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500">
                   <option value="">Seçiniz...</option>
                   <option value="Sağlıklı">Sağlıklı</option>
                   <option value="Güç Doğum">Güç Doğum</option>
@@ -323,29 +323,29 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
               </div>
 
               {!existing && dogumDegerlendirmesi !== 'Ölü Doğum' && dogumDegerlendirmesi !== 'Düşük' && (
-                <div className="bg-green-50 p-4 rounded-xl border border-green-200 space-y-4">
+                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl border border-green-200 space-y-4">
               <h4 className="font-bold text-green-800 flex items-center space-x-2">
                 <Droplets className="w-5 h-5" />
                 <span>Otomatik Buzağı Kaydı (İsteğe Bağlı)</span>
               </h4>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="text-sm font-bold text-earth-700 mb-1 block">Buzağı Küpe No</label>
+                  <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Buzağı Küpe No</label>
                   <input type="text" value={yeniBuzagiKupeNo} onChange={e => setYeniBuzagiKupeNo(e.target.value)}
-                    placeholder="TR..." className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-green-500" />
+                    placeholder="TR..." className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500" />
                 </div>
                 <div>
-                  <label className="text-sm font-bold text-earth-700 mb-1 block">Cinsiyet</label>
+                  <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Cinsiyet</label>
                   <select value={yeniBuzagiCinsiyet} onChange={e => setYeniBuzagiCinsiyet(e.target.value as 'Erkek'|'Dişi')}
-                    className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                    className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500">
                     <option value="Dişi">Dişi</option>
                     <option value="Erkek">Erkek</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-sm font-bold text-earth-700 mb-1 block">Doğum Ağırlığı</label>
+                  <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Doğum Ağırlığı</label>
                   <input type="number" value={yeniBuzagiDogumAgirligi} onChange={e => setYeniBuzagiDogumAgirligi(e.target.value)}
-                    placeholder="kg" className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-green-500" />
+                    placeholder="kg" className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500" />
                 </div>
               </div>
             </div>
@@ -355,23 +355,23 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
 
           {/* Açıklama/Notlar */}
           <div>
-            <label className="text-sm font-bold text-earth-700 mb-1 block">Notlar</label>
+            <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Notlar</label>
             <textarea value={notlar} onChange={e => setNotlar(e.target.value)} rows={3}
               placeholder="Eklemek istediğiniz notlar..."
-              className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-pink-500 resize-none" />
+              className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 resize-none" />
           </div>
 
           {/* Maliyet */}
           <div>
-            <label className="text-sm font-bold text-earth-700 mb-1 block">Maliyet (₺) — İsteğe Bağlı</label>
+            <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Maliyet (₺) — İsteğe Bağlı</label>
             <input type="number" min={0} value={maliyet} onChange={e => setMaliyet(e.target.value)}
               placeholder="Örn: 300"
-              className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-pink-500" />
+              className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500" />
           </div>
         </div>
 
-        <div className="p-4 border-t border-earth-200 flex justify-end space-x-3 shrink-0">
-          <button onClick={onClose} className="px-5 py-2 text-earth-600 font-bold hover:bg-earth-100 rounded-lg transition">İptal</button>
+        <div className="p-4 border-t border-earth-200 dark:border-gray-700 flex justify-end space-x-3 shrink-0">
+          <button onClick={onClose} className="px-5 py-2 text-earth-600 dark:text-gray-400 font-bold hover:bg-earth-100 dark:hover:bg-gray-700 rounded-lg transition">İptal</button>
           <button onClick={handleSave} disabled={saving}
             className="flex items-center space-x-2 px-6 py-2 bg-pink-600 text-white rounded-lg font-bold hover:bg-pink-700 disabled:opacity-50 transition">
             <Save className="w-5 h-5" />

@@ -10,9 +10,9 @@ interface PedigreeTreeProps {
 }
 
 const AnimalCard: React.FC<{ hayvan: Hayvan, title: string, onClick: () => void, onEdit?: () => void }> = ({ hayvan, title, onClick, onEdit }) => (
-  <div onClick={onClick} className="bg-white border border-nature-200 p-2 md:p-3 rounded-lg shadow-sm cursor-pointer hover:shadow-md hover:border-nature-500 transition text-center md:text-left relative group">
+  <div onClick={onClick} className="bg-white dark:bg-gray-800 border border-nature-200 dark:border-nature-800 p-2 md:p-3 rounded-lg shadow-sm cursor-pointer hover:shadow-md hover:border-nature-500 transition text-center md:text-left relative group">
     <div className="flex justify-between items-center mb-1">
-      <div className="text-[10px] md:text-xs font-bold text-earth-500 uppercase">{title}</div>
+      <div className="text-[10px] md:text-xs font-bold text-earth-500 dark:text-gray-400 uppercase">{title}</div>
       {onEdit && (
         <button
           onClick={(e) => { e.stopPropagation(); onEdit(); }}
@@ -23,17 +23,17 @@ const AnimalCard: React.FC<{ hayvan: Hayvan, title: string, onClick: () => void,
         </button>
       )}
     </div>
-    <div className="font-bold text-earth-900 text-sm md:text-base truncate">{hayvan.kupeNo}</div>
-    <div className="text-xs md:text-sm text-earth-600 truncate">{hayvan.tur} &bull; {hayvan.irk}</div>
+    <div className="font-bold text-earth-900 dark:text-gray-100 text-sm md:text-base truncate">{hayvan.kupeNo}</div>
+    <div className="text-xs md:text-sm text-earth-600 dark:text-gray-400 truncate">{hayvan.tur} &bull; {hayvan.irk}</div>
   </div>
 );
 
 const EmptyCard: React.FC<{ title: string, kupeNo?: string, onClick?: () => void }> = ({ title, kupeNo, onClick }) => (
   <div
     onClick={onClick}
-    className={`bg-earth-50 border border-dashed border-earth-300 p-2 md:p-3 rounded-lg flex flex-col justify-center items-center h-full min-h-[60px] md:min-h-[80px] ${onClick ? 'cursor-pointer hover:bg-earth-100 hover:border-earth-400 transition' : ''}`}
+    className={`bg-earth-50 dark:bg-gray-900 border border-dashed border-earth-300 dark:border-gray-600 p-2 md:p-3 rounded-lg flex flex-col justify-center items-center h-full min-h-[60px] md:min-h-[80px] ${onClick ? 'cursor-pointer hover:bg-earth-100 dark:hover:bg-gray-700 hover:border-earth-400 transition' : ''}`}
   >
-    <div className="text-[10px] md:text-xs font-bold text-earth-500 mb-1 uppercase">{title}</div>
+    <div className="text-[10px] md:text-xs font-bold text-earth-500 dark:text-gray-400 mb-1 uppercase">{title}</div>
     <div className="text-xs md:text-sm text-earth-400 italic text-center truncate w-full" title={kupeNo}>
       {kupeNo ? `${kupeNo} (Yok)` : (onClick ? 'Tıkla ve Ekle' : 'Kayıt Yok')}
     </div>
@@ -203,7 +203,7 @@ const PedigreeTree: React.FC<PedigreeTreeProps> = ({ hayvan, onSelectAnimal }) =
   return (
     <div className="space-y-8 animate-fade-in p-1 sm:p-2">
       <div className="space-y-6">
-        <h3 className="text-lg font-bold text-earth-800 border-b pb-2">3 Nesil Soy Ağacı</h3>
+        <h3 className="text-lg font-bold text-earth-800 dark:text-gray-200 border-b pb-2">3 Nesil Soy Ağacı</h3>
         <div className="overflow-x-auto pb-2 min-w-0 custom-scrollbar">
           <div className="grid grid-cols-2 gap-2 md:gap-8 relative min-w-[320px]">
 
@@ -214,7 +214,7 @@ const PedigreeTree: React.FC<PedigreeTreeProps> = ({ hayvan, onSelectAnimal }) =
               {babaAnne ? <AnimalCard hayvan={babaAnne} title="B.Anne" onClick={() => onSelectAnimal(babaAnne.id)} onEdit={() => openModal('Baba-B.Anne')} /> : <EmptyCard title="B.Anne" kupeNo={baba?.anneKupeNo} onClick={baba ? () => openModal('Baba-B.Anne') : undefined} />}
             </div>
             <div className="flex justify-center relative pt-4">
-              <div className="absolute top-0 left-1/4 right-1/4 h-3 border-t-2 border-earth-200 rounded-t-lg"></div>
+              <div className="absolute top-0 left-1/4 right-1/4 h-3 border-t-2 border-earth-200 dark:border-gray-700 rounded-t-lg"></div>
               <div className="absolute top-0 left-1/2 w-0.5 h-4 bg-earth-200 -translate-x-1/2"></div>
               <div className="w-full relative z-10">
                 {baba ? (
@@ -233,7 +233,7 @@ const PedigreeTree: React.FC<PedigreeTreeProps> = ({ hayvan, onSelectAnimal }) =
               {anneAnne ? <AnimalCard hayvan={anneAnne} title="B.Anne" onClick={() => onSelectAnimal(anneAnne.id)} onEdit={() => openModal('Anne-B.Anne')} /> : <EmptyCard title="B.Anne" kupeNo={anne?.anneKupeNo} onClick={anne ? () => openModal('Anne-B.Anne') : undefined} />}
             </div>
             <div className="flex justify-center relative pt-4">
-              <div className="absolute top-0 left-1/4 right-1/4 h-3 border-t-2 border-earth-200 rounded-t-lg"></div>
+              <div className="absolute top-0 left-1/4 right-1/4 h-3 border-t-2 border-earth-200 dark:border-gray-700 rounded-t-lg"></div>
               <div className="absolute top-0 left-1/2 w-0.5 h-4 bg-earth-200 -translate-x-1/2"></div>
               <div className="w-full relative z-10">
                 {anne ? (
@@ -246,13 +246,13 @@ const PedigreeTree: React.FC<PedigreeTreeProps> = ({ hayvan, onSelectAnimal }) =
           </div>
 
           <div className="col-span-2 pt-4 flex justify-center relative mt-2">
-            <div className="absolute top-0 left-[25%] right-[25%] h-4 border-t-2 border-l-2 border-r-2 border-earth-300 rounded-t-lg -mt-2"></div>
+            <div className="absolute top-0 left-[25%] right-[25%] h-4 border-t-2 border-l-2 border-r-2 border-earth-300 dark:border-gray-600 rounded-t-lg -mt-2"></div>
             <div className="absolute top-2 left-1/2 w-0.5 h-4 bg-earth-300 -translate-x-1/2"></div>
 
-            <div className="bg-nature-50 border-2 border-nature-500 p-4 rounded-xl shadow w-full max-w-sm text-center relative z-10">
-              <div className="text-xs font-black text-nature-700 mb-1 uppercase">Mevcut Hayvan</div>
-              <div className="font-black text-xl text-earth-900">{hayvan.kupeNo}</div>
-              <div className="text-earth-600 font-medium mt-1">{hayvan.irk}</div>
+            <div className="bg-nature-50 dark:bg-nature-900/30 border-2 border-nature-500 p-4 rounded-xl shadow w-full max-w-sm text-center relative z-10">
+              <div className="text-xs font-black text-nature-700 dark:text-nature-300 mb-1 uppercase">Mevcut Hayvan</div>
+              <div className="font-black text-xl text-earth-900 dark:text-gray-100">{hayvan.kupeNo}</div>
+              <div className="text-earth-600 dark:text-gray-400 font-medium mt-1">{hayvan.irk}</div>
             </div>
           </div>
         </div>
@@ -260,7 +260,7 @@ const PedigreeTree: React.FC<PedigreeTreeProps> = ({ hayvan, onSelectAnimal }) =
       </div>
 
       <div className="pt-6">
-        <h3 className="text-lg font-bold text-earth-800 border-b pb-2 mb-4">Yavruları ({yavrular.length})</h3>
+        <h3 className="text-lg font-bold text-earth-800 dark:text-gray-200 border-b pb-2 mb-4">Yavruları ({yavrular.length})</h3>
         {yavrular.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {yavrular.sort((a, b) => new Date(b.dogumTarihi).getTime() - new Date(a.dogumTarihi).getTime()).map(yavru => (
@@ -268,7 +268,7 @@ const PedigreeTree: React.FC<PedigreeTreeProps> = ({ hayvan, onSelectAnimal }) =
             ))}
           </div>
         ) : (
-          <div className="text-earth-500 italic bg-earth-50 p-4 rounded-lg text-center">
+          <div className="text-earth-500 dark:text-gray-400 italic bg-earth-50 dark:bg-gray-900 p-4 rounded-lg text-center">
             Sistemde kayıtlı yavrusu bulunamadı.
           </div>
         )}
@@ -276,21 +276,21 @@ const PedigreeTree: React.FC<PedigreeTreeProps> = ({ hayvan, onSelectAnimal }) =
 
       {editingParent && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
-            <div className="p-4 border-b border-earth-200 flex justify-between items-center">
-              <h2 className="text-xl font-black text-earth-900">{editingParent} Ekle / Değiştir</h2>
-              <button onClick={closeModal} className="text-earth-500 hover:text-red-500">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md shadow-2xl">
+            <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex justify-between items-center">
+              <h2 className="text-xl font-black text-earth-900 dark:text-gray-100">{editingParent} Ekle / Değiştir</h2>
+              <button onClick={closeModal} className="text-earth-500 dark:text-gray-400 hover:text-red-500">
                 <X className="w-6 h-6" />
               </button>
             </div>
 
             <form onSubmit={handleSaveParent} className="p-5 space-y-5">
               <div className="relative">
-                <label className="block text-sm font-bold text-earth-700 mb-1">Sürüden Seç (Akıllı Arama)</label>
+                <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Sürüden Seç (Akıllı Arama)</label>
                 <input
                   type="text"
                   placeholder="Küpe numarası ara..."
-                  className="w-full p-3 bg-earth-50 border border-earth-200 rounded-xl focus:ring-2 focus:ring-nature-500"
+                  className="w-full p-3 bg-earth-50 dark:bg-gray-900 border border-earth-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-nature-500"
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
@@ -301,23 +301,23 @@ const PedigreeTree: React.FC<PedigreeTreeProps> = ({ hayvan, onSelectAnimal }) =
                 {isDropdownOpen && searchTerm.length > 0 && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setIsDropdownOpen(false)}></div>
-                    <div className="absolute z-20 w-full mt-1 bg-white border border-earth-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                    <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-800 border border-earth-200 dark:border-gray-700 rounded-xl shadow-lg max-h-48 overflow-y-auto">
                       {filteredCandidates.length > 0 ? (
                         filteredCandidates.map(c => (
                           <div
                             key={c.id}
-                            className="p-3 hover:bg-earth-50 cursor-pointer border-b border-earth-100 last:border-0"
+                            className="p-3 hover:bg-earth-50 dark:hover:bg-gray-700 cursor-pointer border-b border-earth-100 dark:border-gray-700 last:border-0"
                             onClick={() => {
                               setManualKupeNo(c.kupeNo);
                               setSearchTerm('');
                               setIsDropdownOpen(false);
                             }}
                           >
-                            <span className="font-bold">{c.kupeNo}</span> <span className="text-sm text-earth-500">({c.tur})</span>
+                            <span className="font-bold">{c.kupeNo}</span> <span className="text-sm text-earth-500 dark:text-gray-400">({c.tur})</span>
                           </div>
                         ))
                       ) : (
-                        <div className="p-3 text-earth-500 text-sm text-center">Eşleşen kayıt bulunamadı.</div>
+                        <div className="p-3 text-earth-500 dark:text-gray-400 text-sm text-center">Eşleşen kayıt bulunamadı.</div>
                       )}
                     </div>
                   </>
@@ -325,18 +325,18 @@ const PedigreeTree: React.FC<PedigreeTreeProps> = ({ hayvan, onSelectAnimal }) =
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-earth-700 mb-1">Seçilen / Elle Yazılan Küpe No</label>
+                <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Seçilen / Elle Yazılan Küpe No</label>
                 <input
                   type="text"
                   placeholder="TR..."
-                  className="w-full p-3 bg-earth-50 border border-earth-200 rounded-xl focus:ring-2 focus:ring-nature-500 font-bold text-lg"
+                  className="w-full p-3 bg-earth-50 dark:bg-gray-900 border border-earth-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-nature-500 font-bold text-lg"
                   value={manualKupeNo}
                   onChange={(e) => setManualKupeNo(e.target.value)}
                 />
               </div>
 
               <div className="pt-4 flex justify-between items-center">
-                <button type="button" onClick={handleClearParent} className="px-4 py-2.5 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition flex items-center space-x-2">
+                <button type="button" onClick={handleClearParent} className="px-4 py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 font-bold rounded-xl hover:bg-red-100 transition flex items-center space-x-2">
                   <Trash2 className="w-5 h-5" />
                   <span className="hidden sm:inline">Kaydı Sil</span>
                 </button>

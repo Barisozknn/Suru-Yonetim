@@ -27,12 +27,12 @@ const ProgressBar = ({ current, target, label, unit }: { current: number, target
   return (
     <div className="mb-4">
       <div className="flex justify-between items-end mb-1">
-        <span className="font-bold text-earth-800 text-sm">{label}</span>
-        <span className="text-xs font-bold text-earth-500">
+        <span className="font-bold text-earth-800 dark:text-gray-200 text-sm">{label}</span>
+        <span className="text-xs font-bold text-earth-500 dark:text-gray-400">
           {validCurrent.toFixed(1)} / {validTarget.toFixed(1)} {unit}
         </span>
       </div>
-      <div className="w-full bg-earth-100 rounded-full h-2.5">
+      <div className="w-full bg-earth-100 dark:bg-gray-800 rounded-full h-2.5">
         <div className={`${color} h-2.5 rounded-full transition-all duration-500`} style={{ width: `${percent}%` }}></div>
       </div>
     </div>
@@ -179,25 +179,25 @@ const RationCalculator: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-earth-900 tracking-tight flex items-center">
+          <h1 className="text-2xl sm:text-3xl font-black text-earth-900 dark:text-gray-100 tracking-tight flex items-center">
             <Calculator className="w-7 h-7 sm:w-8 sm:h-8 mr-3 text-purple-600 flex-shrink-0" />
             <span>Rasyon Hesaplama</span>
           </h1>
-          <p className="text-earth-500 font-medium text-sm sm:text-base mt-0.5">Grup ihtiyaçlarına göre rasyon formüle edin</p>
+          <p className="text-earth-500 dark:text-gray-400 font-medium text-sm sm:text-base mt-0.5">Grup ihtiyaçlarına göre rasyon formüle edin</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sol Panel: Parametreler */}
-        <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-earth-200 space-y-6 lg:col-span-1">
-          <h2 className="font-bold text-lg text-earth-900 border-b pb-2">1. Hedef Parametreleri</h2>
+        <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 space-y-6 lg:col-span-1">
+          <h2 className="font-bold text-lg text-earth-900 dark:text-gray-100 border-b pb-2">1. Hedef Parametreleri</h2>
           
           <div>
-            <label className="block text-sm font-bold text-earth-700 mb-1">Hedef Grup</label>
+            <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Hedef Grup</label>
             <select 
               value={selectedGrupId}
               onChange={(e) => setSelectedGrupId(e.target.value)}
-              className="w-full p-2.5 border border-earth-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 bg-white font-medium text-sm"
+              className="w-full p-2.5 border border-earth-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-800 font-medium text-sm"
             >
               <option value="">Grup Seçin...</option>
               {gruplar.map(g => (
@@ -207,17 +207,17 @@ const RationCalculator: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-earth-700 mb-1">Verim Yönü</label>
+            <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Verim Yönü</label>
             <div className="flex space-x-2">
               <button 
                 onClick={() => setVerimYonu('Sütçü')}
-                className={`flex-1 py-2 px-3 rounded-lg font-bold flex items-center justify-center transition ${verimYonu === 'Sütçü' ? 'bg-purple-100 text-purple-700 border-2 border-purple-500' : 'bg-earth-50 text-earth-600 border-2 border-transparent'}`}
+                className={`flex-1 py-2 px-3 rounded-lg font-bold flex items-center justify-center transition ${verimYonu === 'Sütçü' ? 'bg-purple-100 text-purple-700 border-2 border-purple-500' : 'bg-earth-50 dark:bg-gray-900 text-earth-600 dark:text-gray-400 border-2 border-transparent'}`}
               >
                 <Droplets className="w-4 h-4 mr-2" /> Sütçü
               </button>
               <button 
                 onClick={() => setVerimYonu('Etçi')}
-                className={`flex-1 py-2 px-3 rounded-lg font-bold flex items-center justify-center transition ${verimYonu === 'Etçi' ? 'bg-red-100 text-red-700 border-2 border-red-500' : 'bg-earth-50 text-earth-600 border-2 border-transparent'}`}
+                className={`flex-1 py-2 px-3 rounded-lg font-bold flex items-center justify-center transition ${verimYonu === 'Etçi' ? 'bg-red-100 text-red-700 border-2 border-red-500' : 'bg-earth-50 dark:bg-gray-900 text-earth-600 dark:text-gray-400 border-2 border-transparent'}`}
               >
                 <Beef className="w-4 h-4 mr-2" /> Etçi
               </button>
@@ -225,35 +225,35 @@ const RationCalculator: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-earth-700 mb-1">Ort. Canlı Ağırlık (Kg)</label>
-            <input type="number" value={avgWeight} onChange={e => setAvgWeight(Number(e.target.value))} className="w-full p-2 border border-earth-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 font-bold" />
+            <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Ort. Canlı Ağırlık (Kg)</label>
+            <input type="number" value={avgWeight} onChange={e => setAvgWeight(Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 font-bold" />
           </div>
 
           {verimYonu === 'Sütçü' ? (
             <div>
-              <label className="block text-sm font-bold text-earth-700 mb-1">Hedef Süt Verimi (Litre/Gün)</label>
-              <input type="number" value={milkYield} onChange={e => setMilkYield(Number(e.target.value))} className="w-full p-2 border border-earth-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 font-bold" />
+              <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Hedef Süt Verimi (Litre/Gün)</label>
+              <input type="number" value={milkYield} onChange={e => setMilkYield(Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 font-bold" />
             </div>
           ) : (
             <div>
-              <label className="block text-sm font-bold text-earth-700 mb-1">Hedef Ağırlık Artışı (GCAA - gr/Gün)</label>
-              <input type="number" value={adg} onChange={e => setAdg(Number(e.target.value))} step="100" className="w-full p-2 border border-earth-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 font-bold" />
+              <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Hedef Ağırlık Artışı (GCAA - gr/Gün)</label>
+              <input type="number" value={adg} onChange={e => setAdg(Number(e.target.value))} step="100" className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 font-bold" />
             </div>
           )}
 
-          <div className="bg-earth-50 p-4 rounded-xl border border-earth-200 mt-4">
-            <h3 className="font-bold text-earth-800 text-sm mb-3">Hesaplanan Hedef İhtiyaç</h3>
+          <div className="bg-earth-50 dark:bg-gray-900 p-4 rounded-xl border border-earth-200 dark:border-gray-700 mt-4">
+            <h3 className="font-bold text-earth-800 dark:text-gray-200 text-sm mb-3">Hesaplanan Hedef İhtiyaç</h3>
             <div className="space-y-1 text-sm">
-              <div className="flex justify-between"><span className="text-earth-500">Kuru Madde (KM):</span> <span className="font-bold">{hedefIhtiyac.dmi.toFixed(1)} kg</span></div>
-              <div className="flex justify-between"><span className="text-earth-500">Enerji (ME):</span> <span className="font-bold">{hedefIhtiyac.me.toFixed(1)} Mcal</span></div>
-              <div className="flex justify-between"><span className="text-earth-500">Ham Protein (HP):</span> <span className="font-bold">{hedefIhtiyac.hp_g.toFixed(0)} gr (%{hedefIhtiyac.hp_yuzde.toFixed(1)})</span></div>
+              <div className="flex justify-between"><span className="text-earth-500 dark:text-gray-400">Kuru Madde (KM):</span> <span className="font-bold">{hedefIhtiyac.dmi.toFixed(1)} kg</span></div>
+              <div className="flex justify-between"><span className="text-earth-500 dark:text-gray-400">Enerji (ME):</span> <span className="font-bold">{hedefIhtiyac.me.toFixed(1)} Mcal</span></div>
+              <div className="flex justify-between"><span className="text-earth-500 dark:text-gray-400">Ham Protein (HP):</span> <span className="font-bold">{hedefIhtiyac.hp_g.toFixed(0)} gr (%{hedefIhtiyac.hp_yuzde.toFixed(1)})</span></div>
             </div>
           </div>
         </div>
 
         {/* Orta Panel: Yem Listesi */}
-        <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-earth-200 space-y-4 lg:col-span-1">
-          <h2 className="font-bold text-lg text-earth-900 border-b pb-2 flex justify-between items-center">
+        <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 space-y-4 lg:col-span-1">
+          <h2 className="font-bold text-lg text-earth-900 dark:text-gray-100 border-b pb-2 flex justify-between items-center">
             2. Rasyona Yem Ekle
           </h2>
           
@@ -261,7 +261,7 @@ const RationCalculator: React.FC = () => {
             <select 
               value={selectedYemToAdd}
               onChange={(e) => setSelectedYemToAdd(e.target.value)}
-              className="flex-1 min-w-0 truncate p-2 border border-earth-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 bg-white font-medium text-sm"
+              className="flex-1 min-w-0 truncate p-2 border border-earth-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-800 font-medium text-sm"
             >
               <option value="">Yem Seçin...</option>
               {yemler.filter(y => y && y.kmYuzde !== undefined).map(y => (
@@ -290,11 +290,11 @@ const RationCalculator: React.FC = () => {
                 const y = yemler.find(yem => yem && yem.id === r.yemId);
                 if (!y) return null;
                 return (
-                  <div key={r.id} className="p-3 border border-earth-200 rounded-xl bg-earth-50 relative group">
+                  <div key={r.id} className="p-3 border border-earth-200 dark:border-gray-700 rounded-xl bg-earth-50 dark:bg-gray-900 relative group">
                     <button onClick={() => removeYem(r.id)} className="absolute top-2 right-2 text-earth-400 hover:text-red-500 transition sm:opacity-0 group-hover:opacity-100 opacity-100 p-1">
                       <X className="w-4 h-4" />
                     </button>
-                    <div className="font-bold text-earth-800 text-sm">{y.ad}</div>
+                    <div className="font-bold text-earth-800 dark:text-gray-200 text-sm">{y.ad}</div>
                     <div className="flex items-center space-x-2 mt-2">
                       <input 
                         type="number" 
@@ -302,9 +302,9 @@ const RationCalculator: React.FC = () => {
                         min="0"
                         value={r.kgAsFed} 
                         onChange={(e) => updateYemKg(r.id, Number(e.target.value))}
-                        className="w-20 p-1 border border-earth-300 rounded text-center font-bold outline-none bg-white"
+                        className="w-20 p-1 border border-earth-300 dark:border-gray-600 rounded text-center font-bold outline-none bg-white dark:bg-gray-800"
                       />
-                      <span className="text-xs text-earth-500">Taze Kg / Hayvan</span>
+                      <span className="text-xs text-earth-500 dark:text-gray-400">Taze Kg / Hayvan</span>
                     </div>
                   </div>
                 )
@@ -314,9 +314,9 @@ const RationCalculator: React.FC = () => {
         </div>
 
         {/* Sağ Panel: Sonuçlar */}
-        <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-earth-200 space-y-4 lg:col-span-1">
-          <h2 className="font-bold text-lg text-earth-900 border-b pb-2 flex items-center">
-            <Activity className="w-5 h-5 mr-2 text-nature-600" />
+        <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 space-y-4 lg:col-span-1">
+          <h2 className="font-bold text-lg text-earth-900 dark:text-gray-100 border-b pb-2 flex items-center">
+            <Activity className="w-5 h-5 mr-2 text-nature-600 dark:text-nature-400" />
             3. Rasyon Çözümü
           </h2>
           
@@ -328,14 +328,14 @@ const RationCalculator: React.FC = () => {
             <ProgressBar current={toplamSaglanan.p} target={hedefIhtiyac.p} label="Fosfor (P)" unit="gr" />
           </div>
 
-          <div className="bg-nature-50 p-4 rounded-xl border border-nature-200 mt-6">
-            <h3 className="font-bold text-nature-800 text-sm mb-1">Rasyon Özeti</h3>
-            <p className="text-xs text-nature-600 mb-4">
+          <div className="bg-nature-50 dark:bg-nature-900/30 p-4 rounded-xl border border-nature-200 dark:border-nature-800 mt-6">
+            <h3 className="font-bold text-nature-800 dark:text-nature-200 text-sm mb-1">Rasyon Özeti</h3>
+            <p className="text-xs text-nature-600 dark:text-nature-400 mb-4">
               Bu rasyonun kuru maddesindeki ham protein oranı <strong>%{toplamSaglanan.hp_yuzde.toFixed(1)}</strong> olarak hesaplanmıştır. 
               {toplamSaglanan.hp_yuzde < hedefIhtiyac.hp_yuzde ? ' (Hedefin altında)' : ' (Hedef uygun)'}
             </p>
 
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4 flex justify-between items-center">
+            <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 rounded-lg p-3 mb-4 flex justify-between items-center">
               <span className="text-sm font-bold text-orange-800">Hayvan Başı Maliyet</span>
               <span className="text-xl font-black text-orange-600">
                 {(() => {

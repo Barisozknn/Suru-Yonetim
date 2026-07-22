@@ -96,15 +96,15 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
 
   return (
     <div className="w-full">
-      <div className="bg-white rounded-2xl shadow-sm border border-earth-200 flex flex-col h-full overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex flex-col h-full overflow-hidden">
         
         {/* Header */}
-        <div className="p-4 border-b border-earth-200 flex justify-between items-center bg-nature-50">
+        <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex justify-between items-center bg-nature-50 dark:bg-nature-900/30">
           <div className="flex items-center space-x-2">
-            <h2 className="text-xl font-black text-earth-900">Yem Deposu ve Stok Yönetimi</h2>
+            <h2 className="text-xl font-black text-earth-900 dark:text-gray-100">Yem Deposu ve Stok Yönetimi</h2>
           </div>
           {onClose && (
-            <button onClick={onClose} className="text-earth-500 hover:text-red-500 transition">
+            <button onClick={onClose} className="text-earth-500 dark:text-gray-400 hover:text-red-500 transition">
               <X className="w-7 h-7" />
             </button>
           )}
@@ -113,7 +113,7 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-6 bg-earth-50/50">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-            <h3 className="font-bold text-earth-800 text-lg">Mevcut Yemler</h3>
+            <h3 className="font-bold text-earth-800 dark:text-gray-200 text-lg">Mevcut Yemler</h3>
             <button 
               onClick={() => {
                 if (isAddingNew) {
@@ -130,9 +130,9 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
           </div>
 
           {isAddingNew && (
-            <form onSubmit={handleAddNewFeed} className="mb-6 bg-white p-5 rounded-xl border border-earth-200 shadow-sm animate-fade-in">
+            <form onSubmit={handleAddNewFeed} className="mb-6 bg-white dark:bg-gray-800 p-5 rounded-xl border border-earth-200 dark:border-gray-700 shadow-sm animate-fade-in">
               <div className="flex justify-between items-center mb-4 border-b pb-2">
-                <h4 className="font-bold text-earth-800">
+                <h4 className="font-bold text-earth-800 dark:text-gray-200">
                   {editingFeedId ? 'Yemi Düzenle' : 'Yeni Yem Kaydı'}
                 </h4>
                 {editingFeedId && (
@@ -143,12 +143,12 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-earth-600 mb-1">Yem Adı</label>
-                  <input required value={ad} onChange={e => setAd(e.target.value)} placeholder="Örn: Yonca Balyası" className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
+                  <label className="block text-sm font-bold text-earth-600 dark:text-gray-400 mb-1">Yem Adı</label>
+                  <input required value={ad} onChange={e => setAd(e.target.value)} placeholder="Örn: Yonca Balyası" className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-earth-600 mb-1">Tür</label>
-                  <select value={tur} onChange={e => setTur(e.target.value)} className="w-full p-2 border border-earth-300 rounded-lg outline-none focus:ring-2 focus:ring-nature-500">
+                  <label className="block text-sm font-bold text-earth-600 dark:text-gray-400 mb-1">Tür</label>
+                  <select value={tur} onChange={e => setTur(e.target.value)} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-nature-500">
                     <option>Kaba Yem</option>
                     <option>Kesif Yem</option>
                     <option>Mineral/Vitamin</option>
@@ -156,32 +156,32 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-earth-600 mb-1">Birim Fiyat (TL/Kg)</label>
-                  <input type="number" step="0.01" min="0" value={birimFiyat} onChange={e => setBirimFiyat(Number(e.target.value))} className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
+                  <label className="block text-sm font-bold text-earth-600 dark:text-gray-400 mb-1">Birim Fiyat (TL/Kg)</label>
+                  <input type="number" step="0.01" min="0" value={birimFiyat} onChange={e => setBirimFiyat(Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-earth-600 mb-1">Min Uyarı (Kg)</label>
-                  <input type="number" step="1" min="0" value={minStokUyariKg} onChange={e => setMinStokUyariKg(Number(e.target.value))} className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
+                  <label className="block text-sm font-bold text-earth-600 dark:text-gray-400 mb-1">Min Uyarı (Kg)</label>
+                  <input type="number" step="1" min="0" value={minStokUyariKg} onChange={e => setMinStokUyariKg(Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-earth-600 mb-1">Kuru Madde (%)</label>
-                  <input type="number" step="0.1" min="0" max="100" value={kmYuzde} onChange={e => setKmYuzde(Number(e.target.value))} className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
+                  <label className="block text-sm font-bold text-earth-600 dark:text-gray-400 mb-1">Kuru Madde (%)</label>
+                  <input type="number" step="0.1" min="0" max="100" value={kmYuzde} onChange={e => setKmYuzde(Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-earth-600 mb-1">Enerji (ME Mcal/kg)</label>
-                  <input type="number" step="0.01" min="0" value={meMcalKg} onChange={e => setMeMcalKg(Number(e.target.value))} className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
+                  <label className="block text-sm font-bold text-earth-600 dark:text-gray-400 mb-1">Enerji (ME Mcal/kg)</label>
+                  <input type="number" step="0.01" min="0" value={meMcalKg} onChange={e => setMeMcalKg(Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-earth-600 mb-1">Ham Protein (%)</label>
-                  <input type="number" step="0.1" min="0" max="100" value={hpYuzde} onChange={e => setHpYuzde(Number(e.target.value))} className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
+                  <label className="block text-sm font-bold text-earth-600 dark:text-gray-400 mb-1">Ham Protein (%)</label>
+                  <input type="number" step="0.1" min="0" max="100" value={hpYuzde} onChange={e => setHpYuzde(Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-earth-600 mb-1">Kalsiyum (Ca %)</label>
-                  <input type="number" step="0.01" min="0" value={caYuzde} onChange={e => setCaYuzde(Number(e.target.value))} className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
+                  <label className="block text-sm font-bold text-earth-600 dark:text-gray-400 mb-1">Kalsiyum (Ca %)</label>
+                  <input type="number" step="0.01" min="0" value={caYuzde} onChange={e => setCaYuzde(Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-earth-600 mb-1">Fosfor (P %)</label>
-                  <input type="number" step="0.01" min="0" value={pYuzde} onChange={e => setPYuzde(Number(e.target.value))} className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
+                  <label className="block text-sm font-bold text-earth-600 dark:text-gray-400 mb-1">Fosfor (P %)</label>
+                  <input type="number" step="0.01" min="0" value={pYuzde} onChange={e => setPYuzde(Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
                 </div>
               </div>
               <div className="mt-4 flex justify-end">
@@ -193,7 +193,7 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
           )}
 
           {yemler.length === 0 ? (
-            <div className="text-center py-10 text-earth-500 italic bg-white rounded-xl border border-earth-200">
+            <div className="text-center py-10 text-earth-500 dark:text-gray-400 italic bg-white dark:bg-gray-800 rounded-xl border border-earth-200 dark:border-gray-700">
               Henüz depoya yem eklenmemiş.
             </div>
           ) : (
@@ -201,12 +201,12 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
               {yemler.map(yem => {
                 const isLowStock = yem.stokKg <= yem.minStokUyariKg;
                 return (
-                  <div key={yem.id} className={`p-5 rounded-xl border ${isLowStock ? 'bg-red-50 border-red-200' : 'bg-white border-earth-200 hover:border-nature-400'} shadow-sm transition flex flex-col justify-between`}>
+                  <div key={yem.id} className={`p-5 rounded-xl border ${isLowStock ? 'bg-red-50 dark:bg-red-900/20 border-red-200' : 'bg-white dark:bg-gray-800 border-earth-200 dark:border-gray-700 hover:border-nature-400'} shadow-sm transition flex flex-col justify-between`}>
                     <div>
                       <div className="flex justify-between items-start mb-2">
                         <div>
-                          <h4 className="text-lg font-bold text-earth-900">{yem.ad}</h4>
-                          <span className="text-sm font-medium text-earth-500">{yem.tur}</span>
+                          <h4 className="text-lg font-bold text-earth-900 dark:text-gray-100">{yem.ad}</h4>
+                          <span className="text-sm font-medium text-earth-500 dark:text-gray-400">{yem.tur}</span>
                         </div>
                         {isLowStock && (
                           <span className="flex items-center text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded-full mr-2">
@@ -215,10 +215,10 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
                           </span>
                         )}
                         <div className="flex space-x-1">
-                          <button onClick={() => handleEditClick(yem)} className="p-1.5 bg-earth-100 text-earth-600 rounded hover:bg-earth-200" title="Düzenle">
+                          <button onClick={() => handleEditClick(yem)} className="p-1.5 bg-earth-100 dark:bg-gray-800 text-earth-600 dark:text-gray-400 rounded hover:bg-earth-200" title="Düzenle">
                             <Edit2 className="w-4 h-4" />
                           </button>
-                          <button onClick={() => handleDeleteClick(yem.id)} className="p-1.5 bg-red-50 text-red-500 rounded hover:bg-red-100" title="Sil">
+                          <button onClick={() => handleDeleteClick(yem.id)} className="p-1.5 bg-red-50 dark:bg-red-900/20 text-red-500 rounded hover:bg-red-100" title="Sil">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
@@ -226,14 +226,14 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
                       
                       <div className="mt-4 flex space-x-6">
                         <div>
-                          <p className="text-xs font-bold text-earth-500 uppercase">Mevcut Stok</p>
-                          <p className={`text-2xl font-black ${isLowStock ? 'text-red-600' : 'text-nature-700'}`}>
+                          <p className="text-xs font-bold text-earth-500 dark:text-gray-400 uppercase">Mevcut Stok</p>
+                          <p className={`text-2xl font-black ${isLowStock ? 'text-red-600' : 'text-nature-700 dark:text-nature-300'}`}>
                             {yem.stokKg.toLocaleString('tr-TR')} <span className="text-base font-bold">kg</span>
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-earth-500 uppercase">Birim Fiyat</p>
-                          <p className="text-xl font-bold text-earth-800">
+                          <p className="text-xs font-bold text-earth-500 dark:text-gray-400 uppercase">Birim Fiyat</p>
+                          <p className="text-xl font-bold text-earth-800 dark:text-gray-200">
                             {yem.birimFiyat.toLocaleString('tr-TR', {style:'currency', currency:'TRY'})}
                           </p>
                         </div>
@@ -241,18 +241,18 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
                     </div>
                       
                       {yem.kmYuzde !== undefined && (
-                        <div className="mt-4 pt-3 border-t border-earth-100 flex flex-wrap gap-2">
-                          <div className="bg-earth-100 text-earth-700 px-2 py-1 rounded-md text-xs font-bold">KM: %{yem.kmYuzde}</div>
-                          <div className="bg-earth-100 text-earth-700 px-2 py-1 rounded-md text-xs font-bold">ME: {yem.meMcalKg}</div>
-                          <div className="bg-earth-100 text-earth-700 px-2 py-1 rounded-md text-xs font-bold">HP: %{yem.hpYuzde}</div>
-                          <div className="bg-earth-100 text-earth-700 px-2 py-1 rounded-md text-xs font-bold">Ca: %{yem.caYuzde}</div>
-                          <div className="bg-earth-100 text-earth-700 px-2 py-1 rounded-md text-xs font-bold">P: %{yem.pYuzde}</div>
+                        <div className="mt-4 pt-3 border-t border-earth-100 dark:border-gray-700 flex flex-wrap gap-2">
+                          <div className="bg-earth-100 dark:bg-gray-800 text-earth-700 dark:text-gray-300 px-2 py-1 rounded-md text-xs font-bold">KM: %{yem.kmYuzde}</div>
+                          <div className="bg-earth-100 dark:bg-gray-800 text-earth-700 dark:text-gray-300 px-2 py-1 rounded-md text-xs font-bold">ME: {yem.meMcalKg}</div>
+                          <div className="bg-earth-100 dark:bg-gray-800 text-earth-700 dark:text-gray-300 px-2 py-1 rounded-md text-xs font-bold">HP: %{yem.hpYuzde}</div>
+                          <div className="bg-earth-100 dark:bg-gray-800 text-earth-700 dark:text-gray-300 px-2 py-1 rounded-md text-xs font-bold">Ca: %{yem.caYuzde}</div>
+                          <div className="bg-earth-100 dark:bg-gray-800 text-earth-700 dark:text-gray-300 px-2 py-1 rounded-md text-xs font-bold">P: %{yem.pYuzde}</div>
                         </div>
                       )}
-                    <div className="mt-6 pt-4 border-t border-earth-200 flex justify-end">
+                    <div className="mt-6 pt-4 border-t border-earth-200 dark:border-gray-700 flex justify-end">
                       <button 
                         onClick={() => setSelectedYem(yem)}
-                        className="flex items-center space-x-1 px-4 py-2 bg-earth-100 text-earth-800 rounded-lg font-bold hover:bg-earth-200 transition"
+                        className="flex items-center space-x-1 px-4 py-2 bg-earth-100 dark:bg-gray-800 text-earth-800 dark:text-gray-200 rounded-lg font-bold hover:bg-earth-200 transition"
                       >
                         <ArrowDownUp className="w-4 h-4" />
                         <span>Giriş / Çıkış Yap</span>

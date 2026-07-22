@@ -60,15 +60,15 @@ const DataManagement: React.FC = () => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-earth-200 space-y-6">
-      <div className="flex items-center justify-between border-b border-earth-100 pb-4">
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 space-y-6">
+      <div className="flex items-center justify-between border-b border-earth-100 dark:border-gray-700 pb-4">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
             <FileSpreadsheet className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-earth-900">Veri Yönetimi (Gelişmiş)</h2>
-            <p className="text-xs text-earth-500">Excel ve PDF formatında raporlar ve veri transferi</p>
+            <h2 className="text-xl font-bold text-earth-900 dark:text-gray-100">Veri Yönetimi (Gelişmiş)</h2>
+            <p className="text-xs text-earth-500 dark:text-gray-400">Excel ve PDF formatında raporlar ve veri transferi</p>
           </div>
         </div>
       </div>
@@ -76,7 +76,7 @@ const DataManagement: React.FC = () => {
       <div className="space-y-4">
         {/* Kategori Seçimi */}
         <div className="space-y-1">
-          <label className="text-sm font-bold text-earth-700">İşlem Yapılacak Veri (Kategori)</label>
+          <label className="text-sm font-bold text-earth-700 dark:text-gray-300">İşlem Yapılacak Veri (Kategori)</label>
           <select 
             value={selectedKategori}
             onChange={(e) => {
@@ -84,7 +84,7 @@ const DataManagement: React.FC = () => {
               setSelectedAnimalIds([]);
               setSearchTerm('');
             }}
-            className="w-full p-3 border-2 border-earth-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-medium"
+            className="w-full p-3 border-2 border-earth-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-medium"
           >
             {KATEGORILER.map(k => (
               <option key={k.id} value={k.id}>{k.label}</option>
@@ -94,9 +94,9 @@ const DataManagement: React.FC = () => {
 
         {/* Dinamik Filtreler */}
         {activeKategori?.requireAnimal && (
-          <div className="space-y-1 p-4 bg-earth-50 rounded-xl border border-earth-200">
-            <label className="text-sm font-bold text-earth-700 flex items-center space-x-2">
-              <Search className="w-4 h-4 text-earth-500" />
+          <div className="space-y-1 p-4 bg-earth-50 dark:bg-gray-900 rounded-xl border border-earth-200 dark:border-gray-700">
+            <label className="text-sm font-bold text-earth-700 dark:text-gray-300 flex items-center space-x-2">
+              <Search className="w-4 h-4 text-earth-500 dark:text-gray-400" />
               <span>Hayvan Seçin</span>
             </label>
             <div className="relative">
@@ -105,14 +105,14 @@ const DataManagement: React.FC = () => {
                 placeholder="Küpe numarası ara..." 
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="w-full p-2 border border-earth-300 rounded-lg outline-none focus:border-blue-500"
+                className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg outline-none focus:border-blue-500"
               />
               {searchTerm && (
-                <div className="absolute w-full mt-1 bg-white border border-earth-200 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
+                <div className="absolute w-full mt-1 bg-white dark:bg-gray-800 border border-earth-200 dark:border-gray-700 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
                   {filteredHayvanlar.map(h => (
                     <div 
                       key={h.id} 
-                      className="p-2 hover:bg-blue-50 cursor-pointer text-sm font-medium border-b border-earth-100 last:border-0"
+                      className="p-2 hover:bg-blue-50 cursor-pointer text-sm font-medium border-b border-earth-100 dark:border-gray-700 last:border-0"
                       onClick={() => {
                         setSelectedAnimalIds(prev => [...prev, h.id]);
                         setSearchTerm('');
@@ -122,7 +122,7 @@ const DataManagement: React.FC = () => {
                     </div>
                   ))}
                   {filteredHayvanlar.length === 0 && (
-                    <div className="p-2 text-sm text-earth-500 text-center">Sonuç bulunamadı</div>
+                    <div className="p-2 text-sm text-earth-500 dark:text-gray-400 text-center">Sonuç bulunamadı</div>
                   )}
                 </div>
               )}
@@ -159,33 +159,33 @@ const DataManagement: React.FC = () => {
         )}
 
         {activeKategori?.requireDates && (
-          <div className="space-y-2 p-4 bg-earth-50 rounded-xl border border-earth-200">
-            <label className="text-sm font-bold text-earth-700 flex items-center space-x-2">
-              <Calendar className="w-4 h-4 text-earth-500" />
+          <div className="space-y-2 p-4 bg-earth-50 dark:bg-gray-900 rounded-xl border border-earth-200 dark:border-gray-700">
+            <label className="text-sm font-bold text-earth-700 dark:text-gray-300 flex items-center space-x-2">
+              <Calendar className="w-4 h-4 text-earth-500 dark:text-gray-400" />
               <span>Tarih Aralığı (Opsiyonel)</span>
             </label>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <span className="text-xs text-earth-500 mb-1 block">Başlangıç</span>
-                <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full p-2 border border-earth-300 rounded-lg" />
+                <span className="text-xs text-earth-500 dark:text-gray-400 mb-1 block">Başlangıç</span>
+                <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg" />
               </div>
               <div>
-                <span className="text-xs text-earth-500 mb-1 block">Bitiş</span>
-                <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full p-2 border border-earth-300 rounded-lg" />
+                <span className="text-xs text-earth-500 dark:text-gray-400 mb-1 block">Bitiş</span>
+                <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg" />
               </div>
             </div>
           </div>
         )}
 
         {/* Aksiyon Butonları */}
-        <div className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-earth-100">
+        <div className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-earth-100 dark:border-gray-700">
           
           <div className="space-y-2">
-            <h3 className="text-sm font-bold text-earth-600 mb-2 uppercase">Dışa Aktar (Rapor)</h3>
+            <h3 className="text-sm font-bold text-earth-600 dark:text-gray-400 mb-2 uppercase">Dışa Aktar (Rapor)</h3>
             <button 
               onClick={() => handleExport('excel')}
               disabled={isLoading || (activeKategori?.requireAnimal && selectedAnimalIds.length === 0)}
-              className="flex items-center justify-center space-x-2 w-full py-2.5 bg-green-50 text-green-700 border border-green-200 rounded-xl font-bold hover:bg-green-100 transition disabled:opacity-50"
+              className="flex items-center justify-center space-x-2 w-full py-2.5 bg-green-50 dark:bg-green-900/20 text-green-700 border border-green-200 rounded-xl font-bold hover:bg-green-100 transition disabled:opacity-50"
             >
               <FileSpreadsheet className="w-5 h-5" />
               <span>Excel Olarak İndir (.xlsx)</span>
@@ -193,15 +193,15 @@ const DataManagement: React.FC = () => {
             <button 
               onClick={() => handleExport('pdf')}
               disabled={isLoading || (activeKategori?.requireAnimal && selectedAnimalIds.length === 0)}
-              className="flex items-center justify-center space-x-2 w-full py-2.5 bg-red-50 text-red-700 border border-red-200 rounded-xl font-bold hover:bg-red-100 transition disabled:opacity-50"
+              className="flex items-center justify-center space-x-2 w-full py-2.5 bg-red-50 dark:bg-red-900/20 text-red-700 border border-red-200 rounded-xl font-bold hover:bg-red-100 transition disabled:opacity-50"
             >
               <FileText className="w-5 h-5" />
               <span>PDF Olarak İndir (.pdf)</span>
             </button>
           </div>
 
-          <div className="space-y-2 border-t md:border-t-0 md:border-l border-earth-100 pt-4 md:pt-0 md:pl-4">
-            <h3 className="text-sm font-bold text-earth-600 mb-2 uppercase">İçe Aktar (Excel Yükle)</h3>
+          <div className="space-y-2 border-t md:border-t-0 md:border-l border-earth-100 dark:border-gray-700 pt-4 md:pt-0 md:pl-4">
+            <h3 className="text-sm font-bold text-earth-600 dark:text-gray-400 mb-2 uppercase">İçe Aktar (Excel Yükle)</h3>
             {activeKategori?.importable ? (
               <>
                 <input 
@@ -232,7 +232,7 @@ const DataManagement: React.FC = () => {
                 </p>
               </>
             ) : (
-              <div className="h-full flex items-center justify-center p-4 bg-earth-50 rounded-xl border border-earth-100 text-earth-400 text-sm font-medium text-center">
+              <div className="h-full flex items-center justify-center p-4 bg-earth-50 dark:bg-gray-900 rounded-xl border border-earth-100 dark:border-gray-700 text-earth-400 text-sm font-medium text-center">
                 Bu kategori için içe aktarım desteklenmiyor.
               </div>
             )}

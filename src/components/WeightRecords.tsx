@@ -119,43 +119,43 @@ const WeightRecords: React.FC<Props> = ({ hayvan }) => {
     <div className="space-y-6">
       {/* Form and ADG Card */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <form onSubmit={handleAdd} className="bg-earth-50 p-4 rounded-xl border border-earth-200 shadow-sm">
-          <h3 className="font-bold text-earth-800 flex items-center mb-4">
-            <Scale className="w-5 h-5 mr-2 text-nature-600" />
+        <form onSubmit={handleAdd} className="bg-earth-50 dark:bg-gray-900 p-4 rounded-xl border border-earth-200 dark:border-gray-700 shadow-sm">
+          <h3 className="font-bold text-earth-800 dark:text-gray-200 flex items-center mb-4">
+            <Scale className="w-5 h-5 mr-2 text-nature-600 dark:text-nature-400" />
             Yeni Tartım Ekle
           </h3>
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-bold text-earth-600 mb-1">Tarih</label>
-              <input required type="date" value={tarih} onChange={e => setTarih(e.target.value)} className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none text-sm" />
+              <label className="block text-xs font-bold text-earth-600 dark:text-gray-400 mb-1">Tarih</label>
+              <input required type="date" value={tarih} onChange={e => setTarih(e.target.value)} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none text-sm" />
             </div>
             <div>
-              <label className="block text-xs font-bold text-earth-600 mb-1">Ağırlık (kg)</label>
-              <input required type="number" step="0.1" value={kg} onChange={e => setKg(Number(e.target.value))} placeholder="Örn: 550" className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none text-sm" />
+              <label className="block text-xs font-bold text-earth-600 dark:text-gray-400 mb-1">Ağırlık (kg)</label>
+              <input required type="number" step="0.1" value={kg} onChange={e => setKg(Number(e.target.value))} placeholder="Örn: 550" className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none text-sm" />
             </div>
             <button type="submit" className="w-full py-2 bg-nature-600 text-white font-bold rounded-lg hover:bg-nature-700 transition">Kaydet</button>
           </div>
         </form>
 
-        <div className="bg-nature-50 p-4 rounded-xl border border-nature-200 shadow-sm flex flex-col justify-center items-center text-center">
+        <div className="bg-nature-50 dark:bg-nature-900/30 p-4 rounded-xl border border-nature-200 dark:border-nature-800 shadow-sm flex flex-col justify-center items-center text-center">
           <TrendingUp className="w-12 h-12 text-nature-500 mb-2 opacity-50" />
-          <h3 className="font-bold text-earth-600 uppercase text-xs">Günlük Canlı Ağırlık Artışı (GCAA)</h3>
+          <h3 className="font-bold text-earth-600 dark:text-gray-400 uppercase text-xs">Günlük Canlı Ağırlık Artışı (GCAA)</h3>
           {adg !== null ? (
             <div className="mt-2">
-              <span className="text-4xl font-black text-nature-700">{adg}</span>
-              <span className="text-sm font-bold text-earth-500 ml-1">kg/gün</span>
-              <p className="text-xs text-earth-500 mt-2">Son iki tartım baz alınmıştır.</p>
+              <span className="text-4xl font-black text-nature-700 dark:text-nature-300">{adg}</span>
+              <span className="text-sm font-bold text-earth-500 dark:text-gray-400 ml-1">kg/gün</span>
+              <p className="text-xs text-earth-500 dark:text-gray-400 mt-2">Son iki tartım baz alınmıştır.</p>
             </div>
           ) : (
-            <p className="text-sm text-earth-500 mt-2 italic">Hesaplama için en az 2 tartım girmelisiniz.</p>
+            <p className="text-sm text-earth-500 dark:text-gray-400 mt-2 italic">Hesaplama için en az 2 tartım girmelisiniz.</p>
           )}
         </div>
       </div>
 
       {/* Chart */}
       {kayitlar.length > 0 && (
-        <div className="bg-white p-4 rounded-xl border border-earth-200 shadow-sm">
-          <h3 className="font-bold text-earth-800 mb-6">Büyüme Eğrisi</h3>
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-earth-200 dark:border-gray-700 shadow-sm">
+          <h3 className="font-bold text-earth-800 dark:text-gray-200 mb-6">Büyüme Eğrisi</h3>
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={kayitlar} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
@@ -174,24 +174,24 @@ const WeightRecords: React.FC<Props> = ({ hayvan }) => {
         </div>
       )}
       {kayitlar.length > 0 && (
-        <div className="bg-white rounded-xl border border-earth-200 shadow-sm overflow-hidden flex flex-col">
-          <div className="p-4 bg-earth-50 border-b border-earth-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <h3 className="font-bold text-earth-800">Geçmiş Tartım Kayıtları</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-earth-200 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col">
+          <div className="p-4 bg-earth-50 dark:bg-gray-900 border-b border-earth-200 dark:border-gray-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <h3 className="font-bold text-earth-800 dark:text-gray-200">Geçmiş Tartım Kayıtları</h3>
             
             <div className="flex items-center space-x-2 text-sm">
-              <span className="text-earth-600 font-medium">Tarih Filtresi:</span>
+              <span className="text-earth-600 dark:text-gray-400 font-medium">Tarih Filtresi:</span>
               <input 
                 type="date" 
                 value={filterStartDate}
                 onChange={e => setFilterStartDate(e.target.value)}
-                className="p-1 border border-earth-300 rounded focus:ring-1 focus:ring-nature-500 outline-none text-xs"
+                className="p-1 border border-earth-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-nature-500 outline-none text-xs"
               />
               <span className="text-earth-400">-</span>
               <input 
                 type="date" 
                 value={filterEndDate}
                 onChange={e => setFilterEndDate(e.target.value)}
-                className="p-1 border border-earth-300 rounded focus:ring-1 focus:ring-nature-500 outline-none text-xs"
+                className="p-1 border border-earth-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-nature-500 outline-none text-xs"
               />
               {(filterStartDate || filterEndDate) && (
                 <button 
@@ -205,8 +205,8 @@ const WeightRecords: React.FC<Props> = ({ hayvan }) => {
           </div>
           
           <div className="overflow-x-auto overflow-y-auto max-h-[450px]">
-            <table className="w-full text-left text-sm text-earth-600">
-              <thead className="bg-earth-100 text-earth-700 font-semibold border-b border-earth-200 sticky top-0 shadow-sm z-10">
+            <table className="w-full text-left text-sm text-earth-600 dark:text-gray-400">
+              <thead className="bg-earth-100 dark:bg-gray-800 text-earth-700 dark:text-gray-300 font-semibold border-b border-earth-200 dark:border-gray-700 sticky top-0 shadow-sm z-10">
                 <tr>
                   <th className="p-3">Tarih</th>
                   <th className="p-3">Ağırlık (kg)</th>
@@ -234,12 +234,12 @@ const WeightRecords: React.FC<Props> = ({ hayvan }) => {
                     </tr>
                   ) : (
                     <tr key={k.id} className="hover:bg-earth-50/50 transition">
-                      <td className="p-3 font-medium text-earth-900">{new Date(k.tarih).toLocaleDateString('tr-TR')}</td>
-                      <td className="p-3 font-bold text-nature-600">{k.kg} kg</td>
+                      <td className="p-3 font-medium text-earth-900 dark:text-gray-100">{new Date(k.tarih).toLocaleDateString('tr-TR')}</td>
+                      <td className="p-3 font-bold text-nature-600 dark:text-nature-400">{k.kg} kg</td>
                       <td className="p-3 text-right">
                         <div className="flex justify-end space-x-1">
-                          <button onClick={() => startEdit(k)} className="p-1.5 text-earth-500 hover:text-nature-600 hover:bg-nature-50 rounded transition" title="Düzenle"><Edit2 className="w-4 h-4" /></button>
-                          <button onClick={() => handleDelete(k.id)} className="p-1.5 text-earth-500 hover:text-red-600 hover:bg-red-50 rounded transition" title="Sil"><Trash2 className="w-4 h-4" /></button>
+                          <button onClick={() => startEdit(k)} className="p-1.5 text-earth-500 dark:text-gray-400 hover:text-nature-600 hover:bg-nature-50 dark:hover:bg-nature-900/30 rounded transition" title="Düzenle"><Edit2 className="w-4 h-4" /></button>
+                          <button onClick={() => handleDelete(k.id)} className="p-1.5 text-earth-500 dark:text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition" title="Sil"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </td>
                     </tr>

@@ -58,13 +58,13 @@ const FinancialTransactionModal: React.FC<Props> = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-earth-900/60 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col">
-        <div className="p-4 border-b border-earth-200 flex justify-between items-center bg-blue-50">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col">
+        <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex justify-between items-center bg-blue-50 dark:bg-blue-900/20">
           <div className="flex items-center space-x-2 text-blue-800">
             <Wallet className="w-6 h-6" />
             <h2 className="text-xl font-black">Ek Gelir / Gider Ekle</h2>
           </div>
-          <button onClick={onClose} className="text-earth-500 hover:text-red-500 transition">
+          <button onClick={onClose} className="text-earth-500 dark:text-gray-400 hover:text-red-500 transition">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -74,21 +74,21 @@ const FinancialTransactionModal: React.FC<Props> = ({ onClose }) => {
             <button
               type="button"
               onClick={() => handleTipChange('Gelir')}
-              className={`py-2 px-4 rounded-xl font-bold border-2 transition ${tip === 'Gelir' ? 'bg-green-100 border-green-500 text-green-700' : 'border-earth-200 text-earth-500 hover:bg-earth-50'}`}
+              className={`py-2 px-4 rounded-xl font-bold border-2 transition ${tip === 'Gelir' ? 'bg-green-100 border-green-500 text-green-700' : 'border-earth-200 dark:border-gray-700 text-earth-500 dark:text-gray-400 hover:bg-earth-50 dark:hover:bg-gray-700'}`}
             >
               Gelir
             </button>
             <button
               type="button"
               onClick={() => handleTipChange('Gider')}
-              className={`py-2 px-4 rounded-xl font-bold border-2 transition ${tip === 'Gider' ? 'bg-red-100 border-red-500 text-red-700' : 'border-earth-200 text-earth-500 hover:bg-earth-50'}`}
+              className={`py-2 px-4 rounded-xl font-bold border-2 transition ${tip === 'Gider' ? 'bg-red-100 border-red-500 text-red-700' : 'border-earth-200 dark:border-gray-700 text-earth-500 dark:text-gray-400 hover:bg-earth-50 dark:hover:bg-gray-700'}`}
             >
               Gider
             </button>
           </div>
 
           <div className="space-y-1">
-            <label className="text-sm font-semibold text-earth-700">Miktar (₺) *</label>
+            <label className="text-sm font-semibold text-earth-700 dark:text-gray-300">Miktar (₺) *</label>
             <input
               type="number"
               required
@@ -96,39 +96,39 @@ const FinancialTransactionModal: React.FC<Props> = ({ onClose }) => {
               step="0.01"
               value={miktar}
               onChange={e => setMiktar(e.target.value)}
-              className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500"
+              className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500"
               placeholder="0.00"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-sm font-semibold text-earth-700">Tarih *</label>
+            <label className="text-sm font-semibold text-earth-700 dark:text-gray-300">Tarih *</label>
             <input
               type="date"
               required
               value={tarih}
               onChange={e => setTarih(e.target.value)}
-              className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500"
+              className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-sm font-semibold text-earth-700">Açıklama (Opsiyonel)</label>
+            <label className="text-sm font-semibold text-earth-700 dark:text-gray-300">Açıklama (Opsiyonel)</label>
             <input
               type="text"
               value={aciklama}
               onChange={e => setAciklama(e.target.value)}
-              className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500"
+              className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500"
               placeholder="Elektrik faturası, hibe ödemesi vb."
               maxLength={100}
             />
           </div>
 
-          <div className="pt-4 flex justify-end space-x-3 border-t border-earth-200">
+          <div className="pt-4 flex justify-end space-x-3 border-t border-earth-200 dark:border-gray-700">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 font-bold text-earth-600 bg-earth-100 hover:bg-earth-200 rounded-lg transition"
+              className="px-4 py-2 font-bold text-earth-600 dark:text-gray-400 bg-earth-100 dark:bg-gray-800 hover:bg-earth-200 rounded-lg transition"
             >
               İptal
             </button>

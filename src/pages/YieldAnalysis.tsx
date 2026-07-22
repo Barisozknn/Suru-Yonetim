@@ -106,11 +106,11 @@ const YieldAnalysis: React.FC = () => {
   if (hayvanlar.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] space-y-4">
-        <div className="p-6 bg-earth-100 rounded-full text-earth-400">
+        <div className="p-6 bg-earth-100 dark:bg-gray-800 rounded-full text-earth-400">
           <Activity className="w-16 h-16" />
         </div>
-        <h2 className="text-2xl font-black text-earth-900">Sürü Verisi Yok</h2>
-        <p className="text-earth-500">Analiz yapabilmek için lütfen önce hayvan ekleyin.</p>
+        <h2 className="text-2xl font-black text-earth-900 dark:text-gray-100">Sürü Verisi Yok</h2>
+        <p className="text-earth-500 dark:text-gray-400">Analiz yapabilmek için lütfen önce hayvan ekleyin.</p>
         <Link to="/hayvanlar" className="px-6 py-3 bg-nature-600 text-white rounded-xl font-bold mt-4 hover:bg-nature-700 transition">
           Hayvan Listesine Git
         </Link>
@@ -122,31 +122,31 @@ const YieldAnalysis: React.FC = () => {
     <div className="space-y-6 flex flex-col h-full">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 flex-shrink-0">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-earth-900 tracking-tight">Süt & Ağırlık Özet</h1>
-          <p className="text-earth-500 font-medium text-sm sm:text-base mt-0.5">Sürü verim analizi ve bireysel hayvan kayıtları</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-earth-900 dark:text-gray-100 tracking-tight">Süt & Ağırlık Özet</h1>
+          <p className="text-earth-500 dark:text-gray-400 font-medium text-sm sm:text-base mt-0.5">Sürü verim analizi ve bireysel hayvan kayıtları</p>
         </div>
       </div>
 
       {!selectedAnimalId ? (
         <>
           {/* Hızlı İşlem Arama */}
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-earth-200 flex-shrink-0 relative">
-            <h2 className="text-lg font-bold text-earth-800 mb-3 flex items-center"><Search className="w-5 h-5 mr-2 text-earth-500"/> Bireysel Verim Girişi (Hayvan Ara)</h2>
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex-shrink-0 relative">
+            <h2 className="text-lg font-bold text-earth-800 dark:text-gray-200 mb-3 flex items-center"><Search className="w-5 h-5 mr-2 text-earth-500 dark:text-gray-400"/> Bireysel Verim Girişi (Hayvan Ara)</h2>
             <div className="relative">
               <input
                 type="text"
                 placeholder="Küpe numarası ile hayvan ara..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-earth-50 border-none rounded-xl focus:ring-2 focus:ring-nature-500 font-medium"
+                className="w-full pl-10 pr-4 py-3 bg-earth-50 dark:bg-gray-900 border-none rounded-xl focus:ring-2 focus:ring-nature-500 font-medium"
               />
               <Search className="w-5 h-5 text-earth-400 absolute left-3 top-3.5" />
             </div>
 
             {searchTerm.length > 1 && (
-              <div className="mt-2 border border-earth-100 rounded-xl overflow-hidden bg-white max-h-60 overflow-y-auto shadow-xl absolute left-4 right-4 z-20">
+              <div className="mt-2 border border-earth-100 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-800 max-h-60 overflow-y-auto shadow-xl absolute left-4 right-4 z-20">
                 {filteredHayvanlar.length === 0 ? (
-                  <div className="p-4 text-center text-earth-500 text-sm">Hayvan bulunamadı.</div>
+                  <div className="p-4 text-center text-earth-500 dark:text-gray-400 text-sm">Hayvan bulunamadı.</div>
                 ) : (
                   filteredHayvanlar.map(h => (
                     <button
@@ -155,11 +155,11 @@ const YieldAnalysis: React.FC = () => {
                         setSelectedAnimalId(h.id);
                         setSearchTerm('');
                       }}
-                      className="w-full flex items-center justify-between p-3 hover:bg-nature-50 border-b last:border-0 border-earth-100 transition-colors text-left"
+                      className="w-full flex items-center justify-between p-3 hover:bg-nature-50 dark:hover:bg-nature-900/30 border-b last:border-0 border-earth-100 dark:border-gray-700 transition-colors text-left"
                     >
                       <div>
-                        <span className="font-bold text-earth-900 block">{h.kupeNo}</span>
-                        <span className="text-xs text-earth-500">{h.tur} • {h.cinsiyet}</span>
+                        <span className="font-bold text-earth-900 dark:text-gray-100 block">{h.kupeNo}</span>
+                        <span className="text-xs text-earth-500 dark:text-gray-400">{h.tur} • {h.cinsiyet}</span>
                       </div>
                       <ChevronRight className="w-5 h-5 text-nature-400" />
                     </button>
@@ -170,13 +170,13 @@ const YieldAnalysis: React.FC = () => {
           </div>
 
           {/* Filtreleme Paneli */}
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-earth-200 flex flex-col md:flex-row md:items-center gap-4">
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex flex-col md:flex-row md:items-center gap-4">
             <div className="flex-1">
-              <label className="block text-xs font-bold text-earth-500 mb-1 uppercase">Sürü Grubu</label>
+              <label className="block text-xs font-bold text-earth-500 dark:text-gray-400 mb-1 uppercase">Sürü Grubu</label>
               <select
                 value={groupFilter}
                 onChange={(e) => setGroupFilter(e.target.value)}
-                className="w-full p-3 bg-earth-50 border border-earth-200 rounded-xl font-bold text-earth-900 focus:ring-2 focus:ring-nature-500"
+                className="w-full p-3 bg-earth-50 dark:bg-gray-900 border border-earth-200 dark:border-gray-700 rounded-xl font-bold text-earth-900 dark:text-gray-100 focus:ring-2 focus:ring-nature-500"
               >
                 <option value="all">Tüm Sürü</option>
                 {gruplar.map(g => (
@@ -185,11 +185,11 @@ const YieldAnalysis: React.FC = () => {
               </select>
             </div>
             <div className="flex-1">
-              <label className="block text-xs font-bold text-earth-500 mb-1 uppercase">Zaman Aralığı</label>
+              <label className="block text-xs font-bold text-earth-500 dark:text-gray-400 mb-1 uppercase">Zaman Aralığı</label>
               <select
                 value={timeFilter}
                 onChange={(e: any) => setTimeFilter(e.target.value)}
-                className="w-full p-3 bg-earth-50 border border-earth-200 rounded-xl font-bold text-earth-900 focus:ring-2 focus:ring-nature-500"
+                className="w-full p-3 bg-earth-50 dark:bg-gray-900 border border-earth-200 dark:border-gray-700 rounded-xl font-bold text-earth-900 dark:text-gray-100 focus:ring-2 focus:ring-nature-500"
               >
                 <option value="7">Son 7 Gün (Günlük)</option>
                 <option value="30">Son 30 Gün (Aylık)</option>
@@ -202,37 +202,37 @@ const YieldAnalysis: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         
         {/* KPI KARTLARI */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-earth-200 flex items-center space-x-4">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex items-center space-x-4">
           <div className="p-4 bg-blue-100 text-blue-600 rounded-xl">
             <Droplet className="w-8 h-8" />
           </div>
           <div>
-            <p className="text-sm font-bold text-earth-500 uppercase">Toplam Süt</p>
-            <p className="text-3xl font-black text-earth-900">
+            <p className="text-sm font-bold text-earth-500 dark:text-gray-400 uppercase">Toplam Süt</p>
+            <p className="text-3xl font-black text-earth-900 dark:text-gray-100">
               {toplamSut.toLocaleString('tr-TR')} <span className="text-base font-normal">Lt</span>
             </p>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-earth-200 flex items-center space-x-4">
-          <div className="p-4 bg-nature-100 text-nature-600 rounded-xl">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex items-center space-x-4">
+          <div className="p-4 bg-nature-100 dark:bg-nature-900/50 text-nature-600 dark:text-nature-400 rounded-xl">
             <Activity className="w-8 h-8" />
           </div>
           <div>
-            <p className="text-sm font-bold text-earth-500 uppercase">Sürü Günlük Ort. Süt</p>
-            <p className="text-3xl font-black text-earth-900">
+            <p className="text-sm font-bold text-earth-500 dark:text-gray-400 uppercase">Sürü Günlük Ort. Süt</p>
+            <p className="text-3xl font-black text-earth-900 dark:text-gray-100">
               {gunlukOrtalamaSut.toLocaleString('tr-TR', {maximumFractionDigits: 1})} <span className="text-base font-normal">Lt/Gün</span>
             </p>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-earth-200 flex items-center space-x-4">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex items-center space-x-4">
           <div className="p-4 bg-orange-100 text-orange-600 rounded-xl">
             <TrendingUp className="w-8 h-8" />
           </div>
           <div>
-            <p className="text-sm font-bold text-earth-500 uppercase">Ortalama GCAA</p>
-            <p className="text-3xl font-black text-earth-900">
+            <p className="text-sm font-bold text-earth-500 dark:text-gray-400 uppercase">Ortalama GCAA</p>
+            <p className="text-3xl font-black text-earth-900 dark:text-gray-100">
               {suruOrtalamaADG > 0 ? suruOrtalamaADG.toFixed(2) : '-'} <span className="text-base font-normal">Kg/Gün</span>
             </p>
           </div>
@@ -242,8 +242,8 @@ const YieldAnalysis: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* GRAFİK */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-earth-200">
-          <h3 className="text-lg font-bold text-earth-900 mb-6">Süt Üretim Eğrisi ({timeFilter === 'all' ? 'Tüm Zamanlar' : `Son ${timeFilter} Gün`})</h3>
+        <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700">
+          <h3 className="text-lg font-bold text-earth-900 dark:text-gray-100 mb-6">Süt Üretim Eğrisi ({timeFilter === 'all' ? 'Tüm Zamanlar' : `Son ${timeFilter} Gün`})</h3>
           {sutGrafikVerisi.length > 0 ? (
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -267,32 +267,32 @@ const YieldAnalysis: React.FC = () => {
               </ResponsiveContainer>
             </div>
           ) : (
-             <div className="h-[300px] flex items-center justify-center text-earth-400 font-bold bg-earth-50 rounded-xl">
+             <div className="h-[300px] flex items-center justify-center text-earth-400 font-bold bg-earth-50 dark:bg-gray-900 rounded-xl">
                Yeterli süt kaydı bulunamadı.
              </div>
           )}
         </div>
 
         {/* ŞAMPİYONLAR */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-earth-200">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700">
           <div className="flex items-center space-x-2 mb-6">
             <Award className="w-6 h-6 text-yellow-500" />
-            <h3 className="text-lg font-bold text-earth-900">En Yüksek Verim (Ortalama)</h3>
+            <h3 className="text-lg font-bold text-earth-900 dark:text-gray-100">En Yüksek Verim (Ortalama)</h3>
           </div>
           
           {sampiyonlar.length > 0 ? (
             <div className="space-y-4">
               {sampiyonlar.map((inek, idx) => (
-                <div key={inek.id} className="flex items-center justify-between p-3 bg-nature-50 rounded-xl border border-nature-100">
+                <div key={inek.id} className="flex items-center justify-between p-3 bg-nature-50 dark:bg-nature-900/30 rounded-xl border border-nature-100">
                   <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 rounded-full bg-nature-200 flex items-center justify-center font-black text-nature-700 text-sm">
+                    <div className="w-8 h-8 rounded-full bg-nature-200 flex items-center justify-center font-black text-nature-700 dark:text-nature-300 text-sm">
                       {idx + 1}
                     </div>
-                    <Link to={`/hayvanlar?id=${inek.id}&tab=verim`} className="font-bold text-earth-900 hover:text-nature-600 transition">
+                    <Link to={`/hayvanlar?id=${inek.id}&tab=verim`} className="font-bold text-earth-900 dark:text-gray-100 hover:text-nature-600 transition">
                       {inek.kupeNo}
                     </Link>
                   </div>
-                  <div className="font-black text-nature-700">
+                  <div className="font-black text-nature-700 dark:text-nature-300">
                     {inek.ortalama.toFixed(1)} <span className="text-xs text-nature-500 font-normal">Lt/Gün</span>
                   </div>
                 </div>
@@ -309,29 +309,29 @@ const YieldAnalysis: React.FC = () => {
         </>
       ) : (
         /* BİREYSEL HAYVAN VERİM GİRİŞİ */
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-earth-200 flex-1 flex flex-col min-h-0">
-          <div className="flex justify-between items-center mb-4 pb-4 border-b border-earth-100 flex-shrink-0">
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex-1 flex flex-col min-h-0">
+          <div className="flex justify-between items-center mb-4 pb-4 border-b border-earth-100 dark:border-gray-700 flex-shrink-0">
             <div className="flex items-center space-x-4">
               <button 
                 onClick={() => setSelectedAnimalId(null)}
-                className="p-2 bg-earth-100 hover:bg-earth-200 rounded-full transition-colors"
+                className="p-2 bg-earth-100 dark:bg-gray-800 hover:bg-earth-200 rounded-full transition-colors"
               >
-                <ArrowLeft className="w-5 h-5 text-earth-700" />
+                <ArrowLeft className="w-5 h-5 text-earth-700 dark:text-gray-300" />
               </button>
               <div>
-                <h2 className="text-xl font-black text-earth-900">{selectedAnimal?.kupeNo} - Verim Kayıtları</h2>
-                <p className="text-sm text-earth-500">{selectedAnimal?.tur} • {selectedAnimal?.irk}</p>
+                <h2 className="text-xl font-black text-earth-900 dark:text-gray-100">{selectedAnimal?.kupeNo} - Verim Kayıtları</h2>
+                <p className="text-sm text-earth-500 dark:text-gray-400">{selectedAnimal?.tur} • {selectedAnimal?.irk}</p>
               </div>
             </div>
           </div>
           
           <div className="space-y-6 overflow-y-auto pr-2 pb-4">
             {['İnek', 'Düve'].includes(selectedAnimal?.tur || '') && (
-              <div className="bg-white rounded-2xl border border-earth-200 overflow-hidden shadow-sm p-2">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-earth-200 dark:border-gray-700 overflow-hidden shadow-sm p-2">
                  <MilkRecords hayvan={selectedAnimal!} />
               </div>
             )}
-            <div className="bg-white rounded-2xl border border-earth-200 overflow-hidden shadow-sm p-2">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-earth-200 dark:border-gray-700 overflow-hidden shadow-sm p-2">
                <WeightRecords hayvan={selectedAnimal!} />
             </div>
           </div>

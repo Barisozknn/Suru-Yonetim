@@ -26,10 +26,10 @@ const ProtectedRoute: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-earth-50">
+      <div className="min-h-screen flex items-center justify-center bg-earth-50 dark:bg-gray-900">
         <div className="flex flex-col items-center space-y-3">
           <div className="w-10 h-10 border-4 border-nature-600 border-t-transparent rounded-full animate-spin" />
-          <p className="text-nature-700 font-bold">Yükleniyor...</p>
+          <p className="text-nature-700 dark:text-nature-300 font-bold">Yükleniyor...</p>
         </div>
       </div>
     );

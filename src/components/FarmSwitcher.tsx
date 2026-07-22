@@ -133,7 +133,7 @@ export default function FarmSwitcher() {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+        <div className="absolute top-full right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
           <div className="p-3 bg-gray-50 border-b border-gray-100">
             <h3 className="text-sm font-semibold text-gray-700">Çiftlikleriniz</h3>
           </div>

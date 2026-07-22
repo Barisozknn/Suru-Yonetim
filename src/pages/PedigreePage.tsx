@@ -21,18 +21,18 @@ const PedigreePage: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      <div className="flex items-center space-x-3 text-nature-800 border-b border-earth-200 pb-4">
+      <div className="flex items-center space-x-3 text-nature-800 dark:text-nature-200 border-b border-earth-200 dark:border-gray-700 pb-4">
         <Network className="w-8 h-8" />
         <div>
           <h1 className="text-2xl font-black">Soy Ağacı Analizi</h1>
-          <p className="text-earth-500">Sürüdeki hayvanların 3 nesil soy ağacını görüntüleyin</p>
+          <p className="text-earth-500 dark:text-gray-400">Sürüdeki hayvanların 3 nesil soy ağacını görüntüleyin</p>
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-earth-200 space-y-6">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 space-y-6">
         {/* Arama ve Seçim Alanı */}
         <div className="max-w-xl mx-auto space-y-2 relative">
-          <label className="text-sm font-bold text-earth-700">Hayvan Seç (Küpe No)</label>
+          <label className="text-sm font-bold text-earth-700 dark:text-gray-300">Hayvan Seç (Küpe No)</label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-earth-400" />
             <input 
@@ -40,12 +40,12 @@ const PedigreePage: React.FC = () => {
               placeholder="Küpe No ile ara..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border-2 border-earth-200 rounded-xl focus:border-nature-500 focus:ring-0 transition"
+              className="w-full pl-10 pr-4 py-3 border-2 border-earth-200 dark:border-gray-700 rounded-xl focus:border-nature-500 focus:ring-0 transition"
             />
           </div>
           
           {searchTerm && (
-            <div className="absolute z-10 w-full mt-1 bg-white border border-earth-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+            <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-earth-200 dark:border-gray-700 rounded-xl shadow-lg max-h-60 overflow-y-auto">
               {filteredHayvanlar.length > 0 ? (
                 filteredHayvanlar.map(h => (
                   <div 
@@ -54,14 +54,14 @@ const PedigreePage: React.FC = () => {
                       setSelectedAnimalId(h.id);
                       setSearchTerm('');
                     }}
-                    className="p-3 hover:bg-earth-50 cursor-pointer border-b border-earth-100 last:border-0 flex justify-between items-center"
+                    className="p-3 hover:bg-earth-50 dark:hover:bg-gray-700 cursor-pointer border-b border-earth-100 dark:border-gray-700 last:border-0 flex justify-between items-center"
                   >
-                    <span className="font-bold text-earth-800">{h.kupeNo}</span>
-                    <span className="text-sm text-earth-500">{h.irk} - {h.tur}</span>
+                    <span className="font-bold text-earth-800 dark:text-gray-200">{h.kupeNo}</span>
+                    <span className="text-sm text-earth-500 dark:text-gray-400">{h.irk} - {h.tur}</span>
                   </div>
                 ))
               ) : (
-                <div className="p-4 text-center text-earth-500 italic">Sonuç bulunamadı.</div>
+                <div className="p-4 text-center text-earth-500 dark:text-gray-400 italic">Sonuç bulunamadı.</div>
               )}
             </div>
           )}
@@ -70,16 +70,16 @@ const PedigreePage: React.FC = () => {
         {/* Soy Ağacı Gösterimi */}
         <div className="pt-6">
           {selectedAnimal ? (
-            <div className="bg-nature-50/30 p-4 md:p-6 rounded-2xl border border-nature-200">
+            <div className="bg-nature-50/30 p-4 md:p-6 rounded-2xl border border-nature-200 dark:border-nature-800">
               <PedigreeTree 
                 hayvan={selectedAnimal} 
                 onSelectAnimal={(id) => setSelectedAnimalId(id)} 
               />
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-earth-400 bg-earth-50 rounded-2xl border-2 border-dashed border-earth-200">
+            <div className="flex flex-col items-center justify-center py-16 text-earth-400 bg-earth-50 dark:bg-gray-900 rounded-2xl border-2 border-dashed border-earth-200 dark:border-gray-700">
               <Network className="w-16 h-16 mb-4 opacity-30" />
-              <p className="text-lg font-bold text-earth-500">Görüntülemek için bir hayvan seçin</p>
+              <p className="text-lg font-bold text-earth-500 dark:text-gray-400">Görüntülemek için bir hayvan seçin</p>
             </div>
           )}
         </div>

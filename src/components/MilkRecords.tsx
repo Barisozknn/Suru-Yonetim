@@ -126,7 +126,7 @@ const MilkRecords: React.FC<Props> = ({ hayvan }) => {
     <div className="space-y-6">
       
       {/* Form */}
-      <form onSubmit={handleAdd} className="bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-sm relative overflow-hidden">
+      <form onSubmit={handleAdd} className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 shadow-sm relative overflow-hidden">
         {isInArinma(tarih) && (
           <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-4 flex items-center space-x-2 text-sm font-bold border border-red-200">
             <AlertTriangle className="w-5 h-5 flex-shrink-0" />
@@ -170,8 +170,8 @@ const MilkRecords: React.FC<Props> = ({ hayvan }) => {
 
       {/* Chart */}
       {kayitlar.length > 0 ? (
-        <div className="bg-white p-4 rounded-xl border border-earth-200 shadow-sm">
-          <h3 className="font-bold text-earth-800 mb-6">Laktasyon Eğrisi</h3>
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-earth-200 dark:border-gray-700 shadow-sm">
+          <h3 className="font-bold text-earth-800 dark:text-gray-200 mb-6">Laktasyon Eğrisi</h3>
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={kayitlar} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
@@ -189,30 +189,30 @@ const MilkRecords: React.FC<Props> = ({ hayvan }) => {
           </div>
         </div>
       ) : (
-        <div className="text-center py-8 text-earth-500 italic bg-white border border-earth-200 rounded-xl">
+        <div className="text-center py-8 text-earth-500 dark:text-gray-400 italic bg-white dark:bg-gray-800 border border-earth-200 dark:border-gray-700 rounded-xl">
           Bu hayvana ait henüz süt kaydı bulunmuyor.
         </div>
       )}
 
       {kayitlar.length > 0 && (
-        <div className="bg-white rounded-xl border border-earth-200 shadow-sm overflow-hidden flex flex-col">
-          <div className="p-4 bg-earth-50 border-b border-earth-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <h3 className="font-bold text-earth-800">Geçmiş Süt Kayıtları</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-earth-200 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col">
+          <div className="p-4 bg-earth-50 dark:bg-gray-900 border-b border-earth-200 dark:border-gray-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <h3 className="font-bold text-earth-800 dark:text-gray-200">Geçmiş Süt Kayıtları</h3>
             
             <div className="flex items-center space-x-2 text-sm">
-              <span className="text-earth-600 font-medium">Tarih Filtresi:</span>
+              <span className="text-earth-600 dark:text-gray-400 font-medium">Tarih Filtresi:</span>
               <input 
                 type="date" 
                 value={filterStartDate}
                 onChange={e => setFilterStartDate(e.target.value)}
-                className="p-1 border border-earth-300 rounded focus:ring-1 focus:ring-blue-500 outline-none text-xs"
+                className="p-1 border border-earth-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 outline-none text-xs"
               />
               <span className="text-earth-400">-</span>
               <input 
                 type="date" 
                 value={filterEndDate}
                 onChange={e => setFilterEndDate(e.target.value)}
-                className="p-1 border border-earth-300 rounded focus:ring-1 focus:ring-blue-500 outline-none text-xs"
+                className="p-1 border border-earth-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 outline-none text-xs"
               />
               {(filterStartDate || filterEndDate) && (
                 <button 
@@ -226,8 +226,8 @@ const MilkRecords: React.FC<Props> = ({ hayvan }) => {
           </div>
           
           <div className="overflow-x-auto overflow-y-auto max-h-[450px]">
-            <table className="w-full text-left text-sm text-earth-600">
-              <thead className="bg-earth-100 text-earth-700 font-semibold border-b border-earth-200 sticky top-0 shadow-sm z-10">
+            <table className="w-full text-left text-sm text-earth-600 dark:text-gray-400">
+              <thead className="bg-earth-100 dark:bg-gray-800 text-earth-700 dark:text-gray-300 font-semibold border-b border-earth-200 dark:border-gray-700 sticky top-0 shadow-sm z-10">
                 <tr>
                   <th className="p-3">Tarih</th>
                   <th className="p-3">Miktar (L)</th>
@@ -263,7 +263,7 @@ const MilkRecords: React.FC<Props> = ({ hayvan }) => {
                     </tr>
                   ) : (
                     <tr key={k.id} className="hover:bg-earth-50/50 transition">
-                      <td className="p-3 font-medium text-earth-900">{new Date(k.tarih).toLocaleDateString('tr-TR')}</td>
+                      <td className="p-3 font-medium text-earth-900 dark:text-gray-100">{new Date(k.tarih).toLocaleDateString('tr-TR')}</td>
                       <td className="p-3 font-bold text-blue-600">{k.litre} L</td>
                       <td className="p-3">{k.yagYuzde ? `%${k.yagYuzde}` : '-'}</td>
                       <td className="p-3">{k.proteinYuzde ? `%${k.proteinYuzde}` : '-'}</td>
@@ -271,8 +271,8 @@ const MilkRecords: React.FC<Props> = ({ hayvan }) => {
                       <td className="p-3">{k.somatikHucre ? k.somatikHucre.toLocaleString('tr-TR') : '-'}</td>
                       <td className="p-3 text-right">
                         <div className="flex justify-end space-x-1">
-                          <button onClick={() => startEdit(k)} className="p-1.5 text-earth-500 hover:text-blue-600 hover:bg-blue-50 rounded transition" title="Düzenle"><Edit2 className="w-4 h-4" /></button>
-                          <button onClick={() => handleDelete(k.id)} className="p-1.5 text-earth-500 hover:text-red-600 hover:bg-red-50 rounded transition" title="Sil"><Trash2 className="w-4 h-4" /></button>
+                          <button onClick={() => startEdit(k)} className="p-1.5 text-earth-500 dark:text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition" title="Düzenle"><Edit2 className="w-4 h-4" /></button>
+                          <button onClick={() => handleDelete(k.id)} className="p-1.5 text-earth-500 dark:text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition" title="Sil"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </td>
                     </tr>

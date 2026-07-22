@@ -12,14 +12,14 @@ interface Props {
 }
 
 const TUR_CONFIG: Record<UremeKaydiTur, { icon: React.ReactNode; color: string; bg: string }> = {
-  'Kızgınlık': { icon: <Heart className="w-4 h-4" />, color: 'text-pink-600', bg: 'bg-pink-50 border-pink-200' },
-  'Tohumlama/Aşım': { icon: <Info className="w-4 h-4" />, color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+  'Kızgınlık': { icon: <Heart className="w-4 h-4" />, color: 'text-pink-600', bg: 'bg-pink-50 dark:bg-pink-900/20 border-pink-200' },
+  'Tohumlama/Aşım': { icon: <Info className="w-4 h-4" />, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200' },
   'Gebelik Kontrolü': { icon: <ShieldAlert className="w-4 h-4" />, color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200' },
-  'Kuruya Çıkarma': { icon: <CalendarCheck className="w-4 h-4" />, color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200' },
-  'Doğum': { icon: <Droplets className="w-4 h-4" />, color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
+  'Kuruya Çıkarma': { icon: <CalendarCheck className="w-4 h-4" />, color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-900/20 border-orange-200' },
+  'Doğum': { icon: <Droplets className="w-4 h-4" />, color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-900/20 border-green-200' },
   'Doğal Aşım': { icon: <GitMerge className="w-4 h-4" />, color: 'text-purple-600', bg: 'bg-purple-50 border-purple-200' },
   'Sperma Alımı': { icon: <Droplet className="w-4 h-4" />, color: 'text-teal-600', bg: 'bg-teal-50 border-teal-200' },
-  'Damızlık Muayenesi': { icon: <Activity className="w-4 h-4" />, color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-200' },
+  'Damızlık Muayenesi': { icon: <Activity className="w-4 h-4" />, color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200' },
 };
 
 const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -101,34 +101,34 @@ const ReproductionTimeline: React.FC<Props> = ({ hayvanId }) => {
   return (
     <div className="space-y-6">
       {/* Özet Kartı */}
-      <div className="bg-pink-50 border border-pink-200 rounded-xl p-4">
+      <div className="bg-pink-50 dark:bg-pink-900/20 border border-pink-200 rounded-xl p-4">
         <h4 className="text-pink-800 font-bold mb-3 flex items-center space-x-2">
           <CalendarDays className="w-5 h-5" />
           <span>Üreme Durumu Özeti</span>
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white p-3 rounded-lg border border-pink-100">
-            <div className="text-xs text-earth-500 font-bold uppercase tracking-wider mb-1">Mevcut Durum</div>
-            <div className="font-bold text-earth-900 text-lg">{mevcutDurum}</div>
+          <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-pink-100">
+            <div className="text-xs text-earth-500 dark:text-gray-400 font-bold uppercase tracking-wider mb-1">Mevcut Durum</div>
+            <div className="font-bold text-earth-900 dark:text-gray-100 text-lg">{mevcutDurum}</div>
           </div>
           {(beklenenKizginlik || tahminiDogum || onerilenKuruyaCikarma) && (
-            <div className="bg-white p-3 rounded-lg border border-pink-100 space-y-2">
-              <div className="text-xs text-earth-500 font-bold uppercase tracking-wider mb-1">Yaklaşan Olaylar</div>
+            <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-pink-100 space-y-2">
+              <div className="text-xs text-earth-500 dark:text-gray-400 font-bold uppercase tracking-wider mb-1">Yaklaşan Olaylar</div>
               {beklenenKizginlik && (
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-earth-600">Beklenen Kızgınlık:</span>
+                  <span className="text-earth-600 dark:text-gray-400">Beklenen Kızgınlık:</span>
                   <span className="font-bold text-pink-600">{formatDate(beklenenKizginlik)}</span>
                 </div>
               )}
               {onerilenKuruyaCikarma && (
                  <div className="flex justify-between items-center text-sm">
-                 <span className="text-earth-600">Önerilen Kuruya Çıkarma:</span>
+                 <span className="text-earth-600 dark:text-gray-400">Önerilen Kuruya Çıkarma:</span>
                  <span className="font-bold text-orange-600">{formatDate(onerilenKuruyaCikarma)}</span>
                </div>
               )}
               {tahminiDogum && (
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-earth-600">Tahmini Doğum:</span>
+                  <span className="text-earth-600 dark:text-gray-400">Tahmini Doğum:</span>
                   <span className="font-bold text-green-600">{formatDate(tahminiDogum)}</span>
                 </div>
               )}
@@ -138,7 +138,7 @@ const ReproductionTimeline: React.FC<Props> = ({ hayvanId }) => {
       </div>
 
       <div className="flex justify-between items-center">
-        <h3 className="font-bold text-earth-800 text-lg">Üreme Geçmişi</h3>
+        <h3 className="font-bold text-earth-800 dark:text-gray-200 text-lg">Üreme Geçmişi</h3>
         <button
           onClick={() => { setEditTarget(undefined); setModalOpen(true); }}
           className="flex items-center space-x-1.5 px-4 py-2 bg-pink-600 text-white rounded-lg font-bold text-sm hover:bg-pink-700 transition"
@@ -180,7 +180,7 @@ const ReproductionTimeline: React.FC<Props> = ({ hayvanId }) => {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-earth-500 mt-0.5">{formatDate(olay.tarih)}</p>
+                      <p className="text-xs text-earth-500 dark:text-gray-400 mt-0.5">{formatDate(olay.tarih)}</p>
                     </div>
                     <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition">
                       <button onClick={() => { setEditTarget(olay); setModalOpen(true); }} className="p-1 text-earth-400 hover:text-earth-700 transition text-xs">✏️</button>
@@ -193,18 +193,18 @@ const ReproductionTimeline: React.FC<Props> = ({ hayvanId }) => {
                   {/* Detaylar */}
                   {olay.detaylar && Object.keys(olay.detaylar).length > 0 && (
                      <div className="mt-2 grid grid-cols-2 gap-2">
-                        {olay.detaylar.gozlemYontemi && <div className="text-xs"><span className="text-earth-500">Yöntem:</span> <span className="font-semibold">{olay.detaylar.gozlemYontemi}</span></div>}
-                        {olay.detaylar.spermaBogaBilgisi && <div className="text-xs"><span className="text-earth-500">Sperma/Boğa:</span> <span className="font-semibold">{olay.detaylar.spermaBogaBilgisi}</span></div>}
-                        {olay.detaylar.teknisyen && <div className="text-xs"><span className="text-earth-500">Teknisyen:</span> <span className="font-semibold">{olay.detaylar.teknisyen}</span></div>}
+                        {olay.detaylar.gozlemYontemi && <div className="text-xs"><span className="text-earth-500 dark:text-gray-400">Yöntem:</span> <span className="font-semibold">{olay.detaylar.gozlemYontemi}</span></div>}
+                        {olay.detaylar.spermaBogaBilgisi && <div className="text-xs"><span className="text-earth-500 dark:text-gray-400">Sperma/Boğa:</span> <span className="font-semibold">{olay.detaylar.spermaBogaBilgisi}</span></div>}
+                        {olay.detaylar.teknisyen && <div className="text-xs"><span className="text-earth-500 dark:text-gray-400">Teknisyen:</span> <span className="font-semibold">{olay.detaylar.teknisyen}</span></div>}
                      </div>
                   )}
 
                   <div className="flex justify-between items-end mt-1.5 gap-2">
-                    <div className="text-sm text-earth-700 flex-1">
+                    <div className="text-sm text-earth-700 dark:text-gray-300 flex-1">
                       {olay.notlar && <p>{olay.notlar}</p>}
                     </div>
                     {olay.maliyet !== undefined && olay.maliyet !== null && olay.maliyet > 0 && (
-                      <span className="text-xs font-bold text-earth-600 bg-earth-100 px-2 py-0.5 rounded border border-earth-200 whitespace-nowrap flex-shrink-0">
+                      <span className="text-xs font-bold text-earth-600 dark:text-gray-400 bg-earth-100 dark:bg-gray-800 px-2 py-0.5 rounded border border-earth-200 dark:border-gray-700 whitespace-nowrap flex-shrink-0">
                         ₺{olay.maliyet}
                       </span>
                     )}

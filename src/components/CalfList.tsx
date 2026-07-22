@@ -28,9 +28,9 @@ const CalfList: React.FC<Props> = ({ onClose, onSelectCalf }) => {
 
   return (
     <div className="w-full">
-      <div className="bg-white rounded-2xl shadow-sm border border-earth-200 flex flex-col h-full">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex flex-col h-full">
         
-        <div className="p-4 border-b border-earth-200 flex justify-between items-center bg-blue-50 rounded-t-2xl flex-shrink-0">
+        <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex justify-between items-center bg-blue-50 dark:bg-blue-900/20 rounded-t-2xl flex-shrink-0">
           <div className="flex items-center space-x-2 text-blue-800">
             <Droplets className="w-6 h-6" />
             <div>
@@ -39,13 +39,13 @@ const CalfList: React.FC<Props> = ({ onClose, onSelectCalf }) => {
             </div>
           </div>
             {onClose && (
-              <button onClick={onClose} className="text-earth-500 hover:text-red-500 transition">
+              <button onClick={onClose} className="text-earth-500 dark:text-gray-400 hover:text-red-500 transition">
                 <X className="w-6 h-6" />
               </button>
             )}
           </div>
 
-        <div className="flex-1 overflow-y-auto p-4 bg-earth-50">
+        <div className="flex-1 overflow-y-auto p-4 bg-earth-50 dark:bg-gray-900">
           {buzagilar.length === 0 ? (
             <div className="text-center py-12 text-earth-400">
               <Droplets className="w-12 h-12 mx-auto mb-3 opacity-30" />
@@ -72,17 +72,17 @@ const CalfList: React.FC<Props> = ({ onClose, onSelectCalf }) => {
                         navigate(`/hayvanlar?id=${buzagi.id}`);
                       }
                     }}
-                    className="bg-white rounded-xl p-4 border border-earth-200 shadow-sm transition cursor-pointer hover:shadow-md hover:border-blue-300"
+                    className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-earth-200 dark:border-gray-700 shadow-sm transition cursor-pointer hover:shadow-md hover:border-blue-300"
                   >
                     <div className="flex justify-between items-start mb-3">
                       <div>
                         <div className="flex items-center space-x-2">
-                          <h3 className="font-bold text-earth-900 text-lg">{buzagi.kupeNo}</h3>
-                          <span className="text-xs px-2 py-0.5 bg-earth-100 text-earth-600 font-bold rounded-md">
+                          <h3 className="font-bold text-earth-900 dark:text-gray-100 text-lg">{buzagi.kupeNo}</h3>
+                          <span className="text-xs px-2 py-0.5 bg-earth-100 dark:bg-gray-800 text-earth-600 dark:text-gray-400 font-bold rounded-md">
                             {buzagi.ageDays} Günlük
                           </span>
                         </div>
-                        <p className="text-xs text-earth-500">{buzagi.irk} • {buzagi.cinsiyet}</p>
+                        <p className="text-xs text-earth-500 dark:text-gray-400">{buzagi.irk} • {buzagi.cinsiyet}</p>
                       </div>
                       
                       {agizSutuAlert && (
@@ -93,18 +93,18 @@ const CalfList: React.FC<Props> = ({ onClose, onSelectCalf }) => {
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 mb-3">
-                      <div className="bg-earth-50 p-2 rounded-lg border border-earth-100 flex items-center justify-between">
-                        <span className="text-xs font-bold text-earth-500 uppercase">Mevcut KG</span>
-                        <span className="font-bold text-earth-900">{buzagi.guncelAgirlikKg || '-'}</span>
+                      <div className="bg-earth-50 dark:bg-gray-900 p-2 rounded-lg border border-earth-100 dark:border-gray-700 flex items-center justify-between">
+                        <span className="text-xs font-bold text-earth-500 dark:text-gray-400 uppercase">Mevcut KG</span>
+                        <span className="font-bold text-earth-900 dark:text-gray-100">{buzagi.guncelAgirlikKg || '-'}</span>
                       </div>
-                      <div className="bg-earth-50 p-2 rounded-lg border border-earth-100 flex items-center justify-between">
-                        <span className="text-xs font-bold text-earth-500 uppercase">Hedef KG</span>
-                        <span className="font-bold text-earth-900">{buzagi.kayit?.hedefSuttenKesimAgirligiKg || '-'}</span>
+                      <div className="bg-earth-50 dark:bg-gray-900 p-2 rounded-lg border border-earth-100 dark:border-gray-700 flex items-center justify-between">
+                        <span className="text-xs font-bold text-earth-500 dark:text-gray-400 uppercase">Hedef KG</span>
+                        <span className="font-bold text-earth-900 dark:text-gray-100">{buzagi.kayit?.hedefSuttenKesimAgirligiKg || '-'}</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-earth-100">
-                      <div className="flex items-center space-x-1.5 text-xs font-bold text-earth-600">
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-earth-100 dark:border-gray-700">
+                      <div className="flex items-center space-x-1.5 text-xs font-bold text-earth-600 dark:text-gray-400">
                         <Droplet className={`w-4 h-4 ${buzagi.kayit?.agizSutuVerildi ? 'text-blue-500' : 'text-earth-300'}`} />
                         <span>{buzagi.kayit?.agizSutuVerildi ? 'Ağız Sütü Aldı' : 'Eksik'}</span>
                       </div>
@@ -120,7 +120,7 @@ const CalfList: React.FC<Props> = ({ onClose, onSelectCalf }) => {
 
                       <button 
                         onClick={(e) => { e.stopPropagation(); setSelectedCalfForTracking(buzagi.id); }}
-                        className="p-1.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition border border-blue-200"
+                        className="p-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 rounded-lg hover:bg-blue-100 transition border border-blue-200"
                         title="Büyütme Takibi Düzenle"
                       >
                         <ClipboardEdit className="w-4 h-4" />

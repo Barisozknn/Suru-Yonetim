@@ -83,9 +83,9 @@ const GroupMilkModal: React.FC<Props> = ({ grup, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-earth-900/60 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh]">
         
-        <div className="p-4 border-b border-earth-200 flex justify-between items-center bg-blue-50 rounded-t-2xl">
+        <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex justify-between items-center bg-blue-50 dark:bg-blue-900/20 rounded-t-2xl">
           <div className="flex items-center space-x-2">
             <Droplet className="w-6 h-6 text-blue-600" />
             <div>
@@ -93,30 +93,30 @@ const GroupMilkModal: React.FC<Props> = ({ grup, onClose }) => {
               <p className="text-sm font-bold text-blue-700">{grup.ad}</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-earth-500 hover:text-red-500 transition">
+          <button onClick={onClose} className="text-earth-500 dark:text-gray-400 hover:text-red-500 transition">
             <X className="w-6 h-6" />
           </button>
         </div>
 
-        <div className="p-4 border-b border-earth-200 bg-earth-50">
-          <label className="block text-sm font-bold text-earth-700 mb-1">Sağım Tarihi</label>
+        <div className="p-4 border-b border-earth-200 dark:border-gray-700 bg-earth-50 dark:bg-gray-900">
+          <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Sağım Tarihi</label>
           <input 
             type="date" 
             value={tarih} 
             onChange={e => setTarih(e.target.value)} 
-            className="w-full max-w-xs p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" 
+            className="w-full max-w-xs p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" 
           />
         </div>
 
         <div className="flex-1 overflow-x-auto overflow-y-auto p-4 bg-earth-50/50">
           {hayvanlar.length === 0 ? (
-            <div className="text-center py-8 text-earth-500 italic">
+            <div className="text-center py-8 text-earth-500 dark:text-gray-400 italic">
               Bu grupta sağmal (dişi sığır) bulunmuyor.
             </div>
           ) : (
             <div className="space-y-3 min-w-[700px]">
               {/* Başlıklar */}
-              <div className="flex items-center px-3 pb-2 text-xs font-bold text-earth-500 uppercase tracking-wider">
+              <div className="flex items-center px-3 pb-2 text-xs font-bold text-earth-500 dark:text-gray-400 uppercase tracking-wider">
                 <div className="w-48 flex-shrink-0">Küpe No / Irk</div>
                 <div className="w-24 px-1 text-center text-blue-600">Miktar (L)*</div>
                 <div className="w-24 px-1 text-center">Yağ (%)</div>
@@ -126,40 +126,40 @@ const GroupMilkModal: React.FC<Props> = ({ grup, onClose }) => {
               </div>
 
               {hayvanlar.map(h => (
-                <div key={h.id} className="flex items-center p-3 bg-white border border-earth-200 rounded-xl shadow-sm hover:border-blue-300 transition">
+                <div key={h.id} className="flex items-center p-3 bg-white dark:bg-gray-800 border border-earth-200 dark:border-gray-700 rounded-xl shadow-sm hover:border-blue-300 transition">
                   <div className="w-48 flex-shrink-0">
-                    <h4 className="font-bold text-earth-900">{h.kupeNo}</h4>
-                    <span className="text-xs text-earth-500">{h.irk}</span>
+                    <h4 className="font-bold text-earth-900 dark:text-gray-100">{h.kupeNo}</h4>
+                    <span className="text-xs text-earth-500 dark:text-gray-400">{h.irk}</span>
                   </div>
                   
                   <div className="w-24 px-1">
                     <input type="number" step="0.1" min="0" placeholder="Litre" 
                       value={kayitlar[h.id]?.litre || ''} onChange={e => handleInputChange(h.id, 'litre', e.target.value)}
-                      className="w-full p-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-center font-bold text-blue-900 bg-blue-50" />
+                      className="w-full p-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-center font-bold text-blue-900 bg-blue-50 dark:bg-blue-900/20" />
                   </div>
                   
                   <div className="w-24 px-1">
                     <input type="number" step="0.1" min="0" max="10" placeholder="Yağ" 
                       value={kayitlar[h.id]?.yagYuzde || ''} onChange={e => handleInputChange(h.id, 'yagYuzde', e.target.value)}
-                      className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-center text-sm" />
+                      className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-center text-sm" />
                   </div>
                   
                   <div className="w-24 px-1">
                     <input type="number" step="0.1" min="0" max="10" placeholder="Protein" 
                       value={kayitlar[h.id]?.proteinYuzde || ''} onChange={e => handleInputChange(h.id, 'proteinYuzde', e.target.value)}
-                      className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-center text-sm" />
+                      className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-center text-sm" />
                   </div>
 
                   <div className="w-24 px-1">
                     <input type="number" step="0.1" min="0" max="10" placeholder="Laktoz" 
                       value={kayitlar[h.id]?.laktozYuzde || ''} onChange={e => handleInputChange(h.id, 'laktozYuzde', e.target.value)}
-                      className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-center text-sm" />
+                      className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-center text-sm" />
                   </div>
 
                   <div className="w-28 px-1">
                     <input type="number" min="0" placeholder="SHS" 
                       value={kayitlar[h.id]?.somatikHucre || ''} onChange={e => handleInputChange(h.id, 'somatikHucre', e.target.value)}
-                      className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-center text-sm" />
+                      className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-center text-sm" />
                   </div>
 
                 </div>
@@ -168,8 +168,8 @@ const GroupMilkModal: React.FC<Props> = ({ grup, onClose }) => {
           )}
         </div>
 
-        <div className="p-4 border-t border-earth-200 bg-white rounded-b-2xl flex justify-end space-x-3">
-          <button onClick={onClose} className="px-5 py-2 text-earth-600 font-bold hover:bg-earth-100 rounded-lg transition">İptal</button>
+        <div className="p-4 border-t border-earth-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-b-2xl flex justify-end space-x-3">
+          <button onClick={onClose} className="px-5 py-2 text-earth-600 dark:text-gray-400 font-bold hover:bg-earth-100 dark:hover:bg-gray-700 rounded-lg transition">İptal</button>
           <button 
             disabled={isSubmitting || hayvanlar.length === 0} 
             onClick={handleSave} 

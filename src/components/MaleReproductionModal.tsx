@@ -112,9 +112,9 @@ const MaleReproductionModal: React.FC<Props> = ({ hayvan, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl flex flex-col max-h-[90vh]">
-        <div className="flex justify-between items-center p-6 border-b border-earth-100">
-          <h2 className="text-xl font-black text-earth-900">Yeni Üreme İşlemi (Erkek)</h2>
+      <div className="bg-white dark:bg-gray-800 w-full max-w-lg rounded-2xl shadow-xl flex flex-col max-h-[90vh]">
+        <div className="flex justify-between items-center p-6 border-b border-earth-100 dark:border-gray-700">
+          <h2 className="text-xl font-black text-earth-900 dark:text-gray-100">Yeni Üreme İşlemi (Erkek)</h2>
           <button onClick={onClose} className="text-earth-400 hover:text-earth-600 transition">
             <X className="w-6 h-6" />
           </button>
@@ -123,10 +123,10 @@ const MaleReproductionModal: React.FC<Props> = ({ hayvan, onClose }) => {
         <form onSubmit={handleSave} className="p-6 overflow-y-auto flex-1 space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
-              <label className="block text-sm font-bold text-earth-700 mb-1">İşlem Türü</label>
+              <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">İşlem Türü</label>
               <select
                 required
-                className="w-full p-3 bg-earth-50 border border-earth-200 rounded-xl focus:ring-2 focus:ring-nature-500 font-medium"
+                className="w-full p-3 bg-earth-50 dark:bg-gray-900 border border-earth-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-nature-500 font-medium"
                 value={tur}
                 onChange={(e) => setTur(e.target.value as UremeKaydiTur)}
               >
@@ -137,11 +137,11 @@ const MaleReproductionModal: React.FC<Props> = ({ hayvan, onClose }) => {
             </div>
 
             <div className="col-span-2">
-              <label className="block text-sm font-bold text-earth-700 mb-1">Tarih</label>
+              <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Tarih</label>
               <input
                 type="date"
                 required
-                className="w-full p-3 bg-earth-50 border border-earth-200 rounded-xl focus:ring-2 focus:ring-nature-500"
+                className="w-full p-3 bg-earth-50 dark:bg-gray-900 border border-earth-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-nature-500"
                 value={tarih}
                 onChange={(e) => setTarih(e.target.value)}
               />
@@ -150,11 +150,11 @@ const MaleReproductionModal: React.FC<Props> = ({ hayvan, onClose }) => {
             {tur === 'Doğal Aşım' && (
               <>
                 <div className="col-span-2 relative">
-                  <label className="block text-sm font-bold text-earth-700 mb-1">Sürüden Dişi Seç (Arama Özellikli)</label>
+                  <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Sürüden Dişi Seç (Arama Özellikli)</label>
                   <div className="relative">
                     <input
                       type="text"
-                      className="w-full p-3 bg-earth-50 border border-earth-200 rounded-xl focus:ring-2 focus:ring-nature-500 font-medium"
+                      className="w-full p-3 bg-earth-50 dark:bg-gray-900 border border-earth-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-nature-500 font-medium"
                       placeholder="Küpe No veya tür ile ara..."
                       value={searchTerm}
                       onChange={(e) => {
@@ -170,13 +170,13 @@ const MaleReproductionModal: React.FC<Props> = ({ hayvan, onClose }) => {
                           className="fixed inset-0 z-10" 
                           onClick={() => setIsDropdownOpen(false)}
                         ></div>
-                        <div className="absolute z-20 w-full mt-1 bg-white border border-earth-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                        <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-800 border border-earth-200 dark:border-gray-700 rounded-xl shadow-lg max-h-48 overflow-y-auto">
                           {disiHayvanlar
                             .filter(d => d.kupeNo.toLowerCase().includes(searchTerm.toLowerCase()) || d.tur.toLowerCase().includes(searchTerm.toLowerCase()))
                             .map(d => (
                               <div
                                 key={d.id}
-                                className="p-3 hover:bg-earth-50 cursor-pointer text-earth-900 border-b border-earth-100 last:border-0"
+                                className="p-3 hover:bg-earth-50 dark:hover:bg-gray-700 cursor-pointer text-earth-900 dark:text-gray-100 border-b border-earth-100 dark:border-gray-700 last:border-0"
                                 onClick={() => {
                                   setSelectedDişiId(d.id);
                                   setSearchTerm(`${d.kupeNo} (${d.tur})`);
@@ -184,11 +184,11 @@ const MaleReproductionModal: React.FC<Props> = ({ hayvan, onClose }) => {
                                   setElleGirisDisi('');
                                 }}
                               >
-                                {d.kupeNo} <span className="text-earth-500 text-sm ml-2">({d.tur})</span>
+                                {d.kupeNo} <span className="text-earth-500 dark:text-gray-400 text-sm ml-2">({d.tur})</span>
                               </div>
                             ))}
                           {disiHayvanlar.filter(d => d.kupeNo.toLowerCase().includes(searchTerm.toLowerCase()) || d.tur.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && (
-                             <div className="p-3 text-earth-500 text-sm text-center">Sonuç bulunamadı.</div>
+                             <div className="p-3 text-earth-500 dark:text-gray-400 text-sm text-center">Sonuç bulunamadı.</div>
                           )}
                         </div>
                       </>
@@ -197,11 +197,11 @@ const MaleReproductionModal: React.FC<Props> = ({ hayvan, onClose }) => {
                 </div>
 
                 <div className="col-span-2">
-                  <label className="block text-sm font-bold text-earth-700 mb-1">Eşleşilen Dişi (Elle Yaz)</label>
+                  <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Eşleşilen Dişi (Elle Yaz)</label>
                   <input
                     type="text"
                     placeholder="Sürü dışından bir hayvan ise buraya yazın..."
-                    className="w-full p-3 bg-earth-50 border border-earth-200 rounded-xl focus:ring-2 focus:ring-nature-500"
+                    className="w-full p-3 bg-earth-50 dark:bg-gray-900 border border-earth-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-nature-500"
                     value={elleGirisDisi}
                     onChange={(e) => {
                       setElleGirisDisi(e.target.value);
@@ -219,30 +219,30 @@ const MaleReproductionModal: React.FC<Props> = ({ hayvan, onClose }) => {
             {tur === 'Sperma Alımı' && (
               <>
                 <div>
-                  <label className="block text-sm font-bold text-earth-700 mb-1">Miktar (ml)</label>
+                  <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Miktar (ml)</label>
                   <input
                     type="number"
                     step="0.1"
-                    className="w-full p-3 bg-earth-50 border border-earth-200 rounded-xl focus:ring-2 focus:ring-nature-500"
+                    className="w-full p-3 bg-earth-50 dark:bg-gray-900 border border-earth-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-nature-500"
                     value={miktarMl}
                     onChange={(e) => setMiktarMl(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-earth-700 mb-1">Motilite (%)</label>
+                  <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Motilite (%)</label>
                   <input
                     type="number"
-                    className="w-full p-3 bg-earth-50 border border-earth-200 rounded-xl focus:ring-2 focus:ring-nature-500"
+                    className="w-full p-3 bg-earth-50 dark:bg-gray-900 border border-earth-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-nature-500"
                     value={motiliteYuzde}
                     onChange={(e) => setMotiliteYuzde(e.target.value)}
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-sm font-bold text-earth-700 mb-1">Üretilen Payet (Doz)</label>
+                  <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Üretilen Payet (Doz)</label>
                   <input
                     type="number"
                     required
-                    className="w-full p-3 bg-earth-50 border border-earth-200 rounded-xl focus:ring-2 focus:ring-nature-500"
+                    className="w-full p-3 bg-earth-50 dark:bg-gray-900 border border-earth-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-nature-500"
                     value={payetSayisi}
                     onChange={(e) => setPayetSayisi(e.target.value)}
                   />
@@ -252,12 +252,12 @@ const MaleReproductionModal: React.FC<Props> = ({ hayvan, onClose }) => {
 
             {tur === 'Damızlık Muayenesi' && (
               <div className="col-span-2">
-                <label className="block text-sm font-bold text-earth-700 mb-1">Skrotum Çevresi (cm)</label>
+                <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Skrotum Çevresi (cm)</label>
                 <input
                   type="number"
                   step="0.1"
                   required
-                  className="w-full p-3 bg-earth-50 border border-earth-200 rounded-xl focus:ring-2 focus:ring-nature-500"
+                  className="w-full p-3 bg-earth-50 dark:bg-gray-900 border border-earth-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-nature-500"
                   value={skrotumCevresiCm}
                   onChange={(e) => setSkrotumCevresiCm(e.target.value)}
                 />
@@ -265,14 +265,14 @@ const MaleReproductionModal: React.FC<Props> = ({ hayvan, onClose }) => {
             )}
 
             <div className="col-span-2">
-               <label className="block text-sm font-bold text-earth-700 mb-1">Maliyet (₺) - Opsiyonel</label>
+               <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Maliyet (₺) - Opsiyonel</label>
                <div className="relative">
                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                    <DollarSign className="h-5 w-5 text-earth-400" />
                  </div>
                  <input
                    type="number"
-                   className="w-full pl-10 p-3 bg-earth-50 border border-earth-200 rounded-xl focus:ring-2 focus:ring-nature-500"
+                   className="w-full pl-10 p-3 bg-earth-50 dark:bg-gray-900 border border-earth-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-nature-500"
                    placeholder="Örn: 500"
                    value={maliyet}
                    onChange={(e) => setMaliyet(e.target.value)}
@@ -281,9 +281,9 @@ const MaleReproductionModal: React.FC<Props> = ({ hayvan, onClose }) => {
             </div>
 
             <div className="col-span-2">
-              <label className="block text-sm font-bold text-earth-700 mb-1">Notlar</label>
+              <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Notlar</label>
               <textarea
-                className="w-full p-3 bg-earth-50 border border-earth-200 rounded-xl focus:ring-2 focus:ring-nature-500"
+                className="w-full p-3 bg-earth-50 dark:bg-gray-900 border border-earth-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-nature-500"
                 rows={2}
                 value={notlar}
                 onChange={(e) => setNotlar(e.target.value)}
@@ -291,11 +291,11 @@ const MaleReproductionModal: React.FC<Props> = ({ hayvan, onClose }) => {
             </div>
           </div>
 
-          <div className="pt-4 border-t border-earth-100 flex justify-end space-x-3">
+          <div className="pt-4 border-t border-earth-100 dark:border-gray-700 flex justify-end space-x-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 font-bold text-earth-600 hover:bg-earth-100 rounded-xl transition"
+              className="px-6 py-3 font-bold text-earth-600 dark:text-gray-400 hover:bg-earth-100 dark:hover:bg-gray-700 rounded-xl transition"
             >
               İptal
             </button>

@@ -51,7 +51,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden relative shadow-2xl">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md overflow-hidden relative shadow-2xl">
         <div className="p-4 bg-earth-900 text-white flex justify-between items-center">
           <div className="flex items-center space-x-2">
             <Camera className="w-5 h-5" />
@@ -73,7 +73,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
           )}
         </div>
         
-        <div className="p-4 bg-earth-50 text-earth-600 text-sm text-center">
+        <div className="p-4 bg-earth-50 dark:bg-gray-900 text-earth-600 dark:text-gray-400 text-sm text-center">
           Kamerayı küpe üzerindeki barkoda doğru tutun. Okuma işlemi otomatik yapılacaktır.
         </div>
       </div>

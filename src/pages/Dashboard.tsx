@@ -58,51 +58,51 @@ const Dashboard: React.FC = () => {
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-earth-900 tracking-tight">Anasayfa</h1>
-          <p className="text-earth-500 font-medium text-sm sm:text-base mt-0.5">Sürünüzün genel durum özeti</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-earth-900 dark:text-gray-100 tracking-tight">Anasayfa</h1>
+          <p className="text-earth-500 dark:text-gray-400 font-medium text-sm sm:text-base mt-0.5">Sürünüzün genel durum özeti</p>
         </div>
         <FarmSwitcher />
       </div>
 
       {/* KPI Kartları */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-earth-200 flex items-center space-x-4">
-          <div className="p-4 bg-earth-100 text-earth-600 rounded-xl">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex items-center space-x-4">
+          <div className="p-4 bg-earth-100 dark:bg-gray-800 text-earth-600 dark:text-gray-400 rounded-xl">
             <Users className="w-8 h-8" />
           </div>
           <div>
-            <p className="text-sm font-bold text-earth-500 uppercase">Toplam Hayvan</p>
-            <p className="text-3xl font-black text-earth-900">{totalAnimals}</p>
+            <p className="text-sm font-bold text-earth-500 dark:text-gray-400 uppercase">Toplam Hayvan</p>
+            <p className="text-3xl font-black text-earth-900 dark:text-gray-100">{totalAnimals}</p>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-earth-200 flex items-center space-x-4">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex items-center space-x-4">
           <div className="p-4 bg-blue-100 text-blue-600 rounded-xl">
             <Activity className="w-8 h-8" />
           </div>
           <div>
-            <p className="text-sm font-bold text-earth-500 uppercase">İnek Başı Ort. Süt (Son 7 Gün)</p>
-            <p className="text-3xl font-black text-earth-900">{avgMilk.toFixed(1)} <span className="text-base">Lt/Gün</span></p>
+            <p className="text-sm font-bold text-earth-500 dark:text-gray-400 uppercase">İnek Başı Ort. Süt (Son 7 Gün)</p>
+            <p className="text-3xl font-black text-earth-900 dark:text-gray-100">{avgMilk.toFixed(1)} <span className="text-base">Lt/Gün</span></p>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-earth-200 flex items-center space-x-4">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex items-center space-x-4">
           <div className={`p-4 rounded-xl ${activeAlerts > 0 ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
             <AlertTriangle className="w-8 h-8" />
           </div>
           <div>
-            <p className="text-sm font-bold text-earth-500 uppercase">Sağlık / Aşı Uyarısı</p>
+            <p className="text-sm font-bold text-earth-500 dark:text-gray-400 uppercase">Sağlık / Aşı Uyarısı</p>
             <p className={`text-3xl font-black ${activeAlerts > 0 ? 'text-red-600' : 'text-green-600'}`}>{activeAlerts}</p>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-earth-200 flex items-center space-x-4">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex items-center space-x-4">
           <div className="p-4 bg-pink-100 text-pink-600 rounded-xl">
             <Droplets className="w-8 h-8" />
           </div>
           <div>
-            <p className="text-sm font-bold text-earth-500 uppercase">Yaklaşan Doğumlar</p>
-            <p className="text-3xl font-black text-earth-900">{expectedBirths} <span className="text-base font-normal text-earth-500">(30 Gün)</span></p>
+            <p className="text-sm font-bold text-earth-500 dark:text-gray-400 uppercase">Yaklaşan Doğumlar</p>
+            <p className="text-3xl font-black text-earth-900 dark:text-gray-100">{expectedBirths} <span className="text-base font-normal text-earth-500 dark:text-gray-400">(30 Gün)</span></p>
           </div>
         </div>
       </div>
@@ -114,26 +114,26 @@ const Dashboard: React.FC = () => {
           <h2 className="text-xl font-black text-purple-900">Sürü Üreme Performansı (İnek Ortalamaları)</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-xl border border-purple-100 shadow-sm">
-            <p className="text-xs font-bold text-earth-500 uppercase tracking-wider mb-1">Servis Periyodu Ort.</p>
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-purple-100 shadow-sm">
+            <p className="text-xs font-bold text-earth-500 dark:text-gray-400 uppercase tracking-wider mb-1">Servis Periyodu Ort.</p>
             <p className="text-2xl font-black text-purple-700">
               {herdPerformance.servisPeriyoduOrt !== null ? `${herdPerformance.servisPeriyoduOrt} Gün` : '-'}
             </p>
           </div>
-          <div className="bg-white p-4 rounded-xl border border-purple-100 shadow-sm">
-            <p className="text-xs font-bold text-earth-500 uppercase tracking-wider mb-1">Laktasyon Süresi Ort.</p>
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-purple-100 shadow-sm">
+            <p className="text-xs font-bold text-earth-500 dark:text-gray-400 uppercase tracking-wider mb-1">Laktasyon Süresi Ort.</p>
             <p className="text-2xl font-black text-purple-700">
               {herdPerformance.ortalamaLaktasyonSuresiOrt !== null ? `${herdPerformance.ortalamaLaktasyonSuresiOrt} Gün` : '-'}
             </p>
           </div>
-          <div className="bg-white p-4 rounded-xl border border-purple-100 shadow-sm">
-            <p className="text-xs font-bold text-earth-500 uppercase tracking-wider mb-1">Gebelik Başına Tohum.</p>
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-purple-100 shadow-sm">
+            <p className="text-xs font-bold text-earth-500 dark:text-gray-400 uppercase tracking-wider mb-1">Gebelik Başına Tohum.</p>
             <p className="text-2xl font-black text-purple-700">
               {herdPerformance.gebelikBasinaTohumlamaOrt !== null ? herdPerformance.gebelikBasinaTohumlamaOrt : '-'}
             </p>
           </div>
-          <div className="bg-white p-4 rounded-xl border border-purple-100 shadow-sm">
-            <p className="text-xs font-bold text-earth-500 uppercase tracking-wider mb-1">Buzağılama Aralığı Ort.</p>
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-purple-100 shadow-sm">
+            <p className="text-xs font-bold text-earth-500 dark:text-gray-400 uppercase tracking-wider mb-1">Buzağılama Aralığı Ort.</p>
             <p className="text-2xl font-black text-purple-700">
               {herdPerformance.buzagilamaAraligiOrt !== null ? `${herdPerformance.buzagilamaAraligiOrt} Gün` : '-'}
             </p>
@@ -175,39 +175,39 @@ const Dashboard: React.FC = () => {
             )}
           </div>
 
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-earth-200">
-            <h3 className="text-lg font-bold text-earth-900 mb-4">Tür Dağılımı</h3>
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700">
+            <h3 className="text-lg font-bold text-earth-900 dark:text-gray-100 mb-4">Tür Dağılımı</h3>
             {speciesDist.length > 0 ? (
               <div className="space-y-3">
                 {speciesDist.map((s, idx) => (
                   <div key={idx} className="flex items-center justify-between">
-                    <span className="text-earth-600 font-bold">{s.name}</span>
-                    <span className="bg-earth-100 text-earth-800 px-3 py-1 rounded-full text-sm font-black">{s.value}</span>
+                    <span className="text-earth-600 dark:text-gray-400 font-bold">{s.name}</span>
+                    <span className="bg-earth-100 dark:bg-gray-800 text-earth-800 dark:text-gray-200 px-3 py-1 rounded-full text-sm font-black">{s.value}</span>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="flex flex-col items-center text-center py-6">
-                <div className="bg-nature-100 p-3 rounded-full text-nature-600 mb-3">
+                <div className="bg-nature-100 dark:bg-nature-900/50 p-3 rounded-full text-nature-600 dark:text-nature-400 mb-3">
                   <Users className="w-8 h-8" />
                 </div>
-                <p className="text-earth-900 font-bold mb-1">Sürünüz Henüz Boş</p>
-                <p className="text-earth-500 text-sm mb-4">Analizleri görmek için ilk hayvanınızı ekleyin.</p>
+                <p className="text-earth-900 dark:text-gray-100 font-bold mb-1">Sürünüz Henüz Boş</p>
+                <p className="text-earth-500 dark:text-gray-400 text-sm mb-4">Analizleri görmek için ilk hayvanınızı ekleyin.</p>
                 <Link to="/hayvanlar" className="bg-nature-600 hover:bg-nature-700 text-white px-4 py-2 rounded-lg font-bold transition text-sm">
                   Hayvan Ekle
                 </Link>
               </div>
             )}
-            <div className="mt-6 pt-4 border-t border-earth-100">
-              <Link to="/hayvanlar" className="text-nature-600 font-bold text-sm hover:underline">Hayvan Listesine Git &rarr;</Link>
+            <div className="mt-6 pt-4 border-t border-earth-100 dark:border-gray-700">
+              <Link to="/hayvanlar" className="text-nature-600 dark:text-nature-400 font-bold text-sm hover:underline">Hayvan Listesine Git &rarr;</Link>
             </div>
           </div>
         </div>
 
         {/* Sağ Kolon: Bugün Yapılacaklar (To-Do) */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-earth-200 flex flex-col">
+        <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex flex-col">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xl font-black text-earth-900">Bugün Yapılacaklar</h3>
+            <h3 className="text-xl font-black text-earth-900 dark:text-gray-100">Bugün Yapılacaklar</h3>
             <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">{activeAlerts} İşlem Bekliyor</span>
           </div>
 
@@ -220,9 +220,9 @@ const Dashboard: React.FC = () => {
             ) : (
               <>
                 {activeAlerts > 0 && (
-                  <div className="bg-red-50 border border-red-100 p-4 rounded-xl">
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 p-4 rounded-xl">
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className="bg-white p-2 rounded-lg"><Syringe className="w-5 h-5 text-red-600" /></div>
+                      <div className="bg-white dark:bg-gray-800 p-2 rounded-lg"><Syringe className="w-5 h-5 text-red-600" /></div>
                       <div>
                         <p className="font-bold text-red-900">Aşı ve Sağlık Uyarıları Mevcut</p>
                         <p className="text-sm text-red-700">Gecikmiş aşıları kontrol et.</p>
@@ -246,9 +246,9 @@ const Dashboard: React.FC = () => {
                 )}
 
                 {expectedBirths > 0 && (
-                  <div className="bg-pink-50 border border-pink-100 p-4 rounded-xl">
+                  <div className="bg-pink-50 dark:bg-pink-900/20 border border-pink-100 p-4 rounded-xl">
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className="bg-white p-2 rounded-lg"><CalfIcon className="w-5 h-5 text-pink-600" /></div>
+                      <div className="bg-white dark:bg-gray-800 p-2 rounded-lg"><CalfIcon className="w-5 h-5 text-pink-600" /></div>
                       <div>
                         <p className="font-bold text-pink-900">Yaklaşan ve Geciken Doğumlar</p>
                         <p className="text-sm text-pink-700">Yaklaşan veya tarihi geçmiş {expectedBirths} doğum var.</p>
@@ -260,7 +260,7 @@ const Dashboard: React.FC = () => {
                            const h = hayvanlar.find(x => x.id === dogum.hayvanId);
                            const isOverdue = dogum.dogumTarihi < new Date(new Date().setHours(0,0,0,0));
                            return (
-                             <div key={idx} className={`text-sm flex justify-between p-2 rounded-md border ${isOverdue ? 'bg-red-50 border-red-200 shadow-sm' : 'bg-white/60 border-pink-100'}`}>
+                             <div key={idx} className={`text-sm flex justify-between p-2 rounded-md border ${isOverdue ? 'bg-red-50 dark:bg-red-900/20 border-red-200 shadow-sm' : 'bg-white/60 border-pink-100'}`}>
                                <span className={`font-bold ${isOverdue ? 'text-red-800' : 'text-pink-800'}`}>{h?.kupeNo || 'Bilinmeyen'}</span>
                                <span className={isOverdue ? 'text-red-600 font-bold' : 'text-pink-600'}>
                                  {dogum.dogumTarihi.toLocaleDateString('tr-TR')} {isOverdue && '(Gecikti)'}
@@ -277,7 +277,7 @@ const Dashboard: React.FC = () => {
                 {heatChecks.length > 0 && (
                   <div className="bg-purple-50 border border-purple-100 p-4 rounded-xl">
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className="bg-white p-2 rounded-lg"><Heart className="w-5 h-5 text-purple-600" /></div>
+                      <div className="bg-white dark:bg-gray-800 p-2 rounded-lg"><Heart className="w-5 h-5 text-purple-600" /></div>
                       <div>
                         <p className="font-bold text-purple-900">Kızgınlık Beklentisi</p>
                         <p className="text-sm text-purple-700">Tohumlama/Boş sonrası {uremeAyarlari.kizginlikDongusu} gün döngüsü</p>
@@ -299,9 +299,9 @@ const Dashboard: React.FC = () => {
                 )}
 
                 {reInseminations.length > 0 && (
-                  <div className="bg-orange-50 border border-orange-100 p-4 rounded-xl">
+                  <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-100 p-4 rounded-xl">
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className="bg-white p-2 rounded-lg"><CalendarCheck className="w-5 h-5 text-orange-600" /></div>
+                      <div className="bg-white dark:bg-gray-800 p-2 rounded-lg"><CalendarCheck className="w-5 h-5 text-orange-600" /></div>
                       <div>
                         <p className="font-bold text-orange-900">Yeniden Tohumlama (Doğum Sonrası)</p>
                         <p className="text-sm text-orange-700">Doğum üzerinden {uremeAyarlari.yenidenTohumlamaUyarisi} gün geçenler</p>

@@ -195,12 +195,12 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
 
   return (
     <div className="fixed inset-0 z-40 bg-earth-900/50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl flex flex-col max-h-[90vh]">
-        <div className="p-6 border-b border-earth-200 flex justify-between items-center bg-nature-50 rounded-t-2xl flex-shrink-0">
-          <h2 className="text-xl font-bold text-earth-900">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl shadow-xl flex flex-col max-h-[90vh]">
+        <div className="p-6 border-b border-earth-200 dark:border-gray-700 flex justify-between items-center bg-nature-50 dark:bg-nature-900/30 rounded-t-2xl flex-shrink-0">
+          <h2 className="text-xl font-bold text-earth-900 dark:text-gray-100">
             {initialData ? 'Hayvanı Düzenle' : 'Yeni Hayvan Ekle'}
           </h2>
-          <button type="button" onClick={onClose} className="text-earth-500 hover:text-red-500 transition">
+          <button type="button" onClick={onClose} className="text-earth-500 dark:text-gray-400 hover:text-red-500 transition">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -210,14 +210,14 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             <div className="space-y-1">
-              <label className="text-sm font-semibold text-earth-700">Küpe Numarası *</label>
+              <label className="text-sm font-semibold text-earth-700 dark:text-gray-300">Küpe Numarası *</label>
               <div className="flex space-x-2">
                 <input 
                   {...register('kupeNo')} 
-                  className="flex-1 p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500"
+                  className="flex-1 p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500"
                   placeholder="TR-..."
                 />
-                <button type="button" onClick={() => setScannerTarget('kupeNo')} className="p-2 bg-nature-100 text-nature-700 rounded-lg hover:bg-nature-200">
+                <button type="button" onClick={() => setScannerTarget('kupeNo')} className="p-2 bg-nature-100 dark:bg-nature-900/50 text-nature-700 dark:text-nature-300 rounded-lg hover:bg-nature-200">
                   <Camera className="w-5 h-5" />
                 </button>
               </div>
@@ -225,10 +225,10 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-semibold text-earth-700">Irk *</label>
+              <label className="text-sm font-semibold text-earth-700 dark:text-gray-300">Irk *</label>
               <select 
                 {...register('irk')} 
-                className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500 bg-white"
+                className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 bg-white dark:bg-gray-800"
               >
                 <option value="">Irk Seçiniz...</option>
                 <optgroup label="Sütçü Irklar">
@@ -263,7 +263,7 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
                     type="text"
                     value={digerIrk}
                     onChange={(e) => setDigerIrk(e.target.value)}
-                    className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500"
+                    className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500"
                     placeholder="Lütfen ırk adını yazınız..."
                   />
                 </div>
@@ -275,7 +275,7 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
                     type="text"
                     value={melezDetay}
                     onChange={(e) => setMelezDetay(e.target.value)}
-                    className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500"
+                    className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500"
                     placeholder="Hangi ırkların melezi? (Opsiyonel)"
                   />
                 </div>
@@ -283,8 +283,8 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-semibold text-earth-700">Tür</label>
-              <select {...register('tur')} className="w-full p-2 border border-earth-300 rounded-lg">
+              <label className="text-sm font-semibold text-earth-700 dark:text-gray-300">Tür</label>
+              <select {...register('tur')} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg">
                 <option value="İnek">İnek (Doğurmuş Dişi)</option>
                 <option value="Tosun">Tosun (1-2 Yaşında Damızlıkta Kullanılmamış Erkek)</option>
                 <option value="Boğa">Boğa (Damızlıkta Kullanılmış Erkek)</option>
@@ -296,17 +296,17 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-semibold text-earth-700">Cinsiyet</label>
+              <label className="text-sm font-semibold text-earth-700 dark:text-gray-300">Cinsiyet</label>
               <select 
                 {...register('cinsiyet')} 
                 disabled={isCinsiyetLocked}
-                className={`w-full p-2 border border-earth-300 rounded-lg ${isCinsiyetLocked ? 'bg-earth-100 opacity-70 cursor-not-allowed' : ''}`}
+                className={`w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg ${isCinsiyetLocked ? 'bg-earth-100 dark:bg-gray-800 opacity-70 cursor-not-allowed' : ''}`}
               >
                 <option value="Dişi">Dişi</option>
                 <option value="Erkek">Erkek</option>
               </select>
               {isCinsiyetLocked && (
-                <p className="text-xs text-earth-500 mt-1">Bu tür için cinsiyet otomatiktir.</p>
+                <p className="text-xs text-earth-500 dark:text-gray-400 mt-1">Bu tür için cinsiyet otomatiktir.</p>
               )}
             </div>
 
@@ -316,17 +316,17 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
                   type="checkbox" 
                   {...register('kisirlastirildiMi')} 
                   id="kisirlastirildiMi"
-                  className="w-4 h-4 text-nature-600 border-earth-300 rounded focus:ring-nature-500"
+                  className="w-4 h-4 text-nature-600 dark:text-nature-400 border-earth-300 dark:border-gray-600 rounded focus:ring-nature-500"
                 />
-                <label htmlFor="kisirlastirildiMi" className="ml-2 text-sm font-semibold text-earth-700">
+                <label htmlFor="kisirlastirildiMi" className="ml-2 text-sm font-semibold text-earth-700 dark:text-gray-300">
                   Kısırlaştırılmış (Öküz adayı)
                 </label>
               </div>
             )}
 
             <div className="space-y-1">
-              <label className="text-sm font-semibold text-earth-700">Grup</label>
-              <select {...register('grupId')} className="w-full p-2 border border-earth-300 rounded-lg">
+              <label className="text-sm font-semibold text-earth-700 dark:text-gray-300">Grup</label>
+              <select {...register('grupId')} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg">
                 <option value="">Grup Yok</option>
                 {gruplar.map(g => (
                   <option key={g.id} value={g.id}>{g.ad}</option>
@@ -335,8 +335,8 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-semibold text-earth-700">Durum</label>
-              <select {...register('durum')} className="w-full p-2 border border-earth-300 rounded-lg">
+              <label className="text-sm font-semibold text-earth-700 dark:text-gray-300">Durum</label>
+              <select {...register('durum')} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg">
                 <option value="Aktif">Aktif</option>
                 <option value="Satıldı">Satıldı</option>
                 <option value="Öldü">Öldü</option>
@@ -346,69 +346,69 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
             {currentDurum === 'Satıldı' && (
               <>
                 <div className="space-y-1">
-                  <label className="text-sm font-semibold text-earth-700">Satış Fiyatı (₺)</label>
+                  <label className="text-sm font-semibold text-earth-700 dark:text-gray-300">Satış Fiyatı (₺)</label>
                   <input 
                     type="number" 
                     {...register('satisFiyati', { valueAsNumber: true })} 
-                    className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500"
+                    className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-semibold text-earth-700">Satış Tarihi</label>
+                  <label className="text-sm font-semibold text-earth-700 dark:text-gray-300">Satış Tarihi</label>
                   <input 
                     type="date" 
                     {...register('satisTarihi')} 
-                    className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500"
+                    className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500"
                   />
                 </div>
               </>
             )}
 
             <div className="space-y-1">
-              <label className="text-sm font-semibold text-earth-700">Güncel Ağırlık (kg)</label>
+              <label className="text-sm font-semibold text-earth-700 dark:text-gray-300">Güncel Ağırlık (kg)</label>
               <input 
                 type="number" 
                 {...register('guncelAgirlikKg', { valueAsNumber: true })} 
-                className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500"
+                className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500"
               />
               {errors.guncelAgirlikKg && <p className="text-xs text-red-500">{errors.guncelAgirlikKg.message}</p>}
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-semibold text-earth-700">Doğum Tarihi</label>
+              <label className="text-sm font-semibold text-earth-700 dark:text-gray-300">Doğum Tarihi</label>
               <input 
                 type="date" 
                 {...register('dogumTarihi')} 
-                className="w-full p-2 border border-earth-300 rounded-lg focus:ring-2 focus:ring-nature-500"
+                className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500"
               />
             </div>
           </div>
 
-          <div className="pt-4 border-t border-earth-200">
-            <h3 className="text-sm font-bold text-earth-500 mb-4 uppercase tracking-wider">Soy Ağacı Bilgileri</h3>
+          <div className="pt-4 border-t border-earth-200 dark:border-gray-700">
+            <h3 className="text-sm font-bold text-earth-500 dark:text-gray-400 mb-4 uppercase tracking-wider">Soy Ağacı Bilgileri</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-1">
-                <label className="text-sm font-semibold text-earth-700">Anne Küpe No</label>
+                <label className="text-sm font-semibold text-earth-700 dark:text-gray-300">Anne Küpe No</label>
                 <div className="flex space-x-2">
                   <input 
                     {...register('anneKupeNo')} 
-                    className="flex-1 p-2 border border-earth-300 rounded-lg"
+                    className="flex-1 p-2 border border-earth-300 dark:border-gray-600 rounded-lg"
                   />
-                  <button type="button" onClick={() => setScannerTarget('anneKupeNo')} className="p-2 bg-nature-100 text-nature-700 rounded-lg hover:bg-nature-200">
+                  <button type="button" onClick={() => setScannerTarget('anneKupeNo')} className="p-2 bg-nature-100 dark:bg-nature-900/50 text-nature-700 dark:text-nature-300 rounded-lg hover:bg-nature-200">
                     <Camera className="w-5 h-5" />
                   </button>
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm font-semibold text-earth-700">Baba Küpe No / Boğa Kodu</label>
+                <label className="text-sm font-semibold text-earth-700 dark:text-gray-300">Baba Küpe No / Boğa Kodu</label>
                 <div className="flex space-x-2">
                   <input 
                     placeholder="Küpe No veya Boğa Kodu"
                     {...register('babaKupeNo')} 
-                    className="flex-1 p-2 border border-earth-300 rounded-lg placeholder:text-sm placeholder:text-earth-400"
+                    className="flex-1 p-2 border border-earth-300 dark:border-gray-600 rounded-lg placeholder:text-sm placeholder:text-earth-400"
                   />
-                  <button type="button" onClick={() => setScannerTarget('babaKupeNo')} className="p-2 bg-nature-100 text-nature-700 rounded-lg hover:bg-nature-200">
+                  <button type="button" onClick={() => setScannerTarget('babaKupeNo')} className="p-2 bg-nature-100 dark:bg-nature-900/50 text-nature-700 dark:text-nature-300 rounded-lg hover:bg-nature-200">
                     <Camera className="w-5 h-5" />
                   </button>
                 </div>
@@ -417,10 +417,10 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
           </div>
 
           {/* Fotoğraf Yükleme */}
-          <div className="pt-4 border-t border-earth-200">
-            <h3 className="text-sm font-bold text-earth-500 mb-4 uppercase tracking-wider">Hayvan Fotoğrafı (Opsiyonel)</h3>
+          <div className="pt-4 border-t border-earth-200 dark:border-gray-700">
+            <h3 className="text-sm font-bold text-earth-500 dark:text-gray-400 mb-4 uppercase tracking-wider">Hayvan Fotoğrafı (Opsiyonel)</h3>
             <div className="flex items-center space-x-4">
-              <div className="w-24 h-24 rounded-xl border-2 border-dashed border-earth-300 flex items-center justify-center overflow-hidden bg-earth-50 flex-shrink-0">
+              <div className="w-24 h-24 rounded-xl border-2 border-dashed border-earth-300 dark:border-gray-600 flex items-center justify-center overflow-hidden bg-earth-50 dark:bg-gray-900 flex-shrink-0">
                 {fotografOnizleme ? (
                   <img src={fotografOnizleme} alt="Önizleme" className="w-full h-full object-cover" />
                 ) : (
@@ -431,7 +431,7 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center justify-center w-full space-x-2 px-4 py-2 bg-earth-100 text-earth-700 rounded-lg hover:bg-earth-200 font-semibold transition"
+                  className="flex items-center justify-center w-full space-x-2 px-4 py-2 bg-earth-100 dark:bg-gray-800 text-earth-700 dark:text-gray-300 rounded-lg hover:bg-earth-200 font-semibold transition"
                 >
                   <ImagePlus className="w-4 h-4" />
                   <span>Fotoğraf Seç</span>
@@ -439,7 +439,7 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
                 <button
                   type="button"
                   onClick={() => cameraInputRef.current?.click()}
-                  className="flex items-center justify-center w-full space-x-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 border border-blue-200 font-semibold transition"
+                  className="flex items-center justify-center w-full space-x-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 rounded-lg hover:bg-blue-100 border border-blue-200 font-semibold transition"
                 >
                   <Camera className="w-4 h-4" />
                   <span>Fotoğraf Çek</span>
@@ -457,8 +457,8 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
             </div>
           </div>
 
-          <div className="p-6 border-t border-earth-200 bg-white flex justify-end space-x-3 flex-shrink-0 rounded-b-2xl">
-            <button type="button" onClick={onClose} className="px-5 py-2 text-earth-600 font-semibold hover:bg-earth-100 rounded-lg">İptal</button>
+          <div className="p-6 border-t border-earth-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex justify-end space-x-3 flex-shrink-0 rounded-b-2xl">
+            <button type="button" onClick={onClose} className="px-5 py-2 text-earth-600 dark:text-gray-400 font-semibold hover:bg-earth-100 dark:hover:bg-gray-700 rounded-lg">İptal</button>
             <button type="submit" className="px-5 py-2 bg-nature-600 text-white font-bold rounded-lg flex items-center space-x-2 hover:bg-nature-700 shadow-sm">
               <Save className="w-5 h-5" />
               <span>Kaydet</span>
