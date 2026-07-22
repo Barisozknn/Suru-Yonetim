@@ -5,6 +5,36 @@ import { useStore } from '../store/useStore';
 import { Calculator, Plus, X, Activity, Droplets, Beef } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
+// ProgressBar bileşeni burada tanımlanmalı — RationCalculator içinde değil!
+// İçerde tanımlanırsa her render'da yeni referans oluşur ve React tüm alt ağacı
+// unmount/remount eder. Mobilde bu beyaz ekrana yol açar.
+const ProgressBar = ({ current, target, label, unit }: { current: number, target: number, label: string, unit: string }) => {
+  const validCurrent = isNaN(current) || !isFinite(current) ? 0 : current;
+  const validTarget = isNaN(target) || !isFinite(target) || target <= 0 ? 1 : target;
+
+  const percent = Math.min(Math.round((validCurrent / validTarget) * 100), 100);
+  const isDeficient = percent < 90;
+  const isExcess = percent > 110;
+
+  let color = 'bg-nature-500';
+  if (isDeficient) color = 'bg-yellow-500';
+  if (isExcess) color = 'bg-red-500';
+
+  return (
+    <div className="mb-4">
+      <div className="flex justify-between items-end mb-1">
+        <span className="font-bold text-earth-800 text-sm">{label}</span>
+        <span className="text-xs font-bold text-earth-500">
+          {validCurrent.toFixed(1)} / {validTarget.toFixed(1)} {unit}
+        </span>
+      </div>
+      <div className="w-full bg-earth-100 rounded-full h-2.5">
+        <div className={`${color} h-2.5 rounded-full transition-all duration-500`} style={{ width: `${percent}%` }}></div>
+      </div>
+    </div>
+  );
+};
+
 const RationCalculator: React.FC = () => {
   const gruplar = useLiveFarmQuery(() => db.gruplar.toArray()) || [];
   const yemler = useLiveFarmQuery(() => db.yemler.toArray()) || [];
@@ -36,7 +66,7 @@ const RationCalculator: React.FC = () => {
         if (avg > 0) setAvgWeight(Math.round(avg));
       }
     }
-  }, [selectedGrupId, hayvanlar]);
+  }, [selectedGrupId, hayvanlar, setAvgWeight]);
 
   // İhtiyaç Hesaplama Fonksiyonları
   const hedefIhtiyac = useMemo(() => {
@@ -128,33 +158,6 @@ const RationCalculator: React.FC = () => {
   const removeYem = (id: string) => {
     const list = Array.isArray(rasyonListesi) ? rasyonListesi : [];
     setRasyonListesi(list.filter(r => r && r.id !== id));
-  };
-
-  const ProgressBar = ({ current, target, label, unit }: { current: number, target: number, label: string, unit: string }) => {
-    const validCurrent = isNaN(current) || !isFinite(current) ? 0 : current;
-    const validTarget = isNaN(target) || !isFinite(target) || target <= 0 ? 1 : target;
-
-    const percent = Math.min(Math.round((validCurrent / validTarget) * 100), 100);
-    const isDeficient = percent < 90;
-    const isExcess = percent > 110;
-
-    let color = 'bg-nature-500';
-    if (isDeficient) color = 'bg-yellow-500';
-    if (isExcess) color = 'bg-red-500';
-
-    return (
-      <div className="mb-4">
-        <div className="flex justify-between items-end mb-1">
-          <span className="font-bold text-earth-800 text-sm">{label}</span>
-          <span className="text-xs font-bold text-earth-500">
-            {validCurrent.toFixed(1)} / {validTarget.toFixed(1)} {unit}
-          </span>
-        </div>
-        <div className="w-full bg-earth-100 rounded-full h-2.5">
-          <div className={`${color} h-2.5 rounded-full transition-all duration-500`} style={{ width: `${percent}%` }}></div>
-        </div>
-      </div>
-    );
   };
 
   const safeRasyonListesi = Array.isArray(rasyonListesi) ? rasyonListesi : [];

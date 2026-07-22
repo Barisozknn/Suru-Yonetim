@@ -519,3 +519,99 @@ export const processSyncQueue = async () => {
     }
   }
 };
+
+// Her Supabase tablosu için yerel IndexedDB tablosuna mapping ve mapper fonksiyonu
+const REALTIME_TABLE_CONFIG: Record<string, {
+  localTable: string;
+  mapFrom: (row: any) => any;
+}> = {
+  hayvanlar:           { localTable: 'hayvanlar',           mapFrom: mapFromSupabaseHayvan },
+  gruplar:             { localTable: 'gruplar',             mapFrom: mapFromSupabaseGrup },
+  yemler:              { localTable: 'yemler',              mapFrom: mapFromSupabaseYem },
+  yem_hareketleri:     { localTable: 'yemHareketleri',      mapFrom: mapFromSupabaseYemHareketi },
+  sut_kayitlari:       { localTable: 'sutKayitlari',        mapFrom: mapFromSupabaseSut },
+  agirlik_kayitlari:   { localTable: 'agirlikKayitlari',    mapFrom: mapFromSupabaseAgirlik },
+  saglik_olaylari:     { localTable: 'saglikOlaylari',      mapFrom: mapFromSupabaseSaglik },
+  asi_protokolleri:    { localTable: 'asiProtokolleri',     mapFrom: mapFromSupabaseProtokol },
+  planlanan_asilar:    { localTable: 'planlananAsilar',     mapFrom: mapFromSupabasePlanlananAsi },
+  ureme_kayitlari:     { localTable: 'uremeKayitlari',      mapFrom: mapFromSupabaseUreme },
+  buzagi_kayitlari:    { localTable: 'buzagiKayitlari',     mapFrom: mapFromSupabaseBuzagi },
+  sohbetler:           { localTable: 'sohbetler',           mapFrom: mapFromSupabaseSohbet },
+  ek_finansal_islemler:{ localTable: 'ekFinansalIslemler',  mapFrom: mapFromSupabaseEkFinansalIslem },
+  gunluk_yem_maliyetleri: { localTable: 'gunlukYemMaliyetleri', mapFrom: mapFromSupabaseGunlukYemMaliyeti },
+  ciftlikler: {
+    localTable: 'ciftlikler',
+    mapFrom: (row: any) => ({ id: row.id, ad: row.ad, olusturulmaTarihi: row.olusturulma_tarihi, user_id: row.user_id })
+  },
+};
+
+/**
+ * Supabase Realtime kanalına abone olur.
+ * Başka bir cihazdan (mobil ↔ masaüstü) yapılan INSERT/UPDATE/DELETE işlemleri
+ * yerel IndexedDB'ye anında yansıtılır; useLiveQuery kullanan tüm bileşenler
+ * otomatik olarak yeniden render edilir.
+ *
+ * @returns Kanal referansı — component unmount olduğunda unsubscribe için kullanın.
+ */
+export const subscribeToRealtimeChanges = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const supabaseTables = Object.keys(REALTIME_TABLE_CONFIG);
+
+  // Tek bir kanal üzerinden tüm tablolara abone ol
+  const channel = supabase.channel(`realtime-sync-${user.id}`);
+
+  supabaseTables.forEach((supabaseTable) => {
+    const config = REALTIME_TABLE_CONFIG[supabaseTable];
+
+    channel.on(
+      'postgres_changes' as any,
+      {
+        event: '*',
+        schema: 'public',
+        table: supabaseTable,
+        filter: `user_id=eq.${user.id}`,
+      },
+      async (payload: any) => {
+        try {
+          const localTable = db.table(config.localTable);
+
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            const mapped = config.mapFrom(payload.new);
+            await localTable.put(mapped);
+
+            // Ciftlikler tablosu değiştiyse Zustand store'u da güncelle
+            if (supabaseTable === 'ciftlikler') {
+              const allFarms = await db.ciftlikler.toArray();
+              useStore.getState().setCiftlikler(allFarms);
+            }
+          } else if (payload.eventType === 'DELETE') {
+            const deletedId = payload.old?.id;
+            if (deletedId) {
+              await localTable.delete(deletedId);
+
+              // Ciftlikler tablosundan silindiyse Zustand'i güncelle
+              if (supabaseTable === 'ciftlikler') {
+                const allFarms = await db.ciftlikler.toArray();
+                useStore.getState().setCiftlikler(allFarms);
+              }
+            }
+          }
+        } catch (err) {
+          console.error(`Realtime sync hatası (${supabaseTable}):`, err);
+        }
+      }
+    );
+  });
+
+  channel.subscribe((status) => {
+    if (status === 'SUBSCRIBED') {
+      console.log('Realtime senkronizasyon aktif ✓');
+    } else if (status === 'CHANNEL_ERROR') {
+      console.warn('Realtime kanal hatası:', status);
+    }
+  });
+
+  return channel;
+};

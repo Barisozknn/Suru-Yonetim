@@ -5,7 +5,7 @@ import {
   Syringe, CalendarDays, Settings, Sparkles, Wifi, WifiOff, RefreshCw,
   Droplets, Wallet
 } from 'lucide-react';
-import { processSyncQueue, pullInitialData } from '../services/syncService';
+import { processSyncQueue, pullInitialData, subscribeToRealtimeChanges } from '../services/syncService';
 
 const NAV_ITEMS = [
   { path: '/', label: 'Ana Sayfa', icon: <Home className="w-[22px] h-[22px]" /> },
@@ -27,6 +27,7 @@ const Layout: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isRealtimeActive, setIsRealtimeActive] = useState(false);
   
   const location = useLocation();
 
@@ -40,6 +41,8 @@ const Layout: React.FC = () => {
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+
+    let realtimeChannel: Awaited<ReturnType<typeof subscribeToRealtimeChanges>> = null;
 
     if (navigator.onLine) {
       setIsSyncing(true);
@@ -55,6 +58,10 @@ const Layout: React.FC = () => {
            // pullInitialData sonrası activeCiftlikId doğru set edildiyse migrasyon doğru çalışır
            const { migrateOrphanDataToDefaultFarm } = await import('../utils/migrateData');
            await migrateOrphanDataToDefaultFarm();
+
+           // Realtime senkronizasyonu başlat (yalnızca ilk bağlanmada)
+           realtimeChannel = await subscribeToRealtimeChanges();
+           if (realtimeChannel) setIsRealtimeActive(true);
         })
         .finally(() => setIsSyncing(false));
     } else {
@@ -65,6 +72,10 @@ const Layout: React.FC = () => {
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      // Realtime kanalını kapat (component unmount)
+      if (realtimeChannel) {
+        realtimeChannel.unsubscribe();
+      }
     };
   }, []);
 
@@ -114,7 +125,16 @@ const Layout: React.FC = () => {
             {isSyncing ? (
               <><RefreshCw className="w-3 h-3 animate-spin text-blue-500" /> <span>Senkronize ediliyor...</span></>
             ) : isOnline ? (
-              <><Wifi className="w-3 h-3 text-green-500" /> <span>Çevrimiçi (Senkronize)</span></>
+              <>
+                <Wifi className="w-3 h-3 text-green-500" />
+                <span>Çevrimiçi (Senkronize)</span>
+                {isRealtimeActive && (
+                  <span className="relative flex h-2 w-2 ml-1" title="Gerçek zamanlı senkronizasyon aktif">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                  </span>
+                )}
+              </>
             ) : (
               <><WifiOff className="w-3 h-3 text-red-500" /> <span>Çevrimdışı (Yerel)</span></>
             )}
@@ -130,8 +150,20 @@ const Layout: React.FC = () => {
           </button>
           <h1 className="text-xl font-black">Sürü<span className="text-nature-300">Metri</span></h1>
         </div>
-        <div>
-          {isSyncing ? <RefreshCw className="w-5 h-5 animate-spin text-blue-300" /> : isOnline ? <Wifi className="w-5 h-5 text-green-300" /> : <WifiOff className="w-5 h-5 text-red-300" />}
+        <div className="flex items-center gap-2">
+          {isSyncing ? (
+            <RefreshCw className="w-5 h-5 animate-spin text-blue-300" />
+          ) : isOnline ? (
+            <Wifi className="w-5 h-5 text-green-300" />
+          ) : (
+            <WifiOff className="w-5 h-5 text-red-300" />
+          )}
+          {isRealtimeActive && isOnline && (
+            <span className="relative flex h-2.5 w-2.5" title="Gerçek zamanlı senkronizasyon aktif">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-400"></span>
+            </span>
+          )}
         </div>
       </header>
 
