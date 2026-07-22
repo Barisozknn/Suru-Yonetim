@@ -143,6 +143,7 @@ const Settings: React.FC = () => {
       const { db } = await import('../lib/db');
       try {
         await Promise.all([
+          db.ciftlikler.clear(),
           db.hayvanlar.clear(),
           db.gruplar.clear(),
           db.yemler.clear(),
@@ -177,7 +178,7 @@ const Settings: React.FC = () => {
         const tables = [
           'hayvanlar', 'gruplar', 'yemler', 'yemHareketleri', 'sutKayitlari',
           'agirlikKayitlari', 'saglikOlaylari', 'asiProtokolleri', 'planlananAsilar',
-          'uremeKayitlari', 'buzagiKayitlari', 'sohbetler', 'ekFinansalIslemler', 'gunlukYemMaliyetleri'
+          'uremeKayitlari', 'buzagiKayitlari', 'sohbetler', 'ekFinansalIslemler', 'gunlukYemMaliyetleri', 'ciftlikler'
         ];
         
         for (const table of tables) {
@@ -187,6 +188,7 @@ const Settings: React.FC = () => {
         // Yerel verileri temizle
         const { db } = await import('../lib/db');
         await Promise.all([
+          db.ciftlikler.clear(),
           db.hayvanlar.clear(),
           db.gruplar.clear(),
           db.yemler.clear(),
@@ -201,8 +203,6 @@ const Settings: React.FC = () => {
           db.syncQueue.clear()
         ]);
         // sessionStorage.clear() ve localStorage.clear() kaldırıldı, çünkü auth token ve diğer yerel state'lerin kalması gerekiyor
-        // Sadece Zustand persist içindeki çiftlik listesini temizleyebiliriz, ama reload ile zaten sıfırlanacak.
-        db.ciftlikler.clear();
         
         alert("Tüm verileriniz buluttan ve cihazdan (tarayıcıdan) başarıyla silindi.");
         window.location.reload();
@@ -230,6 +230,7 @@ const Settings: React.FC = () => {
         // Yerel verileri temizle
         const { db } = await import('../lib/db');
         await Promise.all([
+          db.ciftlikler.clear(),
           db.hayvanlar.clear(),
           db.gruplar.clear(),
           db.yemler.clear(),
