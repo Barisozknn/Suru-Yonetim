@@ -57,9 +57,6 @@ function App() {
       setUser(session?.user ?? null);
     });
 
-    // Migrate old data if necessary
-    import('./utils/migrateData').then(m => m.migrateOrphanDataToDefaultFarm());
-
     // Run daily automations
     runDailyAutomations();
 
@@ -71,6 +68,7 @@ function App() {
 
     return () => subscription.unsubscribe();
   }, [setSession, setUser]);
+
 
   return (
     <BrowserRouter>

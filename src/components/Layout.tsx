@@ -52,8 +52,14 @@ const Layout: React.FC = () => {
            } else {
              console.warn("Kuyrukta bekleyen/hatalı işlemler var, buluttan indirme atlandı (yerel veriler korundu).");
            }
+           // pullInitialData sonrası activeCiftlikId doğru set edildiyse migrasyon doğru çalışır
+           const { migrateOrphanDataToDefaultFarm } = await import('../utils/migrateData');
+           await migrateOrphanDataToDefaultFarm();
         })
         .finally(() => setIsSyncing(false));
+    } else {
+      // Çevrimdışıyken de migrasyon ve aktif çiftlik tespiti yap
+      import('../utils/migrateData').then(m => m.migrateOrphanDataToDefaultFarm());
     }
 
     return () => {
@@ -61,6 +67,7 @@ const Layout: React.FC = () => {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
 
   // Mobil menüyü kapat (route değiştiğinde)
   useEffect(() => {

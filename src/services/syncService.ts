@@ -352,6 +352,10 @@ export const pullInitialData = async () => {
       const mappedCiftlikler = ciftliklerRes.data.map(row => ({ id: row.id, ad: row.ad, olusturulmaTarihi: row.olusturulma_tarihi, user_id: row.user_id }));
       await db.ciftlikler.bulkPut(mappedCiftlikler);
       useStore.getState().setCiftlikler(mappedCiftlikler);
+      // Mobilde activeCiftlikId null ise (localStorage temizlenmiş/yeni cihaz), ilk çiftliği otomatik seç
+      if (!useStore.getState().activeCiftlikId && mappedCiftlikler.length > 0) {
+        useStore.getState().setActiveCiftlikId(mappedCiftlikler[0].id);
+      }
     }
 
     const [hayvanlarRes, gruplarRes, yemlerRes, yemHareketleriRes, sutRes, agirlikRes, saglikRes, protokolRes, planlananAsilarRes, uremeRes, buzagiRes, sohbetlerRes, ekFinansRes] = await Promise.all([

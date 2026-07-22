@@ -30,6 +30,17 @@ export const migrateOrphanDataToDefaultFarm = async () => {
         user_id: state.user.id
       }).then();
     }
+  } else if (!defaultFarmId) {
+    // Mobilde localStorage temizlendiyse activeCiftlikId null olabilir
+    // Ama IndexedDB'de çiftlik varsa, ilk çiftliği seç
+    const firstFarm = await db.ciftlikler.toCollection().first();
+    if (firstFarm) {
+      defaultFarmId = firstFarm.id;
+      // Zustand state'ini de güncelle
+      const allFarms = await db.ciftlikler.toArray();
+      state.setCiftlikler(allFarms);
+      state.setActiveCiftlikId(firstFarm.id);
+    }
   }
 
   if (!defaultFarmId) return;
