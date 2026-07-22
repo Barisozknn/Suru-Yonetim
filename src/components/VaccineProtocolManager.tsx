@@ -242,13 +242,13 @@ const VaccineProtocolManager: React.FC = () => {
 
           {/* Yeni / Düzenle Protokol Formu */}
           {showForm && (
-            <div className="border-2 border-blue-300 rounded-xl p-4 bg-blue-50 space-y-3">
+            <div className="border-2 border-blue-300 rounded-xl p-3 sm:p-4 bg-blue-50 space-y-3 w-full max-w-full overflow-hidden shadow-sm">
               <h3 className="font-bold text-blue-800">{editingId ? 'Protokolü Düzenle' : 'Yeni Protokol'}</h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input value={ad} onChange={e => setAd(e.target.value)} placeholder="Protokol adı (örn: Buzağı 3'lü Karma)"
-                  className="col-span-2 p-2 border border-earth-300 rounded-lg text-sm" />
+                  className="col-span-1 sm:col-span-2 p-2 border border-earth-300 rounded-lg text-sm bg-white" />
                 <select value={hedefTur} onChange={e => setHedefTur(e.target.value as AsiProtokolu['hedefTur'])}
-                  className="p-2 border border-earth-300 rounded-lg text-sm">
+                  className="p-2 border border-earth-300 rounded-lg text-sm bg-white">
                   <option value="Tümü">Tümü</option>
                   <option value="İnek">İnek</option>
                   <option value="Tosun">Tosun</option>
@@ -260,67 +260,74 @@ const VaccineProtocolManager: React.FC = () => {
                 </select>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <label className="text-xs font-bold text-earth-700 uppercase">Uygulamalar</label>
                 {uygulamalar.map((u, i) => (
-                  <div key={i} className="flex space-x-2 items-center">
-                    <span className="text-xs text-earth-500 w-5">{i + 1}.</span>
-                    <input value={u.ad} onChange={e => { const arr = [...uygulamalar]; arr[i].ad = e.target.value; setUygulamalar(arr); }}
-                      placeholder="Aşı adı" className="flex-1 p-1.5 border border-earth-300 rounded-lg text-sm" />
-                    <div className="flex items-center space-x-2 whitespace-nowrap">
-                      <span className="text-xs text-earth-500">Doğumdan</span>
-                      <input type="number" min={0} value={u.gunFarki} onChange={e => { const arr = [...uygulamalar]; arr[i].gunFarki = parseInt(e.target.value)||0; setUygulamalar(arr); }}
-                        className="w-16 p-1.5 border border-earth-300 rounded-lg text-sm text-center font-bold text-nature-700 bg-nature-50" />
-                      <span className="text-xs text-earth-500">gün sonra</span>
-                      <span className="text-xs text-earth-400 pl-2 ml-2 border-l border-earth-300">Opsiyonel Tekrar:</span>
-                      <input type="number" min={0} placeholder="Gün" value={u.tekrarGun || ''} onChange={e => { const arr = [...uygulamalar]; arr[i].tekrarGun = parseInt(e.target.value) || undefined; setUygulamalar(arr); }}
-                        className="w-16 p-1.5 border border-earth-300 rounded-lg text-sm text-center font-bold text-blue-700 bg-blue-50 placeholder:text-blue-300 placeholder:font-normal" />
-                      <span className="text-xs text-earth-500">günde bir</span>
-                      
-                      {(u.tekrarGun || 0) > 0 && (
-                        <div className="flex items-center space-x-2 ml-2">
-                          <label className="flex items-center space-x-1 cursor-pointer bg-blue-50 px-2 py-1 rounded border border-blue-200">
-                            <input type="checkbox" checked={u.surekliTekrar || false} onChange={e => { const arr = [...uygulamalar]; arr[i].surekliTekrar = e.target.checked; setUygulamalar(arr); }} className="w-3 h-3 text-blue-600" />
-                            <span className="text-xs font-semibold text-blue-700">Sürekli</span>
-                          </label>
-                          {!u.surekliTekrar && (
-                            <>
-                              <span className="text-xs text-earth-400">veya</span>
-                              <input type="number" min={1} placeholder="Adet" value={u.tekrarSayisi || ''} onChange={e => { const arr = [...uygulamalar]; arr[i].tekrarSayisi = parseInt(e.target.value) || undefined; setUygulamalar(arr); }}
-                                className="w-16 p-1.5 border border-earth-300 rounded-lg text-sm text-center bg-white" />
-                              <span className="text-xs text-earth-500">kez</span>
-                            </>
-                          )}
-                        </div>
+                  <div key={i} className="p-3 bg-white border border-blue-200 rounded-xl space-y-3 relative shadow-xs">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs font-bold text-blue-700 w-5">{i + 1}.</span>
+                      <input value={u.ad} onChange={e => { const arr = [...uygulamalar]; arr[i].ad = e.target.value; setUygulamalar(arr); }}
+                        placeholder="Aşı adı" className="flex-1 p-2 border border-earth-300 rounded-lg text-sm" />
+                      {uygulamalar.length > 1 && (
+                        <button onClick={() => setUygulamalar(uygulamalar.filter((_, j) => j !== i))} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                          <X className="w-4 h-4" />
+                        </button>
                       )}
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 items-center text-xs">
+                      <div className="flex items-center space-x-1.5 bg-earth-50 p-2 rounded-lg border border-earth-200">
+                        <span className="text-earth-600 font-semibold whitespace-nowrap">Doğumdan</span>
+                        <input type="number" min={0} value={u.gunFarki} onChange={e => { const arr = [...uygulamalar]; arr[i].gunFarki = parseInt(e.target.value)||0; setUygulamalar(arr); }}
+                          className="w-14 p-1 border border-earth-300 rounded text-center font-bold text-nature-700 bg-white" />
+                        <span className="text-earth-600 font-semibold whitespace-nowrap">gün sonra</span>
+                      </div>
                       
-                      {/* Maliyet Alanı */}
-                      <div className="flex items-center space-x-2 ml-4 pl-4 border-l border-earth-300">
-                        <span className="text-xs text-earth-500 font-semibold">Maliyet:</span>
-                        <div className="relative">
+                      <div className="flex items-center space-x-1.5 bg-blue-50/70 p-2 rounded-lg border border-blue-200 flex-wrap">
+                        <span className="text-earth-600 font-semibold whitespace-nowrap">Tekrar:</span>
+                        <input type="number" min={0} placeholder="Gün" value={u.tekrarGun || ''} onChange={e => { const arr = [...uygulamalar]; arr[i].tekrarGun = parseInt(e.target.value) || undefined; setUygulamalar(arr); }}
+                          className="w-14 p-1 border border-blue-300 rounded text-center font-bold text-blue-700 bg-white placeholder:text-blue-300" />
+                        <span className="text-earth-600 font-semibold whitespace-nowrap">günde bir</span>
+
+                        {(u.tekrarGun || 0) > 0 && (
+                          <div className="flex items-center space-x-1.5 mt-1 w-full pt-1 border-t border-blue-200/60">
+                            <label className="flex items-center space-x-1 cursor-pointer bg-white px-2 py-0.5 rounded border border-blue-200">
+                              <input type="checkbox" checked={u.surekliTekrar || false} onChange={e => { const arr = [...uygulamalar]; arr[i].surekliTekrar = e.target.checked; setUygulamalar(arr); }} className="w-3 h-3 text-blue-600" />
+                              <span className="text-xs font-semibold text-blue-700">Sürekli</span>
+                            </label>
+                            {!u.surekliTekrar && (
+                              <div className="flex items-center space-x-1">
+                                <span className="text-earth-400">veya</span>
+                                <input type="number" min={1} placeholder="Adet" value={u.tekrarSayisi || ''} onChange={e => { const arr = [...uygulamalar]; arr[i].tekrarSayisi = parseInt(e.target.value) || undefined; setUygulamalar(arr); }}
+                                  className="w-12 p-1 border border-earth-300 rounded text-center bg-white" />
+                                <span className="text-earth-500">kez</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center space-x-2 bg-earth-50 p-2 rounded-lg border border-earth-200">
+                        <span className="text-earth-600 font-semibold whitespace-nowrap">Maliyet:</span>
+                        <div className="relative flex-1">
                           <input type="number" min={0} step="0.01" value={u.maliyet || ''} onChange={e => { const arr = [...uygulamalar]; arr[i].maliyet = parseFloat(e.target.value) || undefined; setUygulamalar(arr); }}
-                            className="w-20 p-1.5 pl-6 border border-earth-300 rounded-lg text-sm bg-white" placeholder="0.00" />
-                          <span className="absolute left-2 top-1.5 text-earth-400 text-sm font-bold">₺</span>
+                            className="w-full p-1 pl-5 border border-earth-300 rounded text-xs bg-white font-semibold text-earth-800" placeholder="0.00" />
+                          <span className="absolute left-1.5 top-1 text-earth-400 font-bold text-xs">₺</span>
                         </div>
                       </div>
                     </div>
-                    {uygulamalar.length > 1 && (
-                      <button onClick={() => setUygulamalar(uygulamalar.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-600">
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
                   </div>
                 ))}
                 <button onClick={() => setUygulamalar([...uygulamalar, { ad: '', gunFarki: 0 }])}
-                  className="flex items-center space-x-1 text-xs text-blue-600 hover:underline">
-                  <Plus className="w-3 h-3" /><span>Uygulama Ekle</span>
+                  className="flex items-center space-x-1 text-xs text-blue-600 hover:underline font-bold">
+                  <Plus className="w-3.5 h-3.5" /><span>Uygulama Ekle</span>
                 </button>
               </div>
 
               <div className="flex space-x-2 pt-2">
                 <button onClick={resetForm} className="px-4 py-1.5 text-earth-600 text-sm font-semibold hover:bg-earth-100 rounded-lg transition">İptal</button>
                 <button onClick={handleSaveProtokol} disabled={saving}
-                  className="flex items-center space-x-1 px-4 py-1.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition">
+                  className="flex items-center space-x-1 px-4 py-1.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition shadow-sm">
                   <Save className="w-4 h-4" /><span>Kaydet</span>
                 </button>
               </div>

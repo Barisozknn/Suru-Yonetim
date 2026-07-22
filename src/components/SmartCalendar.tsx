@@ -385,24 +385,29 @@ export const SmartCalendar: React.FC = () => {
       
       {/* Sol Taraf - Takvim Izgarası */}
       <div className="flex-1 border-r border-earth-200">
-        <div className="p-4 border-b border-earth-200 bg-earth-50 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-nature-100 text-nature-600 rounded-lg">
-              <CalendarIcon className="w-5 h-5" />
+        <div className="p-3 sm:p-4 border-b border-earth-200 bg-earth-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center justify-between sm:justify-start w-full sm:w-auto">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="p-2 bg-nature-100 text-nature-600 rounded-lg">
+                <CalendarIcon className="w-5 h-5" />
+              </div>
+              <h2 className="text-lg sm:text-xl font-black text-earth-900 tracking-tight">Akıllı Takvim</h2>
             </div>
-            <h2 className="text-xl font-black text-earth-900 tracking-tight">Akıllı Takvim</h2>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <button onClick={goToToday} className="px-3 py-1.5 text-xs font-bold text-nature-700 bg-nature-100 hover:bg-nature-200 rounded-md transition">
+            <button onClick={goToToday} className="px-3 py-1.5 text-xs font-bold text-nature-700 bg-nature-100 hover:bg-nature-200 rounded-md transition sm:hidden">
               Bugün
             </button>
-            <div className="flex bg-white border border-earth-200 rounded-lg overflow-hidden shadow-sm">
-              <button onClick={prevMonth} className="p-2 hover:bg-earth-50 text-earth-600 transition"><ChevronLeft className="w-5 h-5" /></button>
-              <div className="px-4 py-2 font-bold text-earth-800 min-w-[140px] text-center border-l border-r border-earth-200">
+          </div>
+          
+          <div className="flex items-center justify-between sm:justify-end space-x-2 w-full sm:w-auto">
+            <button onClick={goToToday} className="hidden sm:block px-3 py-1.5 text-xs font-bold text-nature-700 bg-nature-100 hover:bg-nature-200 rounded-md transition">
+              Bugün
+            </button>
+            <div className="flex bg-white border border-earth-200 rounded-lg overflow-hidden shadow-sm w-full sm:w-auto justify-between sm:justify-start">
+              <button onClick={prevMonth} className="p-2 hover:bg-earth-50 text-earth-600 transition shrink-0"><ChevronLeft className="w-5 h-5" /></button>
+              <div className="px-3 sm:px-4 py-2 font-bold text-earth-800 text-sm sm:text-base flex-1 sm:flex-none sm:min-w-[140px] text-center border-l border-r border-earth-200 truncate">
                 {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
               </div>
-              <button onClick={nextMonth} className="p-2 hover:bg-earth-50 text-earth-600 transition"><ChevronRight className="w-5 h-5" /></button>
+              <button onClick={nextMonth} className="p-2 hover:bg-earth-50 text-earth-600 transition shrink-0"><ChevronRight className="w-5 h-5" /></button>
             </div>
           </div>
         </div>

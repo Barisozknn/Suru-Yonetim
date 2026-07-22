@@ -467,10 +467,10 @@ const Assistant: React.FC = () => {
                   <Sparkles className="w-8 h-8 text-earth-500" />
                 </div>
                 <h3 className="text-base md:text-lg font-bold text-earth-900 mb-2 max-w-md leading-snug">
-                  Merhaba! Rasyon veya hayvan besleme ile ilgili sorularınızı sorabilirsiniz.
+                  Merhaba! Sürü yönetimi ve hayvanlarınız ile ilgili tüm sorularınızı sorabilirsiniz.
                 </h3>
                 <p className="text-xs md:text-sm text-earth-500 max-w-md leading-relaxed">
-                  Geçmiş rasyonlarınızı, hayvan profillerinizi ve saha gözlemlerinizi sormaktan çekinmeyin.
+                  Hayvan verilerinizi, aşı ve sağlık geçmişini, üreme durumlarını ve sürü performansınızı sormaktan çekinmeyin.
                 </p>
               </div>
             )}
