@@ -261,21 +261,21 @@ const FinancialAnalysis: React.FC = () => {
             <h3 className="font-bold text-earth-800 dark:text-gray-200 text-lg">Gelir Kalemleri Detayı</h3>
           </div>
           <div className="p-4 space-y-4 flex-1">
-            <div className="flex justify-between items-center p-3 bg-green-50/50 rounded-xl border border-green-100">
+            <div className="flex justify-between items-center p-3 bg-green-50/50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800">
               <div>
                 <p className="font-bold text-earth-800 dark:text-gray-200">Süt Satışı</p>
                 <p className="text-xs text-earth-500 dark:text-gray-400">Toplam {calculations.toplamLitre.toFixed(1)} Lt (x {sutLitreFiyati}₺)</p>
               </div>
               <p className="font-black text-green-600">{formatMoney(calculations.sutGeliri)}</p>
             </div>
-            <div className="flex justify-between items-center p-3 bg-green-50/50 rounded-xl border border-green-100">
+            <div className="flex justify-between items-center p-3 bg-green-50/50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800">
               <div>
                 <p className="font-bold text-earth-800 dark:text-gray-200">Hayvan Satışı</p>
                 <p className="text-xs text-earth-500 dark:text-gray-400">Formdan satıldı işaretlenenler</p>
               </div>
               <p className="font-black text-green-600">{formatMoney(calculations.hayvanSatisGeliri)}</p>
             </div>
-            <div className="flex justify-between items-center p-3 bg-green-50/50 rounded-xl border border-green-100">
+            <div className="flex justify-between items-center p-3 bg-green-50/50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800">
               <div>
                 <p className="font-bold text-earth-800 dark:text-gray-200">Ek Gelirler</p>
                 <p className="text-xs text-earth-500 dark:text-gray-400">Manuel eklenen gelirler</p>
@@ -291,28 +291,28 @@ const FinancialAnalysis: React.FC = () => {
             <h3 className="font-bold text-earth-800 dark:text-gray-200 text-lg">Gider Kalemleri Detayı</h3>
           </div>
           <div className="p-4 space-y-4 flex-1">
-            <div className="flex justify-between items-center p-3 bg-red-50/50 rounded-xl border border-red-100">
+            <div className="flex justify-between items-center p-3 bg-red-50/50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800">
               <div>
                 <h4 className="font-bold text-earth-800 dark:text-gray-200">Yem Maliyeti</h4>
                 <p className="text-xs text-earth-400">Günlük olarak kaydedilen geçmiş maliyetler</p>
               </div>
               <p className="font-black text-red-600 dark:text-red-400">-{formatMoney(calculations.yemGideri)}</p>
             </div>
-            <div className="flex justify-between items-center p-3 bg-red-50/50 rounded-xl border border-red-100">
+            <div className="flex justify-between items-center p-3 bg-red-50/50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800">
               <div>
                 <p className="font-bold text-earth-800 dark:text-gray-200">Sağlık Giderleri</p>
                 <p className="text-xs text-earth-500 dark:text-gray-400">İlaç, aşı ve müdahale masrafları</p>
               </div>
               <p className="font-black text-red-600 dark:text-red-400">-{formatMoney(calculations.saglikGideri)}</p>
             </div>
-            <div className="flex justify-between items-center p-3 bg-red-50/50 rounded-xl border border-red-100">
+            <div className="flex justify-between items-center p-3 bg-red-50/50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800">
               <div>
                 <p className="font-bold text-earth-800 dark:text-gray-200">Üreme Giderleri</p>
                 <p className="text-xs text-earth-500 dark:text-gray-400">Tohumlama vb. masraflar</p>
               </div>
               <p className="font-black text-red-600 dark:text-red-400">-{formatMoney(calculations.uremeGideri)}</p>
             </div>
-            <div className="flex justify-between items-center p-3 bg-red-50/50 rounded-xl border border-red-100">
+            <div className="flex justify-between items-center p-3 bg-red-50/50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800">
               <div>
                 <p className="font-bold text-earth-800 dark:text-gray-200">Ek Giderler</p>
                 <p className="text-xs text-earth-500 dark:text-gray-400">Manuel eklenen giderler</p>

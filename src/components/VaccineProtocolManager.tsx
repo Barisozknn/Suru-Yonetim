@@ -283,14 +283,14 @@ const VaccineProtocolManager: React.FC = () => {
                         <span className="text-earth-600 dark:text-gray-400 font-semibold whitespace-nowrap">gün sonra</span>
                       </div>
                       
-                      <div className="flex items-center space-x-1.5 bg-blue-50/70 p-2 rounded-lg border border-blue-200 dark:border-blue-800/50 flex-wrap">
+                      <div className="flex items-center space-x-1.5 bg-blue-50/70 dark:bg-blue-900/30 p-2 rounded-lg border border-blue-200/60 dark:border-blue-800/50 flex-wrap">
                         <span className="text-earth-600 dark:text-gray-400 font-semibold whitespace-nowrap">Tekrar:</span>
                         <input type="number" min={0} placeholder="Gün" value={u.tekrarGun || ''} onChange={e => { const arr = [...uygulamalar]; arr[i].tekrarGun = parseInt(e.target.value) || undefined; setUygulamalar(arr); }}
                           className="w-14 p-1 border border-blue-300 rounded text-center font-bold text-blue-700 dark:text-blue-400 bg-white dark:bg-gray-800 placeholder:text-blue-300" />
                         <span className="text-earth-600 dark:text-gray-400 font-semibold whitespace-nowrap">günde bir</span>
 
                         {(u.tekrarGun || 0) > 0 && (
-                          <div className="flex items-center space-x-1.5 mt-1 w-full pt-1 border-t border-blue-200/60">
+                          <div className="flex items-center space-x-1.5 mt-1 w-full pt-1 border-t border-blue-200/60 dark:border-blue-800/50">
                             <label className="flex items-center space-x-1 cursor-pointer bg-white dark:bg-gray-800 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800/50">
                               <input type="checkbox" checked={u.surekliTekrar || false} onChange={e => { const arr = [...uygulamalar]; arr[i].surekliTekrar = e.target.checked; setUygulamalar(arr); }} className="w-3 h-3 text-blue-600 dark:text-blue-400" />
                               <span className="text-xs font-semibold text-blue-700 dark:text-blue-400">Sürekli</span>
