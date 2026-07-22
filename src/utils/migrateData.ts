@@ -7,7 +7,9 @@ export const migrateOrphanDataToDefaultFarm = async () => {
   let defaultFarmId = state.activeCiftlikId;
 
   // 1. Çiftlik yoksa 'Varsayılan Çiftlik' oluştur
-  const ciftlikCount = await db.ciftlikler.count();
+  const allFarms = await db.ciftlikler.toArray();
+  const ciftlikCount = allFarms.length;
+  
   if (ciftlikCount === 0) {
     const newFarm = {
       id: crypto.randomUUID(),
@@ -30,16 +32,43 @@ export const migrateOrphanDataToDefaultFarm = async () => {
         user_id: state.user.id
       }).then();
     }
-  } else if (!defaultFarmId) {
-    // Mobilde localStorage temizlendiyse activeCiftlikId null olabilir
-    // Ama IndexedDB'de çiftlik varsa, ilk çiftliği seç
-    const firstFarm = await db.ciftlikler.toCollection().first();
-    if (firstFarm) {
-      defaultFarmId = firstFarm.id;
-      // Zustand state'ini de güncelle
-      const allFarms = await db.ciftlikler.toArray();
+  } else {
+    // Db'de var ama Store'da yoksa (pullInitialData boş getirdiği için silindiyse)
+    if (state.ciftlikler.length === 0) {
       state.setCiftlikler(allFarms);
+    }
+    
+    if (!defaultFarmId) {
+      const firstFarm = allFarms[0];
+      defaultFarmId = firstFarm.id;
       state.setActiveCiftlikId(firstFarm.id);
+    }
+
+    // Misafir modunda oluşturulup sonradan hesaba giriş yapılan çiftlikleri buluta senkronize et
+    if (state.user) {
+      for (const farm of allFarms) {
+        if (!farm.user_id || farm.user_id !== state.user.id) {
+          farm.user_id = state.user.id;
+          await db.ciftlikler.put(farm);
+          await supabase.from('ciftlikler').upsert({ id: farm.id, ad: farm.ad, user_id: state.user.id });
+          
+          // Çiftlik yeni senkronize edildiği için içindeki veriler de (daha önce FK hatası yüzünden) senkronize olamamış olabilir.
+          // Bunları tekrar syncQueue'ya ekleyelim ki buluta gitsinler.
+          const tablesToSync = ['hayvanlar', 'gruplar', 'yemler', 'yemHareketleri', 'sutKayitlari', 'agirlikKayitlari', 'saglikOlaylari', 'asiProtokolleri', 'planlananAsilar', 'uremeKayitlari', 'buzagiKayitlari', 'ekFinansalIslemler'];
+          for (const tbl of tablesToSync) {
+             const records = await db.table(tbl).filter(r => r.ciftlikId === farm.id).toArray();
+             for (const r of records) {
+                await db.syncQueue.put({
+                  table: tbl,
+                  action: 'INSERT',
+                  payload: r,
+                  created_at: Date.now()
+                });
+             }
+          }
+        }
+      }
+      state.setCiftlikler(await db.ciftlikler.toArray());
     }
   }
 

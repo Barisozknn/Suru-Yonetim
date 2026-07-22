@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import DataManagement from '../components/DataManagement';
-import { Trash2, LogOut, CalendarClock, Save, CloudOff, UserX, LogIn, User } from 'lucide-react';
+import { Trash2, LogOut, CalendarClock, Save, CloudOff, UserX, LogIn, User, Download, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useStore } from '../store/useStore';
@@ -10,6 +10,7 @@ const Settings: React.FC = () => {
   const navigate = useNavigate();
   const { user, uremeAyarlari, setUremeAyarlari } = useStore();
   
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [localUremeAyarlari, setLocalUremeAyarlari] = useState(uremeAyarlari);
   const [selectedIrk, setSelectedIrk] = useState<string>('Varsayılan');
 
@@ -38,7 +39,94 @@ const Settings: React.FC = () => {
     }
   };
 
-  const handleSaveUremeAyarlari = () => {
+  const handleExportJSON = async () => {
+    try {
+      const { db } = await import('../lib/db');
+      const allData = {
+        ciftlikler: await db.ciftlikler.toArray(),
+        hayvanlar: await db.hayvanlar.toArray(),
+        gruplar: await db.gruplar.toArray(),
+        yemler: await db.yemler.toArray(),
+        yemHareketleri: await db.yemHareketleri.toArray(),
+        sutKayitlari: await db.sutKayitlari.toArray(),
+        agirlikKayitlari: await db.agirlikKayitlari.toArray(),
+        saglikOlaylari: await db.saglikOlaylari.toArray(),
+        asiProtokolleri: await db.asiProtokolleri.toArray(),
+        planlananAsilar: await db.planlananAsilar.toArray(),
+        uremeKayitlari: await db.uremeKayitlari.toArray(),
+        buzagiKayitlari: await db.buzagiKayitlari.toArray(),
+        sohbetler: await db.table('sohbetler').toArray(),
+        ekFinansalIslemler: await db.ekFinansalIslemler.toArray(),
+        gunlukYemMaliyetleri: await db.gunlukYemMaliyetleri.toArray(),
+        settings: useStore.getState().uremeAyarlari,
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allData));
+      const downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.setAttribute("href", dataStr);
+      downloadAnchorNode.setAttribute("download", `surumetri_yedek_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+    } catch (err) {
+      console.error("Dışa aktarma hatası:", err);
+      alert("Veriler dışa aktarılırken bir hata oluştu.");
+    }
+  };
+
+  const handleImportJSON = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      if (!window.confirm("DİKKAT: Yüklediğiniz dosyadaki veriler, mevcut verilerinizin üzerine yazılacaktır! (Aynı ID'li kayıtlar güncellenir, diğerleri eklenir). Devam etmek istiyor musunuz?")) {
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        return;
+      }
+
+      const { db } = await import('../lib/db');
+      
+      const tables = [
+        'ciftlikler', 'hayvanlar', 'gruplar', 'yemler', 'yemHareketleri',
+        'sutKayitlari', 'agirlikKayitlari', 'saglikOlaylari', 'asiProtokolleri',
+        'planlananAsilar', 'uremeKayitlari', 'buzagiKayitlari', 'sohbetler', 
+        'ekFinansalIslemler', 'gunlukYemMaliyetleri'
+      ];
+
+      for (const table of tables) {
+        if (data[table] && Array.isArray(data[table])) {
+           await db.table(table).bulkPut(data[table]);
+           
+           for (const item of data[table]) {
+              await db.syncQueue.put({
+                table,
+                action: 'UPDATE',
+                payload: item,
+                created_at: Date.now()
+              });
+           }
+        }
+      }
+
+      if (data.settings) {
+         useStore.getState().setUremeAyarlari(data.settings);
+      }
+
+      alert("Tüm veriler başarıyla yüklendi! Yeni verilerin aktifleşmesi için sayfa yenileniyor...");
+      window.location.reload();
+      
+    } catch (err) {
+      console.error("İçe aktarma hatası:", err);
+      alert("Geçersiz JSON dosya formatı veya yükleme hatası.");
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleSaveUremeAyarlari = async () => {
     setUremeAyarlari(localUremeAyarlari);
     alert('Üreme ve Uyarı ayarları başarıyla kaydedildi.');
   };
@@ -290,6 +378,45 @@ const Settings: React.FC = () => {
             {useStore.getState().isGuest ? <LogIn className="w-5 h-5" /> : <LogOut className="w-5 h-5" />}
             <span>{useStore.getState().isGuest ? 'Hesaba Giriş Yap' : 'Hesaptan Çıkış Yap'}</span>
           </button>
+        </div>
+
+        {/* JSON Yedekleme */}
+        <div className="bg-indigo-50 p-6 rounded-2xl shadow-sm border border-indigo-200 space-y-6 md:col-span-2">
+          <div className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
+              <Download className="w-6 h-6" />
+            </div>
+            <h2 className="text-xl font-bold text-indigo-900">Tam Yedekleme (JSON)</h2>
+          </div>
+          
+          <p className="text-sm text-indigo-700">
+            Sistemdeki tüm verilerinizi (Çiftlikler, Hayvanlar, Ayarlar vb.) tek bir JSON dosyası olarak cihazınıza indirebilir ve başka bir cihazda geri yükleyebilirsiniz.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 pt-2">
+            <button 
+              onClick={handleExportJSON}
+              className="flex items-center justify-center space-x-2 w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition shadow-sm"
+            >
+              <Download className="w-5 h-5" />
+              <span>Verileri İndir (.json)</span>
+            </button>
+
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center justify-center space-x-2 w-full sm:w-auto px-6 py-3 border-2 border-indigo-600 text-indigo-700 bg-white rounded-xl font-bold hover:bg-indigo-50 transition shadow-sm"
+            >
+              <Upload className="w-5 h-5" />
+              <span>Verileri Yükle</span>
+            </button>
+            <input 
+              type="file" 
+              accept=".json" 
+              className="hidden" 
+              ref={fileInputRef}
+              onChange={handleImportJSON}
+            />
+          </div>
         </div>
 
         {/* Tehlikeli Alan */}
