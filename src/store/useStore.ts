@@ -139,6 +139,7 @@ useStore.subscribe((state, prevState) => {
   if (!state.user) return;
   
   const ayarlar = { 
+    activeCiftlikId: state.activeCiftlikId,
     sutLitreFiyati: state.sutLitreFiyati, 
     rationSelectedGrupId: state.rationSelectedGrupId, 
     rationVerimYonu: state.rationVerimYonu, 
@@ -150,6 +151,7 @@ useStore.subscribe((state, prevState) => {
   };
   
   const prevAyarlar = { 
+    activeCiftlikId: prevState.activeCiftlikId,
     sutLitreFiyati: prevState.sutLitreFiyati, 
     rationSelectedGrupId: prevState.rationSelectedGrupId, 
     rationVerimYonu: prevState.rationVerimYonu, 

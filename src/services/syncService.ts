@@ -357,12 +357,28 @@ export const pullInitialData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    // Önce kullanıcı ayarlarını çek (böylece mobilden seçilen activeCiftlikId senkronize olur)
+    try {
+      const ayarlarRes = await supabase.from('kullanici_ayarlari').select('ayarlar').eq('user_id', user.id).maybeSingle();
+      if (ayarlarRes.data && !ayarlarRes.error) {
+        const remoteAyarlar = ayarlarRes.data.ayarlar;
+        if (remoteAyarlar) {
+          useStore.setState(state => ({
+            ...state,
+            ...remoteAyarlar
+          }));
+        }
+      }
+    } catch (e) {
+      console.warn('kullanici_ayarlari tablosu henüz Supabase de oluşturulmamış olabilir.', e);
+    }
+
     const ciftliklerRes = await supabase.from('ciftlikler').select('*').eq('user_id', user.id);
     if (ciftliklerRes.data) {
       const mappedCiftlikler = ciftliklerRes.data.map(row => ({ id: row.id, ad: row.ad, olusturulmaTarihi: row.olusturulma_tarihi, user_id: row.user_id }));
       await db.ciftlikler.bulkPut(mappedCiftlikler);
       useStore.getState().setCiftlikler(mappedCiftlikler);
-      // Mobilde activeCiftlikId null ise (localStorage temizlenmiş/yeni cihaz), ilk çiftliği otomatik seç
+      // Eğer ayarlar senkronize edildikten sonra hala activeCiftlikId yoksa, ilk çiftliği seç
       if (!useStore.getState().activeCiftlikId && mappedCiftlikler.length > 0) {
         useStore.getState().setActiveCiftlikId(mappedCiftlikler[0].id);
       }
@@ -408,20 +424,7 @@ export const pullInitialData = async () => {
       console.warn('gunluk_yem_maliyetleri tablosu henüz Supabase de oluşturulmamış olabilir.', e);
     }
 
-    try {
-      const ayarlarRes = await supabase.from('kullanici_ayarlari').select('ayarlar').eq('user_id', user.id).maybeSingle();
-      if (ayarlarRes.data && !ayarlarRes.error) {
-        const remoteAyarlar = ayarlarRes.data.ayarlar;
-        if (remoteAyarlar) {
-          useStore.setState(state => ({
-            ...state,
-            ...remoteAyarlar
-          }));
-        }
-      }
-    } catch (e) {
-      console.warn('kullanici_ayarlari tablosu henüz Supabase de oluşturulmamış olabilir.', e);
-    }
+    // (kullanici_ayarlari artık en başta çekiliyor)
 
     console.log('Veriler IndexedDB ye çekildi.');
   } catch (err) {

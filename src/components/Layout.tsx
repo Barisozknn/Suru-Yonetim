@@ -3,9 +3,10 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { 
   Menu, X, Home, Users, Layers, Wheat, Activity, Network, Calculator,
   Syringe, CalendarDays, Settings, Sparkles, Wifi, WifiOff, RefreshCw,
-  Droplets, Wallet
+  Droplets, Wallet, User
 } from 'lucide-react';
 import { processSyncQueue, pullInitialData, subscribeToRealtimeChanges } from '../services/syncService';
+import { useStore } from '../store/useStore';
 
 const NAV_ITEMS = [
   { path: '/', label: 'Ana Sayfa', icon: <Home className="w-[22px] h-[22px]" /> },
@@ -28,6 +29,7 @@ const Layout: React.FC = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isRealtimeActive, setIsRealtimeActive] = useState(false);
+  const isGuest = useStore((state) => state.isGuest);
   
   const location = useLocation();
 
@@ -119,7 +121,9 @@ const Layout: React.FC = () => {
         <NavContent />
         <div className="p-4 border-t border-earth-100 shrink-0">
           <div className="flex items-center justify-center space-x-2 text-xs font-bold px-3 py-2.5 bg-earth-50 rounded-lg text-earth-600">
-            {isSyncing ? (
+            {isGuest ? (
+              <><User className="w-3 h-3 text-earth-500" /> <span>Yerel Mod (Misafir)</span></>
+            ) : isSyncing ? (
               <><RefreshCw className="w-3 h-3 animate-spin text-blue-500" /> <span>Senkronize ediliyor...</span></>
             ) : isOnline ? (
               <>
@@ -148,14 +152,16 @@ const Layout: React.FC = () => {
           <h1 className="text-xl font-black">Sürü<span className="text-nature-300">Metri</span></h1>
         </div>
         <div className="flex items-center gap-2">
-          {isSyncing ? (
+          {isGuest ? (
+            <User className="w-5 h-5 text-earth-300" />
+          ) : isSyncing ? (
             <RefreshCw className="w-5 h-5 animate-spin text-blue-300" />
           ) : isOnline ? (
             <Wifi className="w-5 h-5 text-green-300" />
           ) : (
             <WifiOff className="w-5 h-5 text-red-300" />
           )}
-          {isRealtimeActive && isOnline && (
+          {!isGuest && isRealtimeActive && isOnline && (
             <span className="relative flex h-2.5 w-2.5" title="Gerçek zamanlı senkronizasyon aktif">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-400"></span>

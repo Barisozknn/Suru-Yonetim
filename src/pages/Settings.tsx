@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import DataManagement from '../components/DataManagement';
-import { Trash2, LogOut, CalendarClock, Save, CloudOff, UserX } from 'lucide-react';
+import { Trash2, LogOut, CalendarClock, Save, CloudOff, UserX, LogIn, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useStore } from '../store/useStore';
@@ -112,9 +112,9 @@ const Settings: React.FC = () => {
           db.buzagiKayitlari.clear(),
           db.syncQueue.clear()
         ]);
-        
-        localStorage.clear();
-        sessionStorage.clear();
+        // sessionStorage.clear() ve localStorage.clear() kaldırıldı, çünkü auth token ve diğer yerel state'lerin kalması gerekiyor
+        // Sadece Zustand persist içindeki çiftlik listesini temizleyebiliriz, ama reload ile zaten sıfırlanacak.
+        db.ciftlikler.clear();
         
         alert("Tüm verileriniz buluttan ve cihazdan (tarayıcıdan) başarıyla silindi.");
         window.location.reload();
@@ -158,6 +158,7 @@ const Settings: React.FC = () => {
         
         localStorage.clear();
         sessionStorage.clear();
+        useStore.getState().setIsGuest(false);
         
         await supabase.auth.signOut();
         navigate('/login');
@@ -266,25 +267,34 @@ const Settings: React.FC = () => {
         {/* Hesap Yönetimi */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-earth-200 space-y-6 md:col-span-2">
           <div className="flex items-center space-x-3 mb-2">
-            <div className="p-2 bg-orange-100 text-orange-600 rounded-lg">
-              <LogOut className="w-6 h-6" />
+            <div className={`p-2 rounded-lg ${useStore.getState().isGuest ? 'bg-nature-100 text-nature-600' : 'bg-orange-100 text-orange-600'}`}>
+              {useStore.getState().isGuest ? <User className="w-6 h-6" /> : <LogOut className="w-6 h-6" />}
             </div>
             <h2 className="text-xl font-bold text-earth-900">Hesap Yönetimi</h2>
           </div>
           
-          <p className="text-sm text-earth-600">Sistemden güvenli bir şekilde çıkış yapın.</p>
+          <p className="text-sm text-earth-600">
+            {useStore.getState().isGuest 
+              ? 'Verilerinizi buluta yedeklemek ve cihazlar arası eşitlemek için bir hesaba giriş yapın.' 
+              : 'Sistemden güvenli bir şekilde çıkış yapın.'}
+          </p>
 
           <button 
             onClick={handleLogout}
-            className="flex items-center justify-center space-x-2 w-full md:w-auto px-6 py-3 bg-orange-50 text-orange-700 border border-orange-200 rounded-xl font-bold hover:bg-orange-100 transition"
+            className={`flex items-center justify-center space-x-2 w-full md:w-auto px-6 py-3 border rounded-xl font-bold transition ${
+              useStore.getState().isGuest
+                ? 'bg-nature-50 text-nature-700 border-nature-200 hover:bg-nature-100'
+                : 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100'
+            }`}
           >
-            <LogOut className="w-5 h-5" />
-            <span>Sistemden Çıkış Yap</span>
+            {useStore.getState().isGuest ? <LogIn className="w-5 h-5" /> : <LogOut className="w-5 h-5" />}
+            <span>{useStore.getState().isGuest ? 'Hesaba Giriş Yap' : 'Hesaptan Çıkış Yap'}</span>
           </button>
         </div>
 
-        {/* Tehlikeli Alan */}
-        <div className="bg-red-50 p-6 rounded-2xl shadow-sm border border-red-200 space-y-6 md:col-span-2">
+        {/* Tehlikeli Alan Sadece Kullanıcı Varsa Gösterilir */}
+        {!useStore.getState().isGuest && user && (
+          <div className="bg-red-50 p-6 rounded-2xl shadow-sm border border-red-200 space-y-6 md:col-span-2">
           <div className="flex items-center space-x-3 mb-2">
             <div className="p-2 bg-red-100 text-red-600 rounded-lg">
               <Trash2 className="w-6 h-6" />
@@ -329,6 +339,7 @@ const Settings: React.FC = () => {
             )}
           </div>
         </div>
+        )}
       </div>
 
 
