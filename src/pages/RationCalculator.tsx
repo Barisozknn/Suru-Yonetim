@@ -366,13 +366,35 @@ const RationCalculator: React.FC = () => {
                   return y ? `${y.ad}: ${r.kgAsFed}kg` : '';
                 }).filter(Boolean).join(', ');
                 
-                await db.gruplar.update(selectedGrupId, {
+                const rasyonGuncellemesi = {
                   rasyonAdi: `${verimYonu} Rasyonu`,
                   rasyonOzet: summary,
                   rasyonTarihi: new Date().toISOString()
-                });
-                alert('Rasyon başarıyla gruba atandı!');
+                };
+
+                // 1. Önce IndexedDB'yi güncelle
+                await db.gruplar.update(selectedGrupId, rasyonGuncellemesi);
+
+                // 2. syncQueue'ya ekle — Supabase'e de kaydedilsin
+                const guncelGrup = await db.gruplar.get(selectedGrupId);
+                if (guncelGrup) {
+                  await db.syncQueue.add({
+                    table: 'gruplar',
+                    action: 'UPDATE',
+                    payload: guncelGrup,
+                    created_at: Date.now()
+                  });
+
+                  // 3. Çevrimiçiyse anında Supabase'e gönder
+                  if (navigator.onLine) {
+                    const { processSyncQueue } = await import('../services/syncService');
+                    processSyncQueue();
+                  }
+                }
+
+                alert('Rasyon başarıyla gruba atandı ve kaydedildi!');
               }}
+
               disabled={!selectedGrupId || safeRasyonListesi.length === 0}
               className="w-full py-2 bg-nature-600 text-white rounded-lg font-bold hover:bg-nature-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >

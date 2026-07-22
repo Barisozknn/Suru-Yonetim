@@ -454,6 +454,14 @@ export const processSyncQueue = async () => {
     return pa !== pb ? pa - pb : a.created_at - b.created_at;
   });
 
+  // Kalıcı hata kodları: bu hatalar hiçbir zaman çözülemez, item'i kuyruktan sil
+  const PERMANENT_ERROR_CODES = new Set([
+    '23503', // FK violation — parent kayıt yok
+    '23505', // Unique violation — zaten var
+    '23514', // Check constraint
+    '42703', // undefined column
+  ]);
+
   for (const op of queue) {
     try {
       let recordPayload: any = { ...op.payload, user_id: user.id };
@@ -512,9 +520,16 @@ export const processSyncQueue = async () => {
       if (op.id) {
         await db.syncQueue.delete(op.id);
       }
-    } catch (err) {
-      console.error('Senkronizasyon hatası:', err);
-      // Hata durumunda sadece bu öğeyi atla, diğerlerini eşitlemeye devam et
+    } catch (err: any) {
+      const errCode = err?.code || '';
+      if (PERMANENT_ERROR_CODES.has(errCode)) {
+        // Kalıcı hata: bu item hiçbir zaman başarılı olmayacak, kuyruktan temizle
+        console.warn(`Sync item kalıcı hata nedeniyle silindi (${errCode}):`, op.table, op.action);
+        if (op.id) await db.syncQueue.delete(op.id);
+      } else {
+        console.error('Senkronizasyon hatası:', err);
+      }
+      // Hata durumunda bu öğeyi atla, diğerlerini eşitlemeye devam et
       continue;
     }
   }
@@ -545,15 +560,23 @@ const REALTIME_TABLE_CONFIG: Record<string, {
   },
 };
 
+// Aktif realtime kanalı — çift subscribe'u önler
+let _activeRealtimeChannel: ReturnType<typeof supabase.channel> | null = null;
+
 /**
  * Supabase Realtime kanalına abone olur.
  * Başka bir cihazdan (mobil ↔ masaüstü) yapılan INSERT/UPDATE/DELETE işlemleri
- * yerel IndexedDB'ye anında yansıtılır; useLiveQuery kullanan tüm bileşenler
+ * yerel IndexedDB'ye aninda yansıtılır; useLiveQuery kullanan tüm bileşenler
  * otomatik olarak yeniden render edilir.
  *
  * @returns Kanal referansı — component unmount olduğunda unsubscribe için kullanın.
  */
 export const subscribeToRealtimeChanges = async () => {
+  // Zaten aktif bir kanal varsa onu döndür (çift subscribe önle)
+  if (_activeRealtimeChannel) {
+    return _activeRealtimeChannel;
+  }
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
@@ -562,6 +585,7 @@ export const subscribeToRealtimeChanges = async () => {
   // Tek bir kanal üzerinden tüm tablolara abone ol
   const channel = supabase.channel(`realtime-sync-${user.id}`);
 
+  // ÖNCE tüm .on() handler'larını ekle, SONRA .subscribe() çağır
   supabaseTables.forEach((supabaseTable) => {
     const config = REALTIME_TABLE_CONFIG[supabaseTable];
 
@@ -581,7 +605,6 @@ export const subscribeToRealtimeChanges = async () => {
             const mapped = config.mapFrom(payload.new);
             await localTable.put(mapped);
 
-            // Ciftlikler tablosu değiştiyse Zustand store'u da güncelle
             if (supabaseTable === 'ciftlikler') {
               const allFarms = await db.ciftlikler.toArray();
               useStore.getState().setCiftlikler(allFarms);
@@ -591,7 +614,6 @@ export const subscribeToRealtimeChanges = async () => {
             if (deletedId) {
               await localTable.delete(deletedId);
 
-              // Ciftlikler tablosundan silindiyse Zustand'i güncelle
               if (supabaseTable === 'ciftlikler') {
                 const allFarms = await db.ciftlikler.toArray();
                 useStore.getState().setCiftlikler(allFarms);
@@ -605,13 +627,19 @@ export const subscribeToRealtimeChanges = async () => {
     );
   });
 
+  // Tüm handler'lar eklendikten sonra subscribe et
   channel.subscribe((status) => {
     if (status === 'SUBSCRIBED') {
       console.log('Realtime senkronizasyon aktif ✓');
     } else if (status === 'CHANNEL_ERROR') {
       console.warn('Realtime kanal hatası:', status);
+      _activeRealtimeChannel = null; // Bağlantı koptu, tekrar denenebilir
+    } else if (status === 'CLOSED') {
+      _activeRealtimeChannel = null;
     }
   });
 
+  _activeRealtimeChannel = channel;
   return channel;
 };
+
