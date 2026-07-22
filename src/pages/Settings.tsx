@@ -292,9 +292,8 @@ const Settings: React.FC = () => {
           </button>
         </div>
 
-        {/* Tehlikeli Alan Sadece Kullanıcı Varsa Gösterilir */}
-        {!useStore.getState().isGuest && user && (
-          <div className="bg-red-50 p-6 rounded-2xl shadow-sm border border-red-200 space-y-6 md:col-span-2">
+        {/* Tehlikeli Alan */}
+        <div className="bg-red-50 p-6 rounded-2xl shadow-sm border border-red-200 space-y-6 md:col-span-2">
           <div className="flex items-center space-x-3 mb-2">
             <div className="p-2 bg-red-100 text-red-600 rounded-lg">
               <Trash2 className="w-6 h-6" />
@@ -305,7 +304,7 @@ const Settings: React.FC = () => {
           <p className="text-sm text-red-700">Dikkat: Bu alandaki işlemler geri alınamaz verilerinizin silinmesine yol açar.</p>
 
           <div className="space-y-4 pt-2">
-            {!user && (
+            {(useStore.getState().isGuest || !user) && (
               <button 
                 onClick={handleDeleteAll}
                 className="flex items-center justify-center space-x-2 w-full py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition shadow-sm"
@@ -315,7 +314,7 @@ const Settings: React.FC = () => {
               </button>
             )}
 
-            {user && (
+            {(!useStore.getState().isGuest && user) && (
               <>
                 <button 
                   onClick={handleDeleteCloudData}
@@ -339,7 +338,6 @@ const Settings: React.FC = () => {
             )}
           </div>
         </div>
-        )}
       </div>
 
 
