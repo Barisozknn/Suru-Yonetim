@@ -322,13 +322,20 @@ const RationCalculator: React.FC = () => {
             <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4 flex justify-between items-center">
               <span className="text-sm font-bold text-orange-800">Hayvan Başı Maliyet</span>
               <span className="text-xl font-black text-orange-600">
-                {safeRasyonListesi.reduce((sum, r) => {
-                  if (!r) return sum;
-                  const y = yemler.find(yem => yem && yem.id === r.yemId);
-                  const price = Number(y?.birimFiyat) || 0;
-                  const kg = Number(r.kgAsFed) || 0;
-                  return sum + (price * kg);
-                }, 0).toLocaleString('tr-TR', {style:'currency', currency:'TRY'})} <span className="text-xs text-orange-500 font-normal">/ Gün</span>
+                {(() => {
+                  try {
+                    const total = safeRasyonListesi.reduce((sum, r) => {
+                      if (!r) return sum;
+                      const y = yemler.find(yem => yem && yem.id === r.yemId);
+                      const price = Number(y?.birimFiyat) || 0;
+                      const kg = Number(r.kgAsFed) || 0;
+                      return sum + (price * kg);
+                    }, 0);
+                    return isNaN(total) || !isFinite(total) ? '0.00 ₺' : `${total.toFixed(2)} ₺`;
+                  } catch (e) {
+                    return '0.00 ₺';
+                  }
+                })()} <span className="text-xs text-orange-500 font-normal">/ Gün</span>
               </span>
             </div>
             <button 

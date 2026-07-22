@@ -134,12 +134,15 @@ const Layout: React.FC = () => {
           <div className="fixed inset-0 bg-earth-900/60 transition-opacity" onClick={() => setIsMobileMenuOpen(false)}></div>
           <div className="relative flex-1 flex flex-col w-80 max-w-[85vw] bg-white shadow-2xl animate-in slide-in-from-left duration-300">
             <div className="p-4 border-b border-earth-100 flex items-center justify-between shrink-0">
-              <h1 className="text-xl font-black text-nature-800">Menü</h1>
+              <h1 className="text-xl font-black text-nature-800 tracking-tight">Rasyo<span className="text-earth-500">Metri</span></h1>
               <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-earth-500 hover:bg-earth-100 rounded-lg">
                 <X className="w-6 h-6" />
               </button>
             </div>
             <NavContent isMobile />
+            <div className="p-4 border-t border-earth-100 shrink-0 bg-earth-50/50">
+              <span className="text-xs font-bold text-earth-500 uppercase tracking-widest block text-center">Menü</span>
+            </div>
           </div>
         </div>
       )}
