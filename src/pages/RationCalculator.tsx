@@ -1,13 +1,17 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { useStore } from '../store/useStore';
 import { Calculator, Plus, X, Activity, Droplets, Beef } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
-// ProgressBar bileşeni burada tanımlanmalı — RationCalculator içinde değil!
-// İçerde tanımlanırsa her render'da yeni referans oluşur ve React tüm alt ağacı
-// unmount/remount eder. Mobilde bu beyaz ekrana yol açar.
+// Sabit boş dizi referansları — her render'da yeni [] oluşturmayı önler.
+// useLiveFarmQuery undefined döndürdüğünde (yüklenirken) || [] kullanmak
+// her render'da yeni referans oluşturur ve useEffect sonsuz döngüye girer.
+const EMPTY_ARRAY: never[] = [];
+
+// ProgressBar bileşeni dışarıda tanımlanmalı.
+// İçerde tanımlanırsa her render'da yeni referans → React unmount/remount → beyaz ekran.
 const ProgressBar = ({ current, target, label, unit }: { current: number, target: number, label: string, unit: string }) => {
   const validCurrent = isNaN(current) || !isFinite(current) ? 0 : current;
   const validTarget = isNaN(target) || !isFinite(target) || target <= 0 ? 1 : target;
@@ -36,9 +40,15 @@ const ProgressBar = ({ current, target, label, unit }: { current: number, target
 };
 
 const RationCalculator: React.FC = () => {
-  const gruplar = useLiveFarmQuery(() => db.gruplar.toArray()) || [];
-  const yemler = useLiveFarmQuery(() => db.yemler.toArray()) || [];
-  const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
+  // useLiveFarmQuery undefined döndürdüğünde EMPTY_ARRAY kullan (sabit referans)
+  const gruplarRaw = useLiveFarmQuery(() => db.gruplar.toArray());
+  const yemlerRaw  = useLiveFarmQuery(() => db.yemler.toArray());
+  const hayvanlarRaw = useLiveFarmQuery(() => db.hayvanlar.toArray());
+
+  const gruplar  = gruplarRaw  ?? EMPTY_ARRAY;
+  const yemler   = yemlerRaw   ?? EMPTY_ARRAY;
+  const hayvanlar = hayvanlarRaw ?? EMPTY_ARRAY;
+
   const [selectedYemToAdd, setSelectedYemToAdd] = useState('');
 
   const {
@@ -56,45 +66,54 @@ const RationCalculator: React.FC = () => {
     setRationListesi: setRasyonListesi
   } = useStore();
 
-  // Grup Seçildiğinde ortalama ağırlığı hesapla
+  // Son hesaplanan ortalama ağırlığı takip et — aynı değeri tekrar set etme
+  const lastAvgRef = useRef<number | null>(null);
+
+  // Grup seçildiğinde ortalama ağırlığı hesapla
+  // ÖNEMLI: hayvanlar'ı dependency olarak eklemek ZORUNLU değil;
+  // selectedGrupId değiştiğinde hayvanlar zaten mevcut veriden okunuyor.
+  // hayvanlarRaw'ı (asıl sorgu sonucu) dependency olarak kullan,
+  // böylece sabit EMPTY_ARRAY referansı sonsuz döngü yaratmaz.
   useEffect(() => {
-    if (selectedGrupId) {
-      const gruptakiHayvanlar = hayvanlar.filter(h => h && h.grupId === selectedGrupId);
-      if (gruptakiHayvanlar.length > 0) {
-        const totalWeight = gruptakiHayvanlar.reduce((sum, h) => sum + (Number(h.guncelAgirlikKg) || 0), 0);
-        const avg = totalWeight / gruptakiHayvanlar.length;
-        if (avg > 0) setAvgWeight(Math.round(avg));
+    if (!selectedGrupId) return;
+    const gruptakiHayvanlar = hayvanlar.filter(h => h && h.grupId === selectedGrupId);
+    if (gruptakiHayvanlar.length > 0) {
+      const totalWeight = gruptakiHayvanlar.reduce((sum, h) => sum + (Number(h.guncelAgirlikKg) || 0), 0);
+      const avg = Math.round(totalWeight / gruptakiHayvanlar.length);
+      // Aynı değeri tekrar set etme — sonsuz döngüyü kırar
+      if (avg > 0 && avg !== lastAvgRef.current) {
+        lastAvgRef.current = avg;
+        setAvgWeight(avg);
       }
     }
-  }, [selectedGrupId, hayvanlar, setAvgWeight]);
+  }, [selectedGrupId, hayvanlarRaw, setAvgWeight]); // hayvanlarRaw: gerçek veri değişince tetikle
 
   // İhtiyaç Hesaplama Fonksiyonları
   const hedefIhtiyac = useMemo(() => {
     let hedefDMI = 0;
-    let hedefME = 0; // Mcal/gün
-    let hedefHP_g = 0; // gram/gün
+    let hedefME = 0;
+    let hedefHP_g = 0;
     
     const weight = Number(avgWeight) || 600;
     const milk = Number(milkYield) || 0;
     const dailyAdg = Number(adg) || 0;
 
-    // Yaşama Payı ME (Mcal) = 0.122 * BW^0.75
     const yasamaPayiME = 0.122 * Math.pow(Math.max(weight, 1), 0.75);
     
     if (verimYonu === 'Sütçü') {
-      hedefDMI = weight * 0.032; // BW'nin %3.2'si
+      hedefDMI = weight * 0.032;
       hedefME = yasamaPayiME + (milk * 0.74);
       hedefHP_g = 400 + (milk * 85);
     } else {
-      hedefDMI = weight * 0.023; // Besi danası BW'nin %2.3'ü civarı
+      hedefDMI = weight * 0.023;
       hedefME = yasamaPayiME + ((dailyAdg / 1000) * 4.5);
       hedefHP_g = 400 + ((dailyAdg / 1000) * 320);
     }
 
     const safeDMI = hedefDMI > 0 ? hedefDMI : 1;
     const hedefHP_Yuzde = (hedefHP_g / (safeDMI * 1000)) * 100;
-    const hedefCa = safeDMI * 0.006 * 1000; // gram
-    const hedefP = safeDMI * 0.004 * 1000; // gram
+    const hedefCa = safeDMI * 0.006 * 1000;
+    const hedefP = safeDMI * 0.004 * 1000;
 
     return {
       dmi: isNaN(hedefDMI) || !isFinite(hedefDMI) ? 0 : hedefDMI,
@@ -108,13 +127,9 @@ const RationCalculator: React.FC = () => {
 
   // Sağlanan Toplamları Hesaplama
   const toplamSaglanan = useMemo(() => {
-    let dmi = 0;
-    let me = 0;
-    let hp_g = 0;
-    let ca_g = 0;
-    let p_g = 0;
+    let dmi = 0, me = 0, hp_g = 0, ca_g = 0, p_g = 0;
 
-    const list = Array.isArray(rasyonListesi) ? rasyonListesi : [];
+    const list = Array.isArray(rasyonListesi) ? rasyonListesi : EMPTY_ARRAY;
     list.forEach(item => {
       if (!item) return;
       const yem = yemler.find(y => y && y.id === item.yemId);
@@ -122,7 +137,6 @@ const RationCalculator: React.FC = () => {
         const kg = Number(item.kgAsFed) || 0;
         const kuruMaddeKg = kg * ((Number(yem.kmYuzde) || 0) / 100);
         dmi += kuruMaddeKg;
-        
         me += kuruMaddeKg * (Number(yem.meMcalKg) || 0);
         hp_g += kuruMaddeKg * 1000 * ((Number(yem.hpYuzde) || 0) / 100);
         ca_g += kuruMaddeKg * 1000 * ((Number(yem.caYuzde) || 0) / 100);
@@ -140,27 +154,26 @@ const RationCalculator: React.FC = () => {
       ca: isNaN(ca_g) || !isFinite(ca_g) ? 0 : ca_g,
       p: isNaN(p_g) || !isFinite(p_g) ? 0 : p_g
     };
-  }, [rasyonListesi, yemler]);
+  }, [rasyonListesi, yemlerRaw]); // yemlerRaw: gerçek veri değişince tetikle
 
   const addYem = (yemId: string) => {
     if (!yemId) return;
-    const list = Array.isArray(rasyonListesi) ? rasyonListesi : [];
+    const list = Array.isArray(rasyonListesi) ? rasyonListesi : EMPTY_ARRAY;
     if (list.some(r => r && r.yemId === yemId)) return;
-    
     setRasyonListesi([...list, { id: uuidv4(), yemId, kgAsFed: 1 }]);
   };
 
   const updateYemKg = (id: string, kg: number) => {
-    const list = Array.isArray(rasyonListesi) ? rasyonListesi : [];
+    const list = Array.isArray(rasyonListesi) ? rasyonListesi : EMPTY_ARRAY;
     setRasyonListesi(list.map(r => r && r.id === id ? { ...r, kgAsFed: kg } : r));
   };
 
   const removeYem = (id: string) => {
-    const list = Array.isArray(rasyonListesi) ? rasyonListesi : [];
+    const list = Array.isArray(rasyonListesi) ? rasyonListesi : EMPTY_ARRAY;
     setRasyonListesi(list.filter(r => r && r.id !== id));
   };
 
-  const safeRasyonListesi = Array.isArray(rasyonListesi) ? rasyonListesi : [];
+  const safeRasyonListesi = Array.isArray(rasyonListesi) ? rasyonListesi : EMPTY_ARRAY;
 
   return (
     <div className="space-y-6">
@@ -278,7 +291,7 @@ const RationCalculator: React.FC = () => {
                 if (!y) return null;
                 return (
                   <div key={r.id} className="p-3 border border-earth-200 rounded-xl bg-earth-50 relative group">
-                    <button onClick={() => removeYem(r.id)} className="absolute top-2 right-2 text-earth-400 hover:text-red-500 transition sm:opacity-0 group-hover:opacity-100 p-1">
+                    <button onClick={() => removeYem(r.id)} className="absolute top-2 right-2 text-earth-400 hover:text-red-500 transition sm:opacity-0 group-hover:opacity-100 opacity-100 p-1">
                       <X className="w-4 h-4" />
                     </button>
                     <div className="font-bold text-earth-800 text-sm">{y.ad}</div>

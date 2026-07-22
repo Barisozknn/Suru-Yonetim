@@ -48,13 +48,9 @@ const Layout: React.FC = () => {
       setIsSyncing(true);
       processSyncQueue()
         .then(async () => {
-           const { db } = await import('../lib/db');
-           const count = await db.syncQueue.count();
-           if (count === 0) {
-             await pullInitialData();
-           } else {
-             console.warn("Kuyrukta bekleyen/hatalı işlemler var, buluttan indirme atlandı (yerel veriler korundu).");
-           }
+           // Her zaman buluttan veri çek (syncQueue dolu olsa bile)
+           // syncQueue itemları hata verip takılı kalsa veri hiç çekilmez
+           await pullInitialData();
            // pullInitialData sonrası activeCiftlikId doğru set edildiyse migrasyon doğru çalışır
            const { migrateOrphanDataToDefaultFarm } = await import('../utils/migrateData');
            await migrateOrphanDataToDefaultFarm();
@@ -64,6 +60,7 @@ const Layout: React.FC = () => {
            if (realtimeChannel) setIsRealtimeActive(true);
         })
         .finally(() => setIsSyncing(false));
+
     } else {
       // Çevrimdışıyken de migrasyon ve aktif çiftlik tespiti yap
       import('../utils/migrateData').then(m => m.migrateOrphanDataToDefaultFarm());
