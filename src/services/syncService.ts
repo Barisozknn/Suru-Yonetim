@@ -75,6 +75,11 @@ const mapFromSupabaseYem = (row: any) => ({
   sonAlimTarihi: row.son_alim_tarihi,
   tedarikci: row.tedarikci,
   minStokUyariKg: row.min_stok_uyari_kg,
+  kmYuzde: row.km_yuzde ?? undefined,
+  meMcalKg: row.me_mcal_kg ?? undefined,
+  hpYuzde: row.hp_yuzde ?? undefined,
+  caYuzde: row.ca_yuzde ?? undefined,
+  pYuzde: row.p_yuzde ?? undefined,
   user_id: row.user_id,
   ciftlikId: row.ciftlik_id || undefined
 });
@@ -88,6 +93,11 @@ const mapToSupabaseYem = (obj: any) => ({
   son_alim_tarihi: obj.sonAlimTarihi,
   tedarikci: obj.tedarikci,
   min_stok_uyari_kg: obj.minStokUyariKg,
+  km_yuzde: obj.kmYuzde ?? null,
+  me_mcal_kg: obj.meMcalKg ?? null,
+  hp_yuzde: obj.hpYuzde ?? null,
+  ca_yuzde: obj.caYuzde ?? null,
+  p_yuzde: obj.pYuzde ?? null,
   user_id: obj.user_id,
   ciftlik_id: obj.ciftlikId
 });
