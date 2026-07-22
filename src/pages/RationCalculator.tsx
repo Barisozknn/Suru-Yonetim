@@ -1,13 +1,15 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { useStore } from '../store/useStore';
 import { Calculator, Plus, X, Activity, Droplets, Beef } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+
 const RationCalculator: React.FC = () => {
   const gruplar = useLiveFarmQuery(() => db.gruplar.toArray()) || [];
   const yemler = useLiveFarmQuery(() => db.yemler.toArray()) || [];
   const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
+  const [selectedYemToAdd, setSelectedYemToAdd] = useState('');
 
   const {
     rationSelectedGrupId: selectedGrupId,
@@ -27,9 +29,9 @@ const RationCalculator: React.FC = () => {
   // Grup Seçildiğinde ortalama ağırlığı hesapla
   useEffect(() => {
     if (selectedGrupId) {
-      const gruptakiHayvanlar = hayvanlar.filter(h => h.grupId === selectedGrupId);
+      const gruptakiHayvanlar = hayvanlar.filter(h => h && h.grupId === selectedGrupId);
       if (gruptakiHayvanlar.length > 0) {
-        const totalWeight = gruptakiHayvanlar.reduce((sum, h) => sum + (h.guncelAgirlikKg || 0), 0);
+        const totalWeight = gruptakiHayvanlar.reduce((sum, h) => sum + (Number(h.guncelAgirlikKg) || 0), 0);
         const avg = totalWeight / gruptakiHayvanlar.length;
         if (avg > 0) setAvgWeight(Math.round(avg));
       }
@@ -38,40 +40,39 @@ const RationCalculator: React.FC = () => {
 
   // İhtiyaç Hesaplama Fonksiyonları
   const hedefIhtiyac = useMemo(() => {
-    // Kuru Madde Kapasitesi (Canlı Ağırlığın %2.5 - %3.5'i arası, sütçü/etçiye göre değişir)
-    // Sütçü için yüksek verimde %3.2, Etçi için %2.2 varsayalım
     let hedefDMI = 0;
     let hedefME = 0; // Mcal/gün
     let hedefHP_g = 0; // gram/gün
     
+    const weight = Number(avgWeight) || 600;
+    const milk = Number(milkYield) || 0;
+    const dailyAdg = Number(adg) || 0;
+
     // Yaşama Payı ME (Mcal) = 0.122 * BW^0.75
-    const yasamaPayiME = 0.122 * Math.pow(avgWeight, 0.75);
+    const yasamaPayiME = 0.122 * Math.pow(Math.max(weight, 1), 0.75);
     
     if (verimYonu === 'Sütçü') {
-      hedefDMI = avgWeight * 0.032; // BW'nin %3.2'si
-      // Süt verim payı: ~0.7 Mcal / Litre süt
-      hedefME = yasamaPayiME + (milkYield * 0.74);
-      // HP İhtiyacı: Yaşama payı ~400g + Süt protein payı (~85g/Litre)
-      hedefHP_g = 400 + (milkYield * 85);
+      hedefDMI = weight * 0.032; // BW'nin %3.2'si
+      hedefME = yasamaPayiME + (milk * 0.74);
+      hedefHP_g = 400 + (milk * 85);
     } else {
-      hedefDMI = avgWeight * 0.023; // Besi danası BW'nin %2.3'ü civarı
-      // Büyüme payı: Her 1 kg ADG için ~4.5 Mcal
-      hedefME = yasamaPayiME + ((adg / 1000) * 4.5);
-      // HP İhtiyacı: Yaşama payı + ADG başına protein
-      hedefHP_g = 400 + ((adg / 1000) * 320);
+      hedefDMI = weight * 0.023; // Besi danası BW'nin %2.3'ü civarı
+      hedefME = yasamaPayiME + ((dailyAdg / 1000) * 4.5);
+      hedefHP_g = 400 + ((dailyAdg / 1000) * 320);
     }
 
-    const hedefHP_Yuzde = (hedefHP_g / (hedefDMI * 1000)) * 100;
-    const hedefCa = hedefDMI * 0.006 * 1000; // gram
-    const hedefP = hedefDMI * 0.004 * 1000; // gram
+    const safeDMI = hedefDMI > 0 ? hedefDMI : 1;
+    const hedefHP_Yuzde = (hedefHP_g / (safeDMI * 1000)) * 100;
+    const hedefCa = safeDMI * 0.006 * 1000; // gram
+    const hedefP = safeDMI * 0.004 * 1000; // gram
 
     return {
-      dmi: hedefDMI,
-      me: hedefME,
-      hp_g: hedefHP_g,
-      hp_yuzde: hedefHP_Yuzde,
-      ca: hedefCa,
-      p: hedefP
+      dmi: isNaN(hedefDMI) || !isFinite(hedefDMI) ? 0 : hedefDMI,
+      me: isNaN(hedefME) || !isFinite(hedefME) ? 0 : hedefME,
+      hp_g: isNaN(hedefHP_g) || !isFinite(hedefHP_g) ? 0 : hedefHP_g,
+      hp_yuzde: isNaN(hedefHP_Yuzde) || !isFinite(hedefHP_Yuzde) ? 0 : hedefHP_Yuzde,
+      ca: isNaN(hedefCa) || !isFinite(hedefCa) ? 0 : hedefCa,
+      p: isNaN(hedefP) || !isFinite(hedefP) ? 0 : hedefP
     };
   }, [avgWeight, milkYield, adg, verimYonu]);
 
@@ -83,46 +84,57 @@ const RationCalculator: React.FC = () => {
     let ca_g = 0;
     let p_g = 0;
 
-    rasyonListesi.forEach(item => {
-      const yem = yemler.find(y => y.id === item.yemId);
+    const list = Array.isArray(rasyonListesi) ? rasyonListesi : [];
+    list.forEach(item => {
+      if (!item) return;
+      const yem = yemler.find(y => y && y.id === item.yemId);
       if (yem && yem.kmYuzde) {
-        const kuruMaddeKg = item.kgAsFed * (yem.kmYuzde / 100);
+        const kg = Number(item.kgAsFed) || 0;
+        const kuruMaddeKg = kg * ((Number(yem.kmYuzde) || 0) / 100);
         dmi += kuruMaddeKg;
         
-        me += kuruMaddeKg * (yem.meMcalKg || 0);
-        hp_g += kuruMaddeKg * 1000 * ((yem.hpYuzde || 0) / 100);
-        ca_g += kuruMaddeKg * 1000 * ((yem.caYuzde || 0) / 100);
-        p_g += kuruMaddeKg * 1000 * ((yem.pYuzde || 0) / 100);
+        me += kuruMaddeKg * (Number(yem.meMcalKg) || 0);
+        hp_g += kuruMaddeKg * 1000 * ((Number(yem.hpYuzde) || 0) / 100);
+        ca_g += kuruMaddeKg * 1000 * ((Number(yem.caYuzde) || 0) / 100);
+        p_g += kuruMaddeKg * 1000 * ((Number(yem.pYuzde) || 0) / 100);
       }
     });
 
+    const hp_yuzde = dmi > 0 ? (hp_g / (dmi * 1000)) * 100 : 0;
+
     return {
-      dmi,
-      me,
-      hp_g,
-      hp_yuzde: dmi > 0 ? (hp_g / (dmi * 1000)) * 100 : 0,
-      ca: ca_g,
-      p: p_g
+      dmi: isNaN(dmi) || !isFinite(dmi) ? 0 : dmi,
+      me: isNaN(me) || !isFinite(me) ? 0 : me,
+      hp_g: isNaN(hp_g) || !isFinite(hp_g) ? 0 : hp_g,
+      hp_yuzde: isNaN(hp_yuzde) || !isFinite(hp_yuzde) ? 0 : hp_yuzde,
+      ca: isNaN(ca_g) || !isFinite(ca_g) ? 0 : ca_g,
+      p: isNaN(p_g) || !isFinite(p_g) ? 0 : p_g
     };
   }, [rasyonListesi, yemler]);
 
   const addYem = (yemId: string) => {
     if (!yemId) return;
-    if (rasyonListesi.some(r => r.yemId === yemId)) return;
+    const list = Array.isArray(rasyonListesi) ? rasyonListesi : [];
+    if (list.some(r => r && r.yemId === yemId)) return;
     
-    setRasyonListesi([...rasyonListesi, { id: uuidv4(), yemId, kgAsFed: 1 }]);
+    setRasyonListesi([...list, { id: uuidv4(), yemId, kgAsFed: 1 }]);
   };
 
   const updateYemKg = (id: string, kg: number) => {
-    setRasyonListesi(rasyonListesi.map(r => r.id === id ? { ...r, kgAsFed: kg } : r));
+    const list = Array.isArray(rasyonListesi) ? rasyonListesi : [];
+    setRasyonListesi(list.map(r => r && r.id === id ? { ...r, kgAsFed: kg } : r));
   };
 
   const removeYem = (id: string) => {
-    setRasyonListesi(rasyonListesi.filter(r => r.id !== id));
+    const list = Array.isArray(rasyonListesi) ? rasyonListesi : [];
+    setRasyonListesi(list.filter(r => r && r.id !== id));
   };
 
   const ProgressBar = ({ current, target, label, unit }: { current: number, target: number, label: string, unit: string }) => {
-    const percent = Math.min(Math.round((current / (target || 1)) * 100), 100);
+    const validCurrent = isNaN(current) || !isFinite(current) ? 0 : current;
+    const validTarget = isNaN(target) || !isFinite(target) || target <= 0 ? 1 : target;
+
+    const percent = Math.min(Math.round((validCurrent / validTarget) * 100), 100);
     const isDeficient = percent < 90;
     const isExcess = percent > 110;
 
@@ -135,7 +147,7 @@ const RationCalculator: React.FC = () => {
         <div className="flex justify-between items-end mb-1">
           <span className="font-bold text-earth-800 text-sm">{label}</span>
           <span className="text-xs font-bold text-earth-500">
-            {current.toFixed(1)} / {target.toFixed(1)} {unit}
+            {validCurrent.toFixed(1)} / {validTarget.toFixed(1)} {unit}
           </span>
         </div>
         <div className="w-full bg-earth-100 rounded-full h-2.5">
@@ -144,6 +156,8 @@ const RationCalculator: React.FC = () => {
       </div>
     );
   };
+
+  const safeRasyonListesi = Array.isArray(rasyonListesi) ? rasyonListesi : [];
 
   return (
     <div className="space-y-6">
@@ -159,7 +173,7 @@ const RationCalculator: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sol Panel: Parametreler */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-earth-200 space-y-6 lg:col-span-1">
+        <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-earth-200 space-y-6 lg:col-span-1">
           <h2 className="font-bold text-lg text-earth-900 border-b pb-2">1. Hedef Parametreleri</h2>
           
           <div>
@@ -167,7 +181,7 @@ const RationCalculator: React.FC = () => {
             <select 
               value={selectedGrupId}
               onChange={(e) => setSelectedGrupId(e.target.value)}
-              className="w-full p-2 border border-earth-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full p-2.5 border border-earth-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 bg-white font-medium text-sm"
             >
               <option value="">Grup Seçin...</option>
               {gruplar.map(g => (
@@ -196,18 +210,18 @@ const RationCalculator: React.FC = () => {
 
           <div>
             <label className="block text-sm font-bold text-earth-700 mb-1">Ort. Canlı Ağırlık (Kg)</label>
-            <input type="number" value={avgWeight} onChange={e => setAvgWeight(Number(e.target.value))} className="w-full p-2 border border-earth-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500" />
+            <input type="number" value={avgWeight} onChange={e => setAvgWeight(Number(e.target.value))} className="w-full p-2 border border-earth-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 font-bold" />
           </div>
 
           {verimYonu === 'Sütçü' ? (
             <div>
               <label className="block text-sm font-bold text-earth-700 mb-1">Hedef Süt Verimi (Litre/Gün)</label>
-              <input type="number" value={milkYield} onChange={e => setMilkYield(Number(e.target.value))} className="w-full p-2 border border-earth-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500" />
+              <input type="number" value={milkYield} onChange={e => setMilkYield(Number(e.target.value))} className="w-full p-2 border border-earth-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 font-bold" />
             </div>
           ) : (
             <div>
               <label className="block text-sm font-bold text-earth-700 mb-1">Hedef Ağırlık Artışı (GCAA - gr/Gün)</label>
-              <input type="number" value={adg} onChange={e => setAdg(Number(e.target.value))} step="100" className="w-full p-2 border border-earth-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500" />
+              <input type="number" value={adg} onChange={e => setAdg(Number(e.target.value))} step="100" className="w-full p-2 border border-earth-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 font-bold" />
             </div>
           )}
 
@@ -222,26 +236,28 @@ const RationCalculator: React.FC = () => {
         </div>
 
         {/* Orta Panel: Yem Listesi */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-earth-200 space-y-4 lg:col-span-1">
+        <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-earth-200 space-y-4 lg:col-span-1">
           <h2 className="font-bold text-lg text-earth-900 border-b pb-2 flex justify-between items-center">
             2. Rasyona Yem Ekle
           </h2>
           
           <div className="flex space-x-2">
             <select 
-              id="yemSelect"
-              className="flex-1 min-w-0 truncate p-2 border border-earth-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500"
+              value={selectedYemToAdd}
+              onChange={(e) => setSelectedYemToAdd(e.target.value)}
+              className="flex-1 min-w-0 truncate p-2 border border-earth-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 bg-white font-medium text-sm"
             >
               <option value="">Yem Seçin...</option>
-              {yemler.filter(y => y.kmYuzde !== undefined).map(y => (
-                <option key={y.id} value={y.id}>{y.ad} (Stok: {y.stokKg}kg)</option>
+              {yemler.filter(y => y && y.kmYuzde !== undefined).map(y => (
+                <option key={y.id} value={y.id}>{y.ad} (Stok: {y.stokKg || 0}kg)</option>
               ))}
             </select>
             <button 
               onClick={() => {
-                const sel = document.getElementById('yemSelect') as HTMLSelectElement;
-                addYem(sel.value);
-                sel.value = '';
+                if (selectedYemToAdd) {
+                  addYem(selectedYemToAdd);
+                  setSelectedYemToAdd('');
+                }
               }}
               className="p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
             >
@@ -250,15 +266,16 @@ const RationCalculator: React.FC = () => {
           </div>
 
           <div className="space-y-2 mt-4 max-h-[400px] overflow-y-auto">
-            {rasyonListesi.length === 0 ? (
+            {safeRasyonListesi.length === 0 ? (
               <div className="text-center py-6 text-earth-400 text-sm">Henüz yem eklenmedi.</div>
             ) : (
-              rasyonListesi.map(r => {
-                const y = yemler.find(yem => yem.id === r.yemId);
+              safeRasyonListesi.map(r => {
+                if (!r) return null;
+                const y = yemler.find(yem => yem && yem.id === r.yemId);
                 if (!y) return null;
                 return (
                   <div key={r.id} className="p-3 border border-earth-200 rounded-xl bg-earth-50 relative group">
-                    <button onClick={() => removeYem(r.id)} className="absolute top-2 right-2 text-earth-400 hover:text-red-500 transition opacity-0 group-hover:opacity-100">
+                    <button onClick={() => removeYem(r.id)} className="absolute top-2 right-2 text-earth-400 hover:text-red-500 transition sm:opacity-0 group-hover:opacity-100 p-1">
                       <X className="w-4 h-4" />
                     </button>
                     <div className="font-bold text-earth-800 text-sm">{y.ad}</div>
@@ -269,7 +286,7 @@ const RationCalculator: React.FC = () => {
                         min="0"
                         value={r.kgAsFed} 
                         onChange={(e) => updateYemKg(r.id, Number(e.target.value))}
-                        className="w-20 p-1 border border-earth-300 rounded text-center font-bold outline-none"
+                        className="w-20 p-1 border border-earth-300 rounded text-center font-bold outline-none bg-white"
                       />
                       <span className="text-xs text-earth-500">Taze Kg / Hayvan</span>
                     </div>
@@ -281,7 +298,7 @@ const RationCalculator: React.FC = () => {
         </div>
 
         {/* Sağ Panel: Sonuçlar */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-earth-200 space-y-4 lg:col-span-1">
+        <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-earth-200 space-y-4 lg:col-span-1">
           <h2 className="font-bold text-lg text-earth-900 border-b pb-2 flex items-center">
             <Activity className="w-5 h-5 mr-2 text-nature-600" />
             3. Rasyon Çözümü
@@ -305,9 +322,12 @@ const RationCalculator: React.FC = () => {
             <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4 flex justify-between items-center">
               <span className="text-sm font-bold text-orange-800">Hayvan Başı Maliyet</span>
               <span className="text-xl font-black text-orange-600">
-                {rasyonListesi.reduce((sum, r) => {
-                  const y = yemler.find(yem => yem.id === r.yemId);
-                  return sum + (y ? y.birimFiyat * r.kgAsFed : 0);
+                {safeRasyonListesi.reduce((sum, r) => {
+                  if (!r) return sum;
+                  const y = yemler.find(yem => yem && yem.id === r.yemId);
+                  const price = Number(y?.birimFiyat) || 0;
+                  const kg = Number(r.kgAsFed) || 0;
+                  return sum + (price * kg);
                 }, 0).toLocaleString('tr-TR', {style:'currency', currency:'TRY'})} <span className="text-xs text-orange-500 font-normal">/ Gün</span>
               </span>
             </div>
@@ -317,8 +337,9 @@ const RationCalculator: React.FC = () => {
                   alert('Lütfen önce bir hedef grup seçin.');
                   return;
                 }
-                const summary = rasyonListesi.map(r => {
-                  const y = yemler.find(yem => yem.id === r.yemId);
+                const summary = safeRasyonListesi.map(r => {
+                  if (!r) return '';
+                  const y = yemler.find(yem => yem && yem.id === r.yemId);
                   return y ? `${y.ad}: ${r.kgAsFed}kg` : '';
                 }).filter(Boolean).join(', ');
                 
@@ -329,7 +350,7 @@ const RationCalculator: React.FC = () => {
                 });
                 alert('Rasyon başarıyla gruba atandı!');
               }}
-              disabled={!selectedGrupId || rasyonListesi.length === 0}
+              disabled={!selectedGrupId || safeRasyonListesi.length === 0}
               className="w-full py-2 bg-nature-600 text-white rounded-lg font-bold hover:bg-nature-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Rasyonu Gruba Ata

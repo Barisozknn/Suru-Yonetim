@@ -132,7 +132,7 @@ const AnimalList: React.FC<AnimalListProps> = ({ onSelect }) => {
           </div>
           </div>
           
-          <div className="flex bg-earth-100 p-1 rounded-lg self-stretch items-center shrink-0">
+          <div className="hidden md:flex bg-earth-100 p-1 rounded-lg self-stretch items-center shrink-0">
             <button
               onClick={() => setViewMode('grid')}
               className={`p-2 rounded-md transition ${viewMode === 'grid' ? 'bg-white shadow-sm text-nature-700 font-bold' : 'text-earth-500 hover:text-earth-700'}`}
