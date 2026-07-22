@@ -120,17 +120,17 @@ const YieldAnalysis: React.FC = () => {
 
   return (
     <div className="space-y-6 flex flex-col h-full">
-      <div className="flex justify-between items-center flex-shrink-0">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 flex-shrink-0">
         <div>
-          <h1 className="text-3xl font-black text-earth-900 tracking-tight">Süt & Ağırlık Özet</h1>
-          <p className="text-earth-500 font-medium mt-1">Sürü verim analizi ve bireysel hayvan kayıtları</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-earth-900 tracking-tight">Süt & Ağırlık Özet</h1>
+          <p className="text-earth-500 font-medium text-sm sm:text-base mt-0.5">Sürü verim analizi ve bireysel hayvan kayıtları</p>
         </div>
       </div>
 
       {!selectedAnimalId ? (
         <>
           {/* Hızlı İşlem Arama */}
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-earth-200 flex-shrink-0">
+          <div className="bg-white p-4 rounded-2xl shadow-sm border border-earth-200 flex-shrink-0 relative">
             <h2 className="text-lg font-bold text-earth-800 mb-3 flex items-center"><Search className="w-5 h-5 mr-2 text-earth-500"/> Bireysel Verim Girişi (Hayvan Ara)</h2>
             <div className="relative">
               <input
@@ -144,7 +144,7 @@ const YieldAnalysis: React.FC = () => {
             </div>
 
             {searchTerm.length > 1 && (
-              <div className="mt-2 border border-earth-100 rounded-xl overflow-hidden bg-white max-h-60 overflow-y-auto shadow-sm absolute w-[calc(100%-2rem)] max-w-7xl z-10">
+              <div className="mt-2 border border-earth-100 rounded-xl overflow-hidden bg-white max-h-60 overflow-y-auto shadow-xl absolute left-4 right-4 z-20">
                 {filteredHayvanlar.length === 0 ? (
                   <div className="p-4 text-center text-earth-500 text-sm">Hayvan bulunamadı.</div>
                 ) : (

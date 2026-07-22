@@ -54,12 +54,12 @@ const Dashboard: React.FC = () => {
   const yaklasanDogumlar = getUpcomingBirths(uremeKayitlari, hayvanlar, 30).slice(0, 3);
 
   return (
-    <div className="w-full h-full flex flex-col p-6 space-y-6">
+    <div className="w-full flex flex-col space-y-6">
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-earth-900 tracking-tight">Anasayfa</h1>
-          <p className="text-earth-500 font-medium mt-1">Sürünüzün genel durum özeti</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-earth-900 tracking-tight">Anasayfa</h1>
+          <p className="text-earth-500 font-medium text-sm sm:text-base mt-0.5">Sürünüzün genel durum özeti</p>
         </div>
         <FarmSwitcher />
       </div>

@@ -112,7 +112,7 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
         
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-6 bg-earth-50/50">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
             <h3 className="font-bold text-earth-800 text-lg">Mevcut Yemler</h3>
             <button 
               onClick={() => {
@@ -122,7 +122,7 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
                   setIsAddingNew(true);
                 }
               }} 
-              className="flex items-center space-x-1 px-4 py-2 bg-nature-600 text-white rounded-lg font-bold hover:bg-nature-700 transition"
+              className="flex items-center justify-center space-x-1 px-4 py-2 bg-nature-600 text-white rounded-lg font-bold hover:bg-nature-700 transition w-full sm:w-auto"
             >
               {isAddingNew && !editingFeedId ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
               <span>{isAddingNew && !editingFeedId ? 'İptal' : 'Yeni Yem Ekle'}</span>

@@ -147,13 +147,13 @@ const RationCalculator: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-3xl font-black text-earth-900 tracking-tight flex items-center">
-            <Calculator className="w-8 h-8 mr-3 text-purple-600" />
-            Rasyon Hesaplama
+          <h1 className="text-2xl sm:text-3xl font-black text-earth-900 tracking-tight flex items-center">
+            <Calculator className="w-7 h-7 sm:w-8 sm:h-8 mr-3 text-purple-600 flex-shrink-0" />
+            <span>Rasyon Hesaplama</span>
           </h1>
-          <p className="text-earth-500 font-medium mt-1">Grup ihtiyaçlarına göre rasyon formüle edin</p>
+          <p className="text-earth-500 font-medium text-sm sm:text-base mt-0.5">Grup ihtiyaçlarına göre rasyon formüle edin</p>
         </div>
       </div>
 

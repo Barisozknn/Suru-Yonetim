@@ -225,22 +225,22 @@ const GroupManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
                   const sayi = hayvanlar.filter(h => h.grupId === grup.id).length;
                   return (
                     <div key={grup.id} className="p-3 border border-earth-200 rounded-lg hover:shadow-sm transition bg-white">
-                      <div className="flex justify-between items-start">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <div>
                           <div className="font-bold text-earth-900 text-lg">{grup.ad}</div>
                           <div className="text-sm text-earth-600">Tür: {grup.tur} &bull; {sayi} Hayvan</div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <button onClick={() => setSelectedGroupForAnimals(grup)} className="text-xs font-bold text-earth-700 hover:text-earth-900 bg-earth-100 px-3 py-1 rounded-full border border-earth-200 transition flex items-center">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button onClick={() => setSelectedGroupForAnimals(grup)} className="text-xs font-bold text-earth-700 hover:text-earth-900 bg-earth-100 px-3 py-1.5 rounded-full border border-earth-200 transition flex items-center">
                             <Users className="w-3.5 h-3.5 mr-1" />
                             Hayvan Ekle/Çıkar
                           </button>
                           {!['Tosun', 'Boğa', 'Öküz', 'Buzağı', 'Dana'].includes(grup.tur) && (
-                            <button onClick={() => setSelectedGroupForMilk(grup)} className="text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1 rounded-full border border-blue-200 transition">
+                            <button onClick={() => setSelectedGroupForMilk(grup)} className="text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200 transition">
                               Toplu Süt Girişi
                             </button>
                           )}
-                          <button onClick={() => handleDelete(grup.id)} className="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-full transition" title="Grubu Sil">
+                          <button onClick={() => handleDelete(grup.id)} className="text-red-400 hover:text-red-600 p-1.5 hover:bg-red-50 rounded-full transition ml-auto sm:ml-0" title="Grubu Sil">
                             <Trash2 className="w-5 h-5" />
                           </button>
                         </div>

@@ -144,7 +144,7 @@ const Layout: React.FC = () => {
 
       {/* Ana İçerik Alanı */}
       <main className="flex-1 relative min-w-0 md:pt-0 pt-16 h-full overflow-y-auto">
-        <div className="p-4 md:p-8 max-w-7xl mx-auto min-h-full">
+        <div className="p-3 sm:p-6 md:p-8 max-w-7xl mx-auto min-h-full">
           <Outlet />
         </div>
       </main>

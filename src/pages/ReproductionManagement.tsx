@@ -23,14 +23,14 @@ const ReproductionManagement: React.FC = () => {
 
   return (
     <div className="space-y-6 flex flex-col h-full">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-3xl font-black text-earth-900 tracking-tight">Üreme Yönetimi</h1>
-          <p className="text-earth-500 font-medium mt-1">Tohumlama, gebelik kontrolleri ve doğum takibi</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-earth-900 tracking-tight">Üreme Yönetimi</h1>
+          <p className="text-earth-500 font-medium text-sm sm:text-base mt-0.5">Tohumlama, gebelik kontrolleri ve doğum takibi</p>
         </div>
       </div>
 
-      <div className="bg-white p-4 rounded-2xl shadow-sm border border-earth-200 flex-shrink-0">
+      <div className="bg-white p-4 rounded-2xl shadow-sm border border-earth-200 flex-shrink-0 relative">
         <h2 className="text-lg font-bold text-earth-800 mb-3 flex items-center"><Search className="w-5 h-5 mr-2 text-earth-500"/> Hızlı İşlem (Hayvan Ara)</h2>
         <div className="relative">
           <input
@@ -38,12 +38,12 @@ const ReproductionManagement: React.FC = () => {
             placeholder="Küpe numarası ile hayvan ara..."
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setSelectedAnimalId(null); }}
-            className="w-full p-3 pl-10 border border-earth-300 rounded-xl focus:ring-2 focus:ring-nature-500 outline-none"
+            className="w-full p-3 pl-10 border border-earth-300 rounded-xl focus:ring-2 focus:ring-nature-500 outline-none font-medium"
           />
           <Search className="w-5 h-5 absolute left-3 top-3.5 text-earth-400" />
           
           {searchTerm.length > 1 && !selectedAnimalId && (
-            <div className="absolute z-10 w-full mt-1 bg-white border border-earth-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+            <div className="absolute z-20 left-0 right-0 mt-1 bg-white border border-earth-200 rounded-xl shadow-xl max-h-60 overflow-y-auto">
               {filteredHayvanlar.length === 0 ? (
                 <div className="p-4 text-center text-earth-500">Uygun dişi hayvan bulunamadı</div>
               ) : (
@@ -60,12 +60,12 @@ const ReproductionManagement: React.FC = () => {
 
         {selectedAnimal && (
           <div className="mt-4 pt-4 border-t border-earth-200">
-             <div className="flex justify-between items-center mb-4">
+             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                 <div>
                    <h3 className="font-bold text-lg text-earth-900">{selectedAnimal.kupeNo} - Üreme Geçmişi</h3>
                    <p className="text-sm text-earth-500">{selectedAnimal.tur}</p>
                 </div>
-                <button onClick={() => setIsEventModalOpen(true)} className="bg-nature-600 text-white px-4 py-2 rounded-lg font-bold flex items-center hover:bg-nature-700 transition">
+                <button onClick={() => setIsEventModalOpen(true)} className="bg-nature-600 text-white px-4 py-2 rounded-lg font-bold flex items-center justify-center hover:bg-nature-700 transition w-full sm:w-auto">
                   <Activity className="w-5 h-5 mr-2" /> Yeni Üreme Olayı Gir
                 </button>
              </div>

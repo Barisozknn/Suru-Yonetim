@@ -69,14 +69,14 @@ const AnimalList: React.FC<AnimalListProps> = ({ onSelect }) => {
   return (
     <div className="space-y-6">
       {/* Başlık ve Ekle Butonu */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-3xl font-black text-earth-900">Hayvan Listesi</h2>
-          <p className="text-earth-500 mt-1">Sürüdeki tüm hayvanları görüntüle ve yönet</p>
+          <h2 className="text-2xl sm:text-3xl font-black text-earth-900">Hayvan Listesi</h2>
+          <p className="text-earth-500 text-sm sm:text-base mt-0.5">Sürüdeki tüm hayvanları görüntüle ve yönet</p>
         </div>
         <button
           onClick={() => setIsAddFormOpen(true)}
-          className="flex items-center space-x-2 bg-nature-600 hover:bg-nature-700 text-white font-bold px-5 py-3 rounded-xl shadow-md transition active:scale-95"
+          className="flex items-center justify-center space-x-2 bg-nature-600 hover:bg-nature-700 text-white font-bold px-5 py-3 rounded-xl shadow-md transition active:scale-95 w-full sm:w-auto"
         >
           <Plus className="w-5 h-5" />
           <span>Yeni Hayvan Ekle</span>

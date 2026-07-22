@@ -201,10 +201,11 @@ const PedigreeTree: React.FC<PedigreeTreeProps> = ({ hayvan, onSelectAnimal }) =
   }).filter(h => h.kupeNo.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
-    <div className="space-y-8 animate-fade-in p-2">
+    <div className="space-y-8 animate-fade-in p-1 sm:p-2">
       <div className="space-y-6">
         <h3 className="text-lg font-bold text-earth-800 border-b pb-2">3 Nesil Soy Ağacı</h3>
-        <div className="grid grid-cols-2 gap-2 md:gap-8 relative">
+        <div className="overflow-x-auto pb-2 min-w-0 custom-scrollbar">
+          <div className="grid grid-cols-2 gap-2 md:gap-8 relative min-w-[320px]">
 
           {/* Baba Tarafı */}
           <div className="space-y-4 relative">
@@ -255,6 +256,7 @@ const PedigreeTree: React.FC<PedigreeTreeProps> = ({ hayvan, onSelectAnimal }) =
             </div>
           </div>
         </div>
+      </div>
       </div>
 
       <div className="pt-6">
