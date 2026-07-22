@@ -180,7 +180,7 @@ const RationCalculator: React.FC = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-earth-900 dark:text-gray-100 tracking-tight flex items-center">
-            <Calculator className="w-7 h-7 sm:w-8 sm:h-8 mr-3 text-purple-600 flex-shrink-0" />
+            <Calculator className="w-7 h-7 sm:w-8 sm:h-8 mr-3 text-purple-600 dark:text-purple-400 flex-shrink-0" />
             <span>Rasyon Hesaplama</span>
           </h1>
           <p className="text-earth-500 dark:text-gray-400 font-medium text-sm sm:text-base mt-0.5">Grup ihtiyaçlarına göre rasyon formüle edin</p>
@@ -211,13 +211,13 @@ const RationCalculator: React.FC = () => {
             <div className="flex space-x-2">
               <button 
                 onClick={() => setVerimYonu('Sütçü')}
-                className={`flex-1 py-2 px-3 rounded-lg font-bold flex items-center justify-center transition ${verimYonu === 'Sütçü' ? 'bg-purple-100 text-purple-700 border-2 border-purple-500' : 'bg-earth-50 dark:bg-gray-900 text-earth-600 dark:text-gray-400 border-2 border-transparent'}`}
+                className={`flex-1 py-2 px-3 rounded-lg font-bold flex items-center justify-center transition ${verimYonu === 'Sütçü' ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400 border-2 border-purple-500' : 'bg-earth-50 dark:bg-gray-900 text-earth-600 dark:text-gray-400 border-2 border-transparent'}`}
               >
                 <Droplets className="w-4 h-4 mr-2" /> Sütçü
               </button>
               <button 
                 onClick={() => setVerimYonu('Etçi')}
-                className={`flex-1 py-2 px-3 rounded-lg font-bold flex items-center justify-center transition ${verimYonu === 'Etçi' ? 'bg-red-100 text-red-700 border-2 border-red-500' : 'bg-earth-50 dark:bg-gray-900 text-earth-600 dark:text-gray-400 border-2 border-transparent'}`}
+                className={`flex-1 py-2 px-3 rounded-lg font-bold flex items-center justify-center transition ${verimYonu === 'Etçi' ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 border-2 border-red-500' : 'bg-earth-50 dark:bg-gray-900 text-earth-600 dark:text-gray-400 border-2 border-transparent'}`}
               >
                 <Beef className="w-4 h-4 mr-2" /> Etçi
               </button>

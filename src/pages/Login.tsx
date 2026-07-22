@@ -30,7 +30,7 @@ const Login: React.FC = () => {
       <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg border border-earth-200 dark:border-gray-700 max-w-md w-full">
         <h2 className="text-3xl font-black text-nature-800 dark:text-nature-200 text-center mb-6">SürüMetri</h2>
         <h3 className="text-xl font-bold text-earth-900 dark:text-gray-100 text-center mb-6">Giriş Yap</h3>
-        {error && <div className="bg-red-50 dark:bg-red-900/20 text-red-600 p-3 rounded-lg mb-4 text-sm font-medium">{error}</div>}
+        {error && <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-lg mb-4 text-sm font-medium">{error}</div>}
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">E-posta</label>

@@ -213,7 +213,7 @@ const FinancialAnalysis: React.FC = () => {
       </div>
 
       {groupFilter !== 'all' && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 p-3 rounded-xl flex items-start space-x-2 text-blue-800 text-sm">
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 p-3 rounded-xl flex items-start space-x-2 text-blue-800 text-sm">
           <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
           <p><strong>Not:</strong> Belirli bir grup seçildiğinde Süt, Sağlık, Üreme ve Satış verileri filtrelenir. Yem Tüketimi ve Ek Finansal işlemler sürü geneli olarak hesaplamaya dahil edilir.</p>
         </div>
@@ -233,12 +233,12 @@ const FinancialAnalysis: React.FC = () => {
 
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex flex-col justify-center">
           <div className="flex items-center space-x-3 mb-2">
-            <div className="p-2 bg-red-100 text-red-600 rounded-lg">
+            <div className="p-2 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded-lg">
               <TrendingDown className="w-6 h-6" />
             </div>
             <h3 className="text-lg font-bold text-earth-700 dark:text-gray-300">Toplam Gider</h3>
           </div>
-          <p className="text-3xl font-black text-red-600">{formatMoney(calculations.toplamGider)}</p>
+          <p className="text-3xl font-black text-red-600 dark:text-red-400">{formatMoney(calculations.toplamGider)}</p>
         </div>
 
         <div className={`p-6 rounded-2xl shadow-sm border flex flex-col justify-center ${calculations.netKar >= 0 ? 'bg-nature-600 border-nature-700 text-white' : 'bg-red-600 border-red-700 text-white'}`}>
@@ -296,28 +296,28 @@ const FinancialAnalysis: React.FC = () => {
                 <h4 className="font-bold text-earth-800 dark:text-gray-200">Yem Maliyeti</h4>
                 <p className="text-xs text-earth-400">Günlük olarak kaydedilen geçmiş maliyetler</p>
               </div>
-              <p className="font-black text-red-600">-{formatMoney(calculations.yemGideri)}</p>
+              <p className="font-black text-red-600 dark:text-red-400">-{formatMoney(calculations.yemGideri)}</p>
             </div>
             <div className="flex justify-between items-center p-3 bg-red-50/50 rounded-xl border border-red-100">
               <div>
                 <p className="font-bold text-earth-800 dark:text-gray-200">Sağlık Giderleri</p>
                 <p className="text-xs text-earth-500 dark:text-gray-400">İlaç, aşı ve müdahale masrafları</p>
               </div>
-              <p className="font-black text-red-600">-{formatMoney(calculations.saglikGideri)}</p>
+              <p className="font-black text-red-600 dark:text-red-400">-{formatMoney(calculations.saglikGideri)}</p>
             </div>
             <div className="flex justify-between items-center p-3 bg-red-50/50 rounded-xl border border-red-100">
               <div>
                 <p className="font-bold text-earth-800 dark:text-gray-200">Üreme Giderleri</p>
                 <p className="text-xs text-earth-500 dark:text-gray-400">Tohumlama vb. masraflar</p>
               </div>
-              <p className="font-black text-red-600">-{formatMoney(calculations.uremeGideri)}</p>
+              <p className="font-black text-red-600 dark:text-red-400">-{formatMoney(calculations.uremeGideri)}</p>
             </div>
             <div className="flex justify-between items-center p-3 bg-red-50/50 rounded-xl border border-red-100">
               <div>
                 <p className="font-bold text-earth-800 dark:text-gray-200">Ek Giderler</p>
                 <p className="text-xs text-earth-500 dark:text-gray-400">Manuel eklenen giderler</p>
               </div>
-              <p className="font-black text-red-600">-{formatMoney(calculations.ekGider)}</p>
+              <p className="font-black text-red-600 dark:text-red-400">-{formatMoney(calculations.ekGider)}</p>
             </div>
           </div>
         </div>
@@ -335,14 +335,14 @@ const FinancialAnalysis: React.FC = () => {
               <div key={islem.id} className="p-4 flex items-center justify-between hover:bg-earth-50 dark:hover:bg-gray-700 transition">
                 <div>
                   <div className="flex items-center space-x-2">
-                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${islem.tip === 'Gelir' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${islem.tip === 'Gelir' ? 'bg-green-100 text-green-700' : 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400'}`}>
                       {islem.kategori}
                     </span>
                     <span className="text-sm font-medium text-earth-500 dark:text-gray-400">{new Date(islem.tarih).toLocaleDateString('tr-TR')}</span>
                   </div>
                   {islem.aciklama && <p className="text-earth-700 dark:text-gray-300 mt-1">{islem.aciklama}</p>}
                 </div>
-                <div className={`font-black ${islem.tip === 'Gelir' ? 'text-green-600' : 'text-red-600'}`}>
+                <div className={`font-black ${islem.tip === 'Gelir' ? 'text-green-600' : 'text-red-600 dark:text-red-400'}`}>
                   {islem.tip === 'Gelir' ? '+' : '-'}{formatMoney(islem.miktar)}
                 </div>
               </div>

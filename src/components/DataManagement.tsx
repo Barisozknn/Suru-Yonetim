@@ -63,7 +63,7 @@ const DataManagement: React.FC = () => {
     <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 space-y-6">
       <div className="flex items-center justify-between border-b border-earth-100 dark:border-gray-700 pb-4">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+          <div className="p-2 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-lg">
             <FileSpreadsheet className="w-6 h-6" />
           </div>
           <div>
@@ -135,7 +135,7 @@ const DataManagement: React.FC = () => {
                   const h = hayvanlar.find(x => x.id === id);
                   if (!h) return null;
                   return (
-                    <div key={id} className="flex items-center bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1.5 rounded-full border border-blue-200">
+                    <div key={id} className="flex items-center bg-blue-100 dark:bg-blue-900/40 text-blue-800 text-xs font-bold px-2.5 py-1.5 rounded-full border border-blue-200 dark:border-blue-800/50">
                       <span>{h.kupeNo}</span>
                       <button 
                         onClick={() => setSelectedAnimalIds(prev => prev.filter(p => p !== id))}
@@ -193,7 +193,7 @@ const DataManagement: React.FC = () => {
             <button 
               onClick={() => handleExport('pdf')}
               disabled={isLoading || (activeKategori?.requireAnimal && selectedAnimalIds.length === 0)}
-              className="flex items-center justify-center space-x-2 w-full py-2.5 bg-red-50 dark:bg-red-900/20 text-red-700 border border-red-200 rounded-xl font-bold hover:bg-red-100 transition disabled:opacity-50"
+              className="flex items-center justify-center space-x-2 w-full py-2.5 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/50 rounded-xl font-bold hover:bg-red-100 transition disabled:opacity-50"
             >
               <FileText className="w-5 h-5" />
               <span>PDF Olarak İndir (.pdf)</span>
@@ -221,7 +221,7 @@ const DataManagement: React.FC = () => {
                 </button>
                 <button 
                   onClick={() => downloadTemplate(selectedKategori)}
-                  className="mt-2 flex items-center justify-center space-x-2 w-full py-2 bg-transparent text-blue-600 border border-blue-200 rounded-xl font-bold hover:bg-blue-50 transition text-sm"
+                  className="mt-2 flex items-center justify-center space-x-2 w-full py-2 bg-transparent text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50 rounded-xl font-bold hover:bg-blue-50 transition text-sm"
                 >
                   <FileSpreadsheet className="w-4 h-4" />
                   <span>Örnek Şablon İndir (.xlsx)</span>

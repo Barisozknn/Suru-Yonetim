@@ -132,19 +132,19 @@ const ReproductionSchedule: React.FC = () => {
                 onClick={() => navigate(`/hayvanlar?id=${plan.hayvanId}&tab=ureme`)}
                 className={`flex items-center space-x-3 p-3 rounded-xl border cursor-pointer hover:shadow-md transition ${isOverdue ? 'bg-red-50 dark:bg-red-900/20 border-red-300 shadow-sm hover:bg-red-100' : `${config.bg} hover:brightness-95`}`}
               >
-                <div className={`flex-shrink-0 ${isOverdue ? 'text-red-600' : config.color}`}>{config.icon}</div>
+                <div className={`flex-shrink-0 ${isOverdue ? 'text-red-600 dark:text-red-400' : config.color}`}>{config.icon}</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2 flex-wrap gap-1">
                     <span className="font-bold text-earth-900 dark:text-gray-100 text-sm">{plan.kupeNo}</span>
                     <span className="text-xs text-earth-500 dark:text-gray-400 font-mono bg-white/70 px-2 py-0.5 rounded border border-earth-200 dark:border-gray-700">{plan.tur}</span>
                   </div>
                   <div className="flex items-center space-x-3 mt-0.5">
-                    <span className={`text-xs font-bold ${isOverdue ? 'text-red-700' : config.color}`}>{plan.olayTuru}</span>
+                    <span className={`text-xs font-bold ${isOverdue ? 'text-red-700 dark:text-red-400' : config.color}`}>{plan.olayTuru}</span>
                   </div>
                 </div>
                 <div className="text-right flex flex-col items-end">
-                  <span className={`text-sm font-bold ${isOverdue ? 'text-red-700' : 'text-earth-800 dark:text-gray-200'}`}>{new Date(plan.tarih).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                  {isOverdue && <span className="text-[10px] font-bold text-red-600 uppercase mt-1 bg-red-100 px-2 py-0.5 rounded-full border border-red-200">Gecikti</span>}
+                  <span className={`text-sm font-bold ${isOverdue ? 'text-red-700 dark:text-red-400' : 'text-earth-800 dark:text-gray-200'}`}>{new Date(plan.tarih).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                  {isOverdue && <span className="text-[10px] font-bold text-red-600 dark:text-red-400 uppercase mt-1 bg-red-100 dark:bg-red-900/40 px-2 py-0.5 rounded-full border border-red-200 dark:border-red-800/50">Gecikti</span>}
                 </div>
               </div>
             );

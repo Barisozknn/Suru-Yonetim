@@ -336,7 +336,7 @@ const PedigreeTree: React.FC<PedigreeTreeProps> = ({ hayvan, onSelectAnimal }) =
               </div>
 
               <div className="pt-4 flex justify-between items-center">
-                <button type="button" onClick={handleClearParent} className="px-4 py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 font-bold rounded-xl hover:bg-red-100 transition flex items-center space-x-2">
+                <button type="button" onClick={handleClearParent} className="px-4 py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-bold rounded-xl hover:bg-red-100 transition flex items-center space-x-2">
                   <Trash2 className="w-5 h-5" />
                   <span className="hidden sm:inline">Kaydı Sil</span>
                 </button>

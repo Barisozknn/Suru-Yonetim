@@ -236,7 +236,7 @@ const GroupManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
                             Hayvan Ekle/Çıkar
                           </button>
                           {!['Tosun', 'Boğa', 'Öküz', 'Buzağı', 'Dana'].includes(grup.tur) && (
-                            <button onClick={() => setSelectedGroupForMilk(grup)} className="text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-full border border-blue-200 transition">
+                            <button onClick={() => setSelectedGroupForMilk(grup)} className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-full border border-blue-200 dark:border-blue-800/50 transition">
                               Toplu Süt Girişi
                             </button>
                           )}

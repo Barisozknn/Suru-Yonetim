@@ -120,7 +120,7 @@ const CalfList: React.FC<Props> = ({ onClose, onSelectCalf }) => {
 
                       <button 
                         onClick={(e) => { e.stopPropagation(); setSelectedCalfForTracking(buzagi.id); }}
-                        className="p-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 rounded-lg hover:bg-blue-100 transition border border-blue-200"
+                        className="p-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-100 transition border border-blue-200 dark:border-blue-800/50"
                         title="Büyütme Takibi Düzenle"
                       >
                         <ClipboardEdit className="w-4 h-4" />

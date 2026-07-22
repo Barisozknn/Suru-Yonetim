@@ -128,39 +128,39 @@ const MilkRecords: React.FC<Props> = ({ hayvan }) => {
       {/* Form */}
       <form onSubmit={handleAdd} className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 shadow-sm relative overflow-hidden">
         {isInArinma(tarih) && (
-          <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-4 flex items-center space-x-2 text-sm font-bold border border-red-200">
+          <div className="bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 p-3 rounded-lg mb-4 flex items-center space-x-2 text-sm font-bold border border-red-200 dark:border-red-800/50">
             <AlertTriangle className="w-5 h-5 flex-shrink-0" />
             <span>Seçili tarihte hayvan arınma süresindedir! Süt satışa/tüketime uygun değildir.</span>
           </div>
         )}
         <h3 className="font-bold text-blue-900 flex items-center mb-4">
-          <Droplet className="w-5 h-5 mr-2 text-blue-600" />
+          <Droplet className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
           Süt Sağım Kaydı Ekle
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-xs font-bold text-blue-800 mb-1">Tarih</label>
-            <input required type="date" value={tarih} onChange={e => setTarih(e.target.value)} className="w-full p-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+            <input required type="date" value={tarih} onChange={e => setTarih(e.target.value)} className="w-full p-2 border border-blue-200 dark:border-blue-800/50 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
           </div>
           <div>
             <label className="block text-xs font-bold text-blue-800 mb-1">Litre</label>
-            <input required type="number" step="0.1" min="0" value={litre} onChange={e => setLitre(Number(e.target.value))} placeholder="Örn: 25.5" className="w-full p-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+            <input required type="number" step="0.1" min="0" value={litre} onChange={e => setLitre(Number(e.target.value))} placeholder="Örn: 25.5" className="w-full p-2 border border-blue-200 dark:border-blue-800/50 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
           </div>
           <div>
             <label className="block text-xs font-bold text-blue-800 mb-1">Yağ (%) <span className="text-blue-500 font-normal">opsiyonel</span></label>
-            <input type="number" step="0.1" min="0" max="10" value={yagYuzde} onChange={e => setYagYuzde(Number(e.target.value))} placeholder="Örn: 3.8" className="w-full p-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+            <input type="number" step="0.1" min="0" max="10" value={yagYuzde} onChange={e => setYagYuzde(Number(e.target.value))} placeholder="Örn: 3.8" className="w-full p-2 border border-blue-200 dark:border-blue-800/50 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
           </div>
           <div>
             <label className="block text-xs font-bold text-blue-800 mb-1">Protein (%) <span className="text-blue-500 font-normal">opsiyonel</span></label>
-            <input type="number" step="0.1" min="0" max="10" value={proteinYuzde} onChange={e => setProteinYuzde(Number(e.target.value))} placeholder="Örn: 3.2" className="w-full p-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+            <input type="number" step="0.1" min="0" max="10" value={proteinYuzde} onChange={e => setProteinYuzde(Number(e.target.value))} placeholder="Örn: 3.2" className="w-full p-2 border border-blue-200 dark:border-blue-800/50 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
           </div>
           <div>
             <label className="block text-xs font-bold text-blue-800 mb-1">Laktoz (%) <span className="text-blue-500 font-normal">opsiyonel</span></label>
-            <input type="number" step="0.1" min="0" max="10" value={laktozYuzde} onChange={e => setLaktozYuzde(Number(e.target.value))} placeholder="Örn: 4.7" className="w-full p-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+            <input type="number" step="0.1" min="0" max="10" value={laktozYuzde} onChange={e => setLaktozYuzde(Number(e.target.value))} placeholder="Örn: 4.7" className="w-full p-2 border border-blue-200 dark:border-blue-800/50 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
           </div>
           <div>
             <label className="block text-xs font-bold text-blue-800 mb-1">Somatik Hücre <span className="text-blue-500 font-normal">opsiyonel</span></label>
-            <input type="number" min="0" value={somatikHucre} onChange={e => setSomatikHucre(Number(e.target.value))} placeholder="Örn: 150000" className="w-full p-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+            <input type="number" min="0" value={somatikHucre} onChange={e => setSomatikHucre(Number(e.target.value))} placeholder="Örn: 150000" className="w-full p-2 border border-blue-200 dark:border-blue-800/50 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
           </div>
         </div>
         <div className="mt-4 flex justify-end">
@@ -257,14 +257,14 @@ const MilkRecords: React.FC<Props> = ({ hayvan }) => {
                       <td className="p-2 text-right">
                         <div className="flex justify-end space-x-1">
                           <button onClick={saveEdit} className="p-1.5 text-green-600 hover:bg-green-100 rounded transition" title="Kaydet"><Check className="w-4 h-4" /></button>
-                          <button onClick={cancelEdit} className="p-1.5 text-red-600 hover:bg-red-100 rounded transition" title="İptal"><X className="w-4 h-4" /></button>
+                          <button onClick={cancelEdit} className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 rounded transition" title="İptal"><X className="w-4 h-4" /></button>
                         </div>
                       </td>
                     </tr>
                   ) : (
                     <tr key={k.id} className="hover:bg-earth-50/50 transition">
                       <td className="p-3 font-medium text-earth-900 dark:text-gray-100">{new Date(k.tarih).toLocaleDateString('tr-TR')}</td>
-                      <td className="p-3 font-bold text-blue-600">{k.litre} L</td>
+                      <td className="p-3 font-bold text-blue-600 dark:text-blue-400">{k.litre} L</td>
                       <td className="p-3">{k.yagYuzde ? `%${k.yagYuzde}` : '-'}</td>
                       <td className="p-3">{k.proteinYuzde ? `%${k.proteinYuzde}` : '-'}</td>
                       <td className="p-3">{k.laktozYuzde ? `%${k.laktozYuzde}` : '-'}</td>

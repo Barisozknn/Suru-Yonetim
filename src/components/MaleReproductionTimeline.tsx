@@ -50,9 +50,9 @@ const MaleReproductionTimeline: React.FC<Props> = ({ hayvan }) => {
 
   const getBgColor = (tur: string) => {
     switch (tur) {
-      case 'Doğal Aşım': return 'bg-red-50 dark:bg-red-900/20 border-red-200';
-      case 'Sperma Alımı': return 'bg-blue-50 dark:bg-blue-900/20 border-blue-200';
-      case 'Damızlık Muayenesi': return 'bg-purple-50 border-purple-200';
+      case 'Doğal Aşım': return 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50';
+      case 'Sperma Alımı': return 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/50';
+      case 'Damızlık Muayenesi': return 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800/50';
       default: return 'bg-earth-50 dark:bg-gray-900 border-earth-200 dark:border-gray-700';
     }
   };
@@ -62,7 +62,7 @@ const MaleReproductionTimeline: React.FC<Props> = ({ hayvan }) => {
       {/* Boğa İstatistikleri */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-earth-200 dark:border-gray-700 shadow-sm flex items-center space-x-4">
-          <div className="p-3 bg-red-100 text-red-600 rounded-lg">
+          <div className="p-3 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded-lg">
             <Heart className="w-6 h-6" />
           </div>
           <div>
@@ -72,7 +72,7 @@ const MaleReproductionTimeline: React.FC<Props> = ({ hayvan }) => {
         </div>
 
         <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-earth-200 dark:border-gray-700 shadow-sm flex items-center space-x-4">
-          <div className="p-3 bg-blue-100 text-blue-600 rounded-lg">
+          <div className="p-3 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-lg">
             <TestTube className="w-6 h-6" />
           </div>
           <div>
@@ -82,7 +82,7 @@ const MaleReproductionTimeline: React.FC<Props> = ({ hayvan }) => {
         </div>
 
         <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-earth-200 dark:border-gray-700 shadow-sm flex items-center space-x-4">
-          <div className="p-3 bg-purple-100 text-purple-600 rounded-lg">
+          <div className="p-3 bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 rounded-lg">
             <Activity className="w-6 h-6" />
           </div>
           <div>

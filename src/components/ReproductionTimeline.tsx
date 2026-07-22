@@ -13,11 +13,11 @@ interface Props {
 
 const TUR_CONFIG: Record<UremeKaydiTur, { icon: React.ReactNode; color: string; bg: string }> = {
   'Kızgınlık': { icon: <Heart className="w-4 h-4" />, color: 'text-pink-600', bg: 'bg-pink-50 dark:bg-pink-900/20 border-pink-200' },
-  'Tohumlama/Aşım': { icon: <Info className="w-4 h-4" />, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200' },
-  'Gebelik Kontrolü': { icon: <ShieldAlert className="w-4 h-4" />, color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200' },
+  'Tohumlama/Aşım': { icon: <Info className="w-4 h-4" />, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/50' },
+  'Gebelik Kontrolü': { icon: <ShieldAlert className="w-4 h-4" />, color: 'text-yellow-600 dark:text-yellow-400', bg: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800/50' },
   'Kuruya Çıkarma': { icon: <CalendarCheck className="w-4 h-4" />, color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-900/20 border-orange-200' },
   'Doğum': { icon: <Droplets className="w-4 h-4" />, color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-900/20 border-green-200' },
-  'Doğal Aşım': { icon: <GitMerge className="w-4 h-4" />, color: 'text-purple-600', bg: 'bg-purple-50 border-purple-200' },
+  'Doğal Aşım': { icon: <GitMerge className="w-4 h-4" />, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800/50' },
   'Sperma Alımı': { icon: <Droplet className="w-4 h-4" />, color: 'text-teal-600', bg: 'bg-teal-50 border-teal-200' },
   'Damızlık Muayenesi': { icon: <Activity className="w-4 h-4" />, color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200' },
 };
@@ -175,7 +175,7 @@ const ReproductionTimeline: React.FC<Props> = ({ hayvanId }) => {
                       <div className="flex items-center space-x-2">
                         <span className={`font-bold text-sm ${config.color}`}>{normalizedTur}</span>
                         {olay.durum && (
-                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${olay.durum === 'Gebe' ? 'bg-green-100 text-green-700 border-green-300' : 'bg-red-100 text-red-700 border-red-300'}`}>
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${olay.durum === 'Gebe' ? 'bg-green-100 text-green-700 border-green-300' : 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 border-red-300'}`}>
                             {olay.durum}
                           </span>
                         )}

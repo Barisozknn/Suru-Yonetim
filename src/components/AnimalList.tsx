@@ -51,8 +51,8 @@ const AnimalList: React.FC<AnimalListProps> = ({ onSelect }) => {
   const getStatusIcon = (durum: string) => {
     switch(durum) {
       case 'Aktif': return <Activity className="w-4 h-4 text-nature-600 dark:text-nature-400" />;
-      case 'Öldü': return <Skull className="w-4 h-4 text-red-600" />;
-      case 'Satıldı': return <ShoppingCart className="w-4 h-4 text-blue-600" />;
+      case 'Öldü': return <Skull className="w-4 h-4 text-red-600 dark:text-red-400" />;
+      case 'Satıldı': return <ShoppingCart className="w-4 h-4 text-blue-600 dark:text-blue-400" />;
       default: return null;
     }
   }
@@ -60,8 +60,8 @@ const AnimalList: React.FC<AnimalListProps> = ({ onSelect }) => {
   const getStatusBg = (durum: string) => {
     switch(durum) {
       case 'Aktif': return 'bg-nature-100 dark:bg-nature-900/50 text-nature-800 dark:text-nature-200 border-nature-200 dark:border-nature-800';
-      case 'Öldü': return 'bg-red-100 text-red-800 border-red-200';
-      case 'Satıldı': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'Öldü': return 'bg-red-100 dark:bg-red-900/40 text-red-800 border-red-200 dark:border-red-800/50';
+      case 'Satıldı': return 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 border-blue-200 dark:border-blue-800/50';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   }
@@ -169,7 +169,7 @@ const AnimalList: React.FC<AnimalListProps> = ({ onSelect }) => {
                     <span>{hayvan.durum}</span>
                   </span>
                   {arinmadakiHayvanIds.has(hayvan.id) && (
-                    <span className="flex items-center space-x-1 text-xs font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full border border-red-300">
+                    <span className="flex items-center space-x-1 text-xs font-bold bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 px-2 py-0.5 rounded-full border border-red-300">
                       <AlertTriangle className="w-3 h-3" />
                       <span>Arınmada</span>
                     </span>

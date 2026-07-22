@@ -201,7 +201,7 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
               {yemler.map(yem => {
                 const isLowStock = yem.stokKg <= yem.minStokUyariKg;
                 return (
-                  <div key={yem.id} className={`p-5 rounded-xl border ${isLowStock ? 'bg-red-50 dark:bg-red-900/20 border-red-200' : 'bg-white dark:bg-gray-800 border-earth-200 dark:border-gray-700 hover:border-nature-400'} shadow-sm transition flex flex-col justify-between`}>
+                  <div key={yem.id} className={`p-5 rounded-xl border ${isLowStock ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50' : 'bg-white dark:bg-gray-800 border-earth-200 dark:border-gray-700 hover:border-nature-400'} shadow-sm transition flex flex-col justify-between`}>
                     <div>
                       <div className="flex justify-between items-start mb-2">
                         <div>
@@ -209,7 +209,7 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
                           <span className="text-sm font-medium text-earth-500 dark:text-gray-400">{yem.tur}</span>
                         </div>
                         {isLowStock && (
-                          <span className="flex items-center text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded-full mr-2">
+                          <span className="flex items-center text-xs font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/40 px-2 py-1 rounded-full mr-2">
                             <AlertCircle className="w-3 h-3 mr-1" />
                             Kritik Stok
                           </span>
@@ -227,7 +227,7 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
                       <div className="mt-4 flex space-x-6">
                         <div>
                           <p className="text-xs font-bold text-earth-500 dark:text-gray-400 uppercase">Mevcut Stok</p>
-                          <p className={`text-2xl font-black ${isLowStock ? 'text-red-600' : 'text-nature-700 dark:text-nature-300'}`}>
+                          <p className={`text-2xl font-black ${isLowStock ? 'text-red-600 dark:text-red-400' : 'text-nature-700 dark:text-nature-300'}`}>
                             {yem.stokKg.toLocaleString('tr-TR')} <span className="text-base font-bold">kg</span>
                           </p>
                         </div>

@@ -81,7 +81,7 @@ const FinancialTransactionModal: React.FC<Props> = ({ onClose }) => {
             <button
               type="button"
               onClick={() => handleTipChange('Gider')}
-              className={`py-2 px-4 rounded-xl font-bold border-2 transition ${tip === 'Gider' ? 'bg-red-100 border-red-500 text-red-700' : 'border-earth-200 dark:border-gray-700 text-earth-500 dark:text-gray-400 hover:bg-earth-50 dark:hover:bg-gray-700'}`}
+              className={`py-2 px-4 rounded-xl font-bold border-2 transition ${tip === 'Gider' ? 'bg-red-100 dark:bg-red-900/40 border-red-500 text-red-700 dark:text-red-400' : 'border-earth-200 dark:border-gray-700 text-earth-500 dark:text-gray-400 hover:bg-earth-50 dark:hover:bg-gray-700'}`}
             >
               Gider
             </button>

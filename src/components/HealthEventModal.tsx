@@ -21,9 +21,9 @@ const TUR_ICONS: Record<SaglikOlayiTur, React.ReactNode> = {
 
 const TUR_COLORS: Record<SaglikOlayiTur, string> = {
   'Muayene': 'bg-nature-100 dark:bg-nature-900/50 text-nature-700 dark:text-nature-300 border-nature-300',
-  'Aşı': 'bg-blue-100 text-blue-700 border-blue-300',
+  'Aşı': 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 border-blue-300',
   'İlaç': 'bg-orange-100 text-orange-700 border-orange-300',
-  'Operasyon': 'bg-red-100 text-red-700 border-red-300',
+  'Operasyon': 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 border-red-300',
   'Diğer': 'bg-earth-100 dark:bg-gray-800 text-earth-700 dark:text-gray-300 border-earth-300 dark:border-gray-600',
 };
 
@@ -116,13 +116,13 @@ const HealthEventModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => {
               ))}
             </div>
             {tur === 'Operasyon' && hayvan?.cinsiyet === 'Erkek' && (
-              <div className="flex items-center space-x-2 mt-4 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200">
+              <div className="flex items-center space-x-2 mt-4 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800/50">
                 <input 
                   type="checkbox" 
                   id="kisirlastirma" 
                   checked={isKisirlastirma} 
                   onChange={e => setIsKisirlastirma(e.target.checked)} 
-                  className="w-4 h-4 text-red-600 border-red-300 rounded focus:ring-red-500" 
+                  className="w-4 h-4 text-red-600 dark:text-red-400 border-red-300 rounded focus:ring-red-500" 
                 />
                 <label htmlFor="kisirlastirma" className="text-sm font-bold text-red-800">
                   Bu bir "Kısırlaştırma" operasyonudur

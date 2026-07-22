@@ -439,7 +439,7 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
                 <button
                   type="button"
                   onClick={() => cameraInputRef.current?.click()}
-                  className="flex items-center justify-center w-full space-x-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 rounded-lg hover:bg-blue-100 border border-blue-200 font-semibold transition"
+                  className="flex items-center justify-center w-full space-x-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-100 border border-blue-200 dark:border-blue-800/50 font-semibold transition"
                 >
                   <Camera className="w-4 h-4" />
                   <span>Fotoğraf Çek</span>

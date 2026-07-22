@@ -404,12 +404,12 @@ const Assistant: React.FC = () => {
                       }} 
                       className={`flex items-center justify-between p-3.5 rounded-2xl cursor-pointer border transition ${
                         activeChatId === sohbet.id 
-                          ? 'bg-blue-50/80 border-blue-200 text-blue-900' 
+                          ? 'bg-blue-50/80 border-blue-200 dark:border-blue-800/50 text-blue-900' 
                           : 'bg-slate-50/70 border-slate-200/80 text-slate-800 hover:bg-slate-100'
                       }`}
                     >
                       <div className="flex items-center space-x-3 overflow-hidden">
-                        <MessageSquare className={`w-5 h-5 flex-shrink-0 ${activeChatId === sohbet.id ? 'text-blue-600' : 'text-slate-500'}`} />
+                        <MessageSquare className={`w-5 h-5 flex-shrink-0 ${activeChatId === sohbet.id ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500'}`} />
                         <div className="overflow-hidden">
                           <p className="font-bold truncate text-sm">{sohbet.baslik}</p>
                           <p className="text-[11px] text-slate-400 mt-0.5">{formatDateTime(sohbet.olusturulmaTarihi)}</p>
@@ -510,7 +510,7 @@ const Assistant: React.FC = () => {
             
             {error && (
               <div className="flex justify-center">
-                <div className="bg-red-50 dark:bg-red-900/20 text-red-600 px-4 py-2 rounded-lg text-sm flex items-center space-x-2 border border-red-200">
+                <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-4 py-2 rounded-lg text-sm flex items-center space-x-2 border border-red-200 dark:border-red-800/50">
                   <span>{error}</span>
                 </div>
               </div>

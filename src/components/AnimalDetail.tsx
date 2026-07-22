@@ -99,7 +99,7 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
   if (!hayvan) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-600">Hayvan bulunamadı!</p>
+        <p className="text-red-600 dark:text-red-400">Hayvan bulunamadı!</p>
         <button onClick={onBack} className="mt-4 px-4 py-2 bg-nature-600 text-white rounded-lg">Geri Dön</button>
       </div>
     );
@@ -197,7 +197,7 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
 
             {/* Dişi Performans Kartı */}
             {isFemale && femalePerf && (
-              <div className="sm:col-span-2 bg-purple-50 p-5 rounded-2xl border border-purple-200 mt-2">
+              <div className="sm:col-span-2 bg-purple-50 dark:bg-purple-900/20 p-5 rounded-2xl border border-purple-200 dark:border-purple-800/50 mt-2">
                 <div className="flex items-center space-x-2 text-purple-800 mb-4">
                   <Trophy className="w-6 h-6" />
                   <h3 className="text-lg font-black">Performans Verileri</h3>
@@ -271,7 +271,7 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
 
             {/* Buzağı Gelişim Kartı */}
             {(hayvan.tur === 'Buzağı' || calculateAgeInDays(hayvan.dogumTarihi) <= 180) && (
-              <div className="sm:col-span-2 bg-blue-50 dark:bg-blue-900/20 p-5 rounded-2xl border border-blue-200 mt-4">
+              <div className="sm:col-span-2 bg-blue-50 dark:bg-blue-900/20 p-5 rounded-2xl border border-blue-200 dark:border-blue-800/50 mt-4">
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center space-x-2 text-blue-800">
                     <Droplets className="w-6 h-6" />

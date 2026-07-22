@@ -203,7 +203,7 @@ const YieldAnalysis: React.FC = () => {
         
         {/* KPI KARTLARI */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex items-center space-x-4">
-          <div className="p-4 bg-blue-100 text-blue-600 rounded-xl">
+          <div className="p-4 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-xl">
             <Droplet className="w-8 h-8" />
           </div>
           <div>

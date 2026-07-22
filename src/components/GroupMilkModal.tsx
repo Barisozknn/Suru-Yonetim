@@ -87,10 +87,10 @@ const GroupMilkModal: React.FC<Props> = ({ grup, onClose }) => {
         
         <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex justify-between items-center bg-blue-50 dark:bg-blue-900/20 rounded-t-2xl">
           <div className="flex items-center space-x-2">
-            <Droplet className="w-6 h-6 text-blue-600" />
+            <Droplet className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             <div>
               <h2 className="text-xl font-black text-blue-900">Toplu Süt Girişi</h2>
-              <p className="text-sm font-bold text-blue-700">{grup.ad}</p>
+              <p className="text-sm font-bold text-blue-700 dark:text-blue-400">{grup.ad}</p>
             </div>
           </div>
           <button onClick={onClose} className="text-earth-500 dark:text-gray-400 hover:text-red-500 transition">
@@ -118,7 +118,7 @@ const GroupMilkModal: React.FC<Props> = ({ grup, onClose }) => {
               {/* Başlıklar */}
               <div className="flex items-center px-3 pb-2 text-xs font-bold text-earth-500 dark:text-gray-400 uppercase tracking-wider">
                 <div className="w-48 flex-shrink-0">Küpe No / Irk</div>
-                <div className="w-24 px-1 text-center text-blue-600">Miktar (L)*</div>
+                <div className="w-24 px-1 text-center text-blue-600 dark:text-blue-400">Miktar (L)*</div>
                 <div className="w-24 px-1 text-center">Yağ (%)</div>
                 <div className="w-24 px-1 text-center">Protein (%)</div>
                 <div className="w-24 px-1 text-center">Laktoz (%)</div>

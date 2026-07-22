@@ -148,7 +148,7 @@ const VaccineProtocolManager: React.FC = () => {
 
         <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex justify-between items-center bg-nature-50 dark:bg-nature-900/30 rounded-t-2xl">
           <div className="flex items-center space-x-2">
-            <Syringe className="w-6 h-6 text-blue-600" />
+            <Syringe className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             <div>
               <h2 className="text-xl font-black text-earth-900 dark:text-gray-100">Aşı Protokolleri</h2>
               <p className="text-xs text-earth-500 dark:text-gray-400">Şablon oluştur ve hayvanlara/gruplara ata</p>
@@ -191,7 +191,7 @@ const VaccineProtocolManager: React.FC = () => {
                   <div className="space-y-1">
                     {(p.uygulamalar || []).map((u, i) => (
                       <div key={i} className="flex items-center space-x-3 text-sm">
-                        <span className="w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-bold">{i + 1}</span>
+                        <span className="w-6 h-6 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 rounded-full flex items-center justify-center text-xs font-bold">{i + 1}</span>
                         <span className="font-medium text-earth-800 dark:text-gray-200">{u.ad}</span>
                         <span className="text-earth-500 dark:text-gray-400">— Doğumdan {u.gunFarki}. gün</span>
                       </div>
@@ -202,8 +202,8 @@ const VaccineProtocolManager: React.FC = () => {
 
               {/* Atama Modal */}
               {atamaModalId === p.id && (
-                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border-t border-blue-200 space-y-3">
-                  <p className="text-xs font-bold text-blue-700">Protokolü Ata:</p>
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border-t border-blue-200 dark:border-blue-800/50 space-y-3">
+                  <p className="text-xs font-bold text-blue-700 dark:text-blue-400">Protokolü Ata:</p>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-xs text-earth-600 dark:text-gray-400 font-semibold block mb-1">Tek Hayvana</label>
@@ -263,9 +263,9 @@ const VaccineProtocolManager: React.FC = () => {
               <div className="space-y-3">
                 <label className="text-xs font-bold text-earth-700 dark:text-gray-300 uppercase">Uygulamalar</label>
                 {uygulamalar.map((u, i) => (
-                  <div key={i} className="p-3 bg-white dark:bg-gray-800 border border-blue-200 rounded-xl space-y-3 relative shadow-xs">
+                  <div key={i} className="p-3 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800/50 rounded-xl space-y-3 relative shadow-xs">
                     <div className="flex items-center space-x-2">
-                      <span className="text-xs font-bold text-blue-700 w-5">{i + 1}.</span>
+                      <span className="text-xs font-bold text-blue-700 dark:text-blue-400 w-5">{i + 1}.</span>
                       <input value={u.ad} onChange={e => { const arr = [...uygulamalar]; arr[i].ad = e.target.value; setUygulamalar(arr); }}
                         placeholder="Aşı adı" className="flex-1 p-2 border border-earth-300 dark:border-gray-600 rounded-lg text-sm" />
                       {uygulamalar.length > 1 && (
@@ -283,17 +283,17 @@ const VaccineProtocolManager: React.FC = () => {
                         <span className="text-earth-600 dark:text-gray-400 font-semibold whitespace-nowrap">gün sonra</span>
                       </div>
                       
-                      <div className="flex items-center space-x-1.5 bg-blue-50/70 p-2 rounded-lg border border-blue-200 flex-wrap">
+                      <div className="flex items-center space-x-1.5 bg-blue-50/70 p-2 rounded-lg border border-blue-200 dark:border-blue-800/50 flex-wrap">
                         <span className="text-earth-600 dark:text-gray-400 font-semibold whitespace-nowrap">Tekrar:</span>
                         <input type="number" min={0} placeholder="Gün" value={u.tekrarGun || ''} onChange={e => { const arr = [...uygulamalar]; arr[i].tekrarGun = parseInt(e.target.value) || undefined; setUygulamalar(arr); }}
-                          className="w-14 p-1 border border-blue-300 rounded text-center font-bold text-blue-700 bg-white dark:bg-gray-800 placeholder:text-blue-300" />
+                          className="w-14 p-1 border border-blue-300 rounded text-center font-bold text-blue-700 dark:text-blue-400 bg-white dark:bg-gray-800 placeholder:text-blue-300" />
                         <span className="text-earth-600 dark:text-gray-400 font-semibold whitespace-nowrap">günde bir</span>
 
                         {(u.tekrarGun || 0) > 0 && (
                           <div className="flex items-center space-x-1.5 mt-1 w-full pt-1 border-t border-blue-200/60">
-                            <label className="flex items-center space-x-1 cursor-pointer bg-white dark:bg-gray-800 px-2 py-0.5 rounded border border-blue-200">
-                              <input type="checkbox" checked={u.surekliTekrar || false} onChange={e => { const arr = [...uygulamalar]; arr[i].surekliTekrar = e.target.checked; setUygulamalar(arr); }} className="w-3 h-3 text-blue-600" />
-                              <span className="text-xs font-semibold text-blue-700">Sürekli</span>
+                            <label className="flex items-center space-x-1 cursor-pointer bg-white dark:bg-gray-800 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800/50">
+                              <input type="checkbox" checked={u.surekliTekrar || false} onChange={e => { const arr = [...uygulamalar]; arr[i].surekliTekrar = e.target.checked; setUygulamalar(arr); }} className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                              <span className="text-xs font-semibold text-blue-700 dark:text-blue-400">Sürekli</span>
                             </label>
                             {!u.surekliTekrar && (
                               <div className="flex items-center space-x-1">
@@ -319,7 +319,7 @@ const VaccineProtocolManager: React.FC = () => {
                   </div>
                 ))}
                 <button onClick={() => setUygulamalar([...uygulamalar, { ad: '', gunFarki: 0 }])}
-                  className="flex items-center space-x-1 text-xs text-blue-600 hover:underline font-bold">
+                  className="flex items-center space-x-1 text-xs text-blue-600 dark:text-blue-400 hover:underline font-bold">
                   <Plus className="w-3.5 h-3.5" /><span>Uygulama Ekle</span>
                 </button>
               </div>

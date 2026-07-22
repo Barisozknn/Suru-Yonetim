@@ -77,7 +77,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex items-center space-x-4">
-          <div className="p-4 bg-blue-100 text-blue-600 rounded-xl">
+          <div className="p-4 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-xl">
             <Activity className="w-8 h-8" />
           </div>
           <div>
@@ -87,12 +87,12 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex items-center space-x-4">
-          <div className={`p-4 rounded-xl ${activeAlerts > 0 ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+          <div className={`p-4 rounded-xl ${activeAlerts > 0 ? 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400' : 'bg-green-100 text-green-600'}`}>
             <AlertTriangle className="w-8 h-8" />
           </div>
           <div>
             <p className="text-sm font-bold text-earth-500 dark:text-gray-400 uppercase">Sağlık / Aşı Uyarısı</p>
-            <p className={`text-3xl font-black ${activeAlerts > 0 ? 'text-red-600' : 'text-green-600'}`}>{activeAlerts}</p>
+            <p className={`text-3xl font-black ${activeAlerts > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600'}`}>{activeAlerts}</p>
           </div>
         </div>
 
@@ -108,33 +108,33 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Sürü Üreme Performansı (İnekler) */}
-      <div className="bg-purple-50 border border-purple-200 rounded-2xl p-6">
+      <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800/50 rounded-2xl p-6">
         <div className="flex items-center space-x-2 mb-4">
-          <CalendarCheck className="w-6 h-6 text-purple-700" />
+          <CalendarCheck className="w-6 h-6 text-purple-700 dark:text-purple-400" />
           <h2 className="text-xl font-black text-purple-900">Sürü Üreme Performansı (İnek Ortalamaları)</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-purple-100 shadow-sm">
             <p className="text-xs font-bold text-earth-500 dark:text-gray-400 uppercase tracking-wider mb-1">Servis Periyodu Ort.</p>
-            <p className="text-2xl font-black text-purple-700">
+            <p className="text-2xl font-black text-purple-700 dark:text-purple-400">
               {herdPerformance.servisPeriyoduOrt !== null ? `${herdPerformance.servisPeriyoduOrt} Gün` : '-'}
             </p>
           </div>
           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-purple-100 shadow-sm">
             <p className="text-xs font-bold text-earth-500 dark:text-gray-400 uppercase tracking-wider mb-1">Laktasyon Süresi Ort.</p>
-            <p className="text-2xl font-black text-purple-700">
+            <p className="text-2xl font-black text-purple-700 dark:text-purple-400">
               {herdPerformance.ortalamaLaktasyonSuresiOrt !== null ? `${herdPerformance.ortalamaLaktasyonSuresiOrt} Gün` : '-'}
             </p>
           </div>
           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-purple-100 shadow-sm">
             <p className="text-xs font-bold text-earth-500 dark:text-gray-400 uppercase tracking-wider mb-1">Gebelik Başına Tohum.</p>
-            <p className="text-2xl font-black text-purple-700">
+            <p className="text-2xl font-black text-purple-700 dark:text-purple-400">
               {herdPerformance.gebelikBasinaTohumlamaOrt !== null ? herdPerformance.gebelikBasinaTohumlamaOrt : '-'}
             </p>
           </div>
           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-purple-100 shadow-sm">
             <p className="text-xs font-bold text-earth-500 dark:text-gray-400 uppercase tracking-wider mb-1">Buzağılama Aralığı Ort.</p>
-            <p className="text-2xl font-black text-purple-700">
+            <p className="text-2xl font-black text-purple-700 dark:text-purple-400">
               {herdPerformance.buzagilamaAraligiOrt !== null ? `${herdPerformance.buzagilamaAraligiOrt} Gün` : '-'}
             </p>
           </div>
@@ -208,7 +208,7 @@ const Dashboard: React.FC = () => {
         <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex flex-col">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-xl font-black text-earth-900 dark:text-gray-100">Bugün Yapılacaklar</h3>
-            <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">{activeAlerts} İşlem Bekliyor</span>
+            <span className="bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">{activeAlerts} İşlem Bekliyor</span>
           </div>
 
           <div className="flex-1 space-y-4">
@@ -222,10 +222,10 @@ const Dashboard: React.FC = () => {
                 {activeAlerts > 0 && (
                   <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 p-4 rounded-xl">
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className="bg-white dark:bg-gray-800 p-2 rounded-lg"><Syringe className="w-5 h-5 text-red-600" /></div>
+                      <div className="bg-white dark:bg-gray-800 p-2 rounded-lg"><Syringe className="w-5 h-5 text-red-600 dark:text-red-400" /></div>
                       <div>
                         <p className="font-bold text-red-900">Aşı ve Sağlık Uyarıları Mevcut</p>
-                        <p className="text-sm text-red-700">Gecikmiş aşıları kontrol et.</p>
+                        <p className="text-sm text-red-700 dark:text-red-400">Gecikmiş aşıları kontrol et.</p>
                       </div>
                     </div>
                     {gecikmisAsilar.length > 0 && (
@@ -235,13 +235,13 @@ const Dashboard: React.FC = () => {
                            return (
                              <div key={asi.id} className="text-sm flex justify-between bg-white/60 p-2 rounded-md border border-red-100">
                                <span className="font-bold text-red-800">{h?.kupeNo || 'Bilinmeyen'}</span>
-                               <span className="text-red-600 truncate ml-2">{asi.asiAd}</span>
+                               <span className="text-red-600 dark:text-red-400 truncate ml-2">{asi.asiAd}</span>
                              </div>
                            )
                         })}
                       </div>
                     )}
-                    <Link to="/saglik" className="mt-3 ml-12 inline-block text-red-600 font-bold text-sm hover:underline">Tümünü Gör &rarr;</Link>
+                    <Link to="/saglik" className="mt-3 ml-12 inline-block text-red-600 dark:text-red-400 font-bold text-sm hover:underline">Tümünü Gör &rarr;</Link>
                   </div>
                 )}
 
@@ -260,9 +260,9 @@ const Dashboard: React.FC = () => {
                            const h = hayvanlar.find(x => x.id === dogum.hayvanId);
                            const isOverdue = dogum.dogumTarihi < new Date(new Date().setHours(0,0,0,0));
                            return (
-                             <div key={idx} className={`text-sm flex justify-between p-2 rounded-md border ${isOverdue ? 'bg-red-50 dark:bg-red-900/20 border-red-200 shadow-sm' : 'bg-white/60 border-pink-100'}`}>
+                             <div key={idx} className={`text-sm flex justify-between p-2 rounded-md border ${isOverdue ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50 shadow-sm' : 'bg-white/60 border-pink-100'}`}>
                                <span className={`font-bold ${isOverdue ? 'text-red-800' : 'text-pink-800'}`}>{h?.kupeNo || 'Bilinmeyen'}</span>
-                               <span className={isOverdue ? 'text-red-600 font-bold' : 'text-pink-600'}>
+                               <span className={isOverdue ? 'text-red-600 dark:text-red-400 font-bold' : 'text-pink-600'}>
                                  {dogum.dogumTarihi.toLocaleDateString('tr-TR')} {isOverdue && '(Gecikti)'}
                                </span>
                              </div>
@@ -275,12 +275,12 @@ const Dashboard: React.FC = () => {
                 )}
 
                 {heatChecks.length > 0 && (
-                  <div className="bg-purple-50 border border-purple-100 p-4 rounded-xl">
+                  <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-100 p-4 rounded-xl">
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className="bg-white dark:bg-gray-800 p-2 rounded-lg"><Heart className="w-5 h-5 text-purple-600" /></div>
+                      <div className="bg-white dark:bg-gray-800 p-2 rounded-lg"><Heart className="w-5 h-5 text-purple-600 dark:text-purple-400" /></div>
                       <div>
                         <p className="font-bold text-purple-900">Kızgınlık Beklentisi</p>
-                        <p className="text-sm text-purple-700">Tohumlama/Boş sonrası {uremeAyarlari.kizginlikDongusu} gün döngüsü</p>
+                        <p className="text-sm text-purple-700 dark:text-purple-400">Tohumlama/Boş sonrası {uremeAyarlari.kizginlikDongusu} gün döngüsü</p>
                       </div>
                     </div>
                     <div className="space-y-2 mt-3 pl-12">
@@ -289,12 +289,12 @@ const Dashboard: React.FC = () => {
                          return (
                            <div key={idx} className="text-sm flex justify-between bg-white/60 p-2 rounded-md border border-purple-100">
                              <span className="font-bold text-purple-800">{h?.kupeNo || 'Bilinmeyen'}</span>
-                             <span className="text-purple-600 truncate ml-2">Yaklaşık: {item.date.toLocaleDateString('tr-TR')}</span>
+                             <span className="text-purple-600 dark:text-purple-400 truncate ml-2">Yaklaşık: {item.date.toLocaleDateString('tr-TR')}</span>
                            </div>
                          )
                       })}
                     </div>
-                    <Link to="/ureme" className="mt-3 ml-12 inline-block text-purple-600 font-bold text-sm hover:underline">Üreme Takvimine Git &rarr;</Link>
+                    <Link to="/ureme" className="mt-3 ml-12 inline-block text-purple-600 dark:text-purple-400 font-bold text-sm hover:underline">Üreme Takvimine Git &rarr;</Link>
                   </div>
                 )}
 

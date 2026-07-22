@@ -134,7 +134,7 @@ Gerçekleşen Sütten Kesim: ${gerceklesenSuttenKesimTarihi ? new Date(gercekles
             <h3 className="font-bold text-earth-800 dark:text-gray-200">Ağız Sütü (Kolostrum)</h3>
             <label className="flex items-center space-x-2 cursor-pointer">
               <input type="checkbox" checked={agizSutuVerildi} onChange={e => setAgizSutuVerildi(e.target.checked)}
-                className="w-5 h-5 text-blue-600 rounded border-earth-300 dark:border-gray-600 focus:ring-blue-500" />
+                className="w-5 h-5 text-blue-600 dark:text-blue-400 rounded border-earth-300 dark:border-gray-600 focus:ring-blue-500" />
               <span className="font-semibold text-earth-700 dark:text-gray-300">Ağız sütü verildi</span>
             </label>
 

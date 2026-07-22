@@ -20,9 +20,9 @@ const getStatus = (asi: PlanlananAsi): 'yapilmis' | 'gecikmis' | 'bu_hafta' | 'p
 
 const STATUS_CONFIG = {
   yapilmis: { label: 'Yapıldı', icon: <CheckCircle2 className="w-4 h-4" />, color: 'text-nature-600 dark:text-nature-400', bg: 'bg-nature-50 dark:bg-nature-900/30 border-nature-200 dark:border-nature-800', badge: 'bg-nature-100 dark:bg-nature-900/50 text-nature-700 dark:text-nature-300' },
-  gecikmis: { label: 'Gecikmiş', icon: <AlertTriangle className="w-4 h-4" />, color: 'text-red-600', bg: 'bg-red-50 dark:bg-red-900/20 border-red-200', badge: 'bg-red-100 text-red-700' },
-  bu_hafta: { label: 'Bu Hafta', icon: <Clock className="w-4 h-4" />, color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200', badge: 'bg-yellow-100 text-yellow-700' },
-  planlanan: { label: 'Planlanan', icon: <Syringe className="w-4 h-4" />, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200', badge: 'bg-blue-100 text-blue-700' },
+  gecikmis: { label: 'Gecikmiş', icon: <AlertTriangle className="w-4 h-4" />, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50', badge: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400' },
+  bu_hafta: { label: 'Bu Hafta', icon: <Clock className="w-4 h-4" />, color: 'text-yellow-600 dark:text-yellow-400', bg: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800/50', badge: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400' },
+  planlanan: { label: 'Planlanan', icon: <Syringe className="w-4 h-4" />, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/50', badge: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400' },
 };
 
 const VaccineSchedule: React.FC = () => {
@@ -59,9 +59,9 @@ const VaccineSchedule: React.FC = () => {
   return (
     <div className="w-full">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex flex-col h-full">
-        <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex justify-between items-center bg-purple-50 rounded-t-2xl flex-shrink-0">
+        <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex justify-between items-center bg-purple-50 dark:bg-purple-900/20 rounded-t-2xl flex-shrink-0">
           <div className="flex items-center space-x-2">
-            <Syringe className="w-6 h-6 text-blue-600" />
+            <Syringe className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             <div>
               <h2 className="text-xl font-black text-earth-900 dark:text-gray-100">Aşı Takvimi</h2>
               <p className="text-xs text-earth-500 dark:text-gray-400">Planlanan ve gerçekleşen aşıların özeti</p>
@@ -72,9 +72,9 @@ const VaccineSchedule: React.FC = () => {
         {/* Özet Kartları */}
         <div className="grid grid-cols-4 gap-3 p-4 border-b border-earth-100 dark:border-gray-700">
           {[
-            { key: 'gecikmis', label: 'Gecikmiş', value: ozet.gecikmis, color: 'bg-red-50 dark:bg-red-900/20 text-red-700 border-red-200' },
-            { key: 'bu_hafta', label: 'Bu Hafta', value: ozet.bu_hafta, color: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
-            { key: 'planlanan', label: 'Planlanan', value: ozet.planlanan, color: 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 border-blue-200' },
+            { key: 'gecikmis', label: 'Gecikmiş', value: ozet.gecikmis, color: 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800/50' },
+            { key: 'bu_hafta', label: 'Bu Hafta', value: ozet.bu_hafta, color: 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800/50' },
+            { key: 'planlanan', label: 'Planlanan', value: ozet.planlanan, color: 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800/50' },
             { key: 'yapilmis', label: 'Yapılmış', value: ozet.yapilmis, color: 'bg-nature-50 dark:bg-nature-900/30 text-nature-700 dark:text-nature-300 border-nature-200 dark:border-nature-800' },
           ].map(item => (
             <div key={item.key} className={`text-center p-2 rounded-xl border ${item.color}`}>

@@ -54,7 +54,7 @@ export const SmartCalendar: React.FC = () => {
         title: `${getHayvanNo(k.hayvanId)}: ${k.litre}L Süt`,
         dateStr: k.tarih.split('T')[0],
         icon: <Droplet className="w-4 h-4" />,
-        color: 'text-blue-600 bg-blue-100 border-blue-200',
+        color: 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 border-blue-200 dark:border-blue-800/50',
         link: `/hayvanlar?id=${k.hayvanId}&tab=verim`
       });
     });
@@ -81,7 +81,7 @@ export const SmartCalendar: React.FC = () => {
         details: k.aciklama,
         dateStr: k.tarih.split('T')[0],
         icon: <AlertTriangle className="w-4 h-4" />,
-        color: 'text-red-600 bg-red-100 border-red-200',
+        color: 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/40 border-red-200 dark:border-red-800/50',
         link: `/hayvanlar?id=${k.hayvanId}&tab=saglik`
       });
     });
@@ -239,7 +239,7 @@ export const SmartCalendar: React.FC = () => {
           title: `${k.kupeNo} Doğdu`,
           dateStr: k.dogumTarihi.split('T')[0],
           icon: <Droplet className="w-4 h-4" />,
-          color: 'text-purple-600 bg-purple-100 border-purple-200',
+          color: 'text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/40 border-purple-200 dark:border-purple-800/50',
           link: `/hayvanlar?id=${k.id}&tab=ozet`
         });
       }

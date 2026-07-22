@@ -7,9 +7,9 @@ import HealthEventModal from './HealthEventModal';
 
 const TUR_CONFIG: Record<SaglikOlayiTur, { icon: React.ReactNode; color: string; bg: string }> = {
   'Muayene': { icon: <Stethoscope className="w-4 h-4" />, color: 'text-nature-600 dark:text-nature-400', bg: 'bg-nature-50 dark:bg-nature-900/30 border-nature-200 dark:border-nature-800' },
-  'Aşı':    { icon: <Syringe className="w-4 h-4" />,     color: 'text-blue-600',   bg: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200' },
+  'Aşı':    { icon: <Syringe className="w-4 h-4" />,     color: 'text-blue-600 dark:text-blue-400',   bg: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/50' },
   'İlaç':   { icon: <Pill className="w-4 h-4" />,         color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-900/20 border-orange-200' },
-  'Operasyon': { icon: <Scissors className="w-4 h-4" />, color: 'text-red-600',   bg: 'bg-red-50 dark:bg-red-900/20 border-red-200' },
+  'Operasyon': { icon: <Scissors className="w-4 h-4" />, color: 'text-red-600 dark:text-red-400',   bg: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50' },
   'Diğer':  { icon: <FileText className="w-4 h-4" />,    color: 'text-earth-600 dark:text-gray-400',  bg: 'bg-earth-50 dark:bg-gray-900 border-earth-200 dark:border-gray-700' },
 };
 
@@ -94,7 +94,7 @@ const HealthTimeline: React.FC<Props> = ({ hayvanId }) => {
                           <span className="text-xs font-mono bg-white/70 px-2 py-0.5 rounded border border-current/20">{olay.ilacAdi}</span>
                         )}
                         {kalan > 0 && (
-                          <span className="flex items-center space-x-1 text-xs font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full border border-red-300">
+                          <span className="flex items-center space-x-1 text-xs font-bold bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 px-2 py-0.5 rounded-full border border-red-300">
                             <AlertTriangle className="w-3 h-3" />
                             <span>Arınmada — {kalan} gün</span>
                           </span>

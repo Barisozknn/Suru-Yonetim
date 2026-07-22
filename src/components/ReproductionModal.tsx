@@ -24,11 +24,11 @@ const TUR_ICONS: Record<UremeKaydiTur, React.ReactNode> = {
 
 const TUR_COLORS: Record<UremeKaydiTur, string> = {
   'Kızgınlık': 'bg-pink-100 text-pink-700 border-pink-300',
-  'Tohumlama/Aşım': 'bg-blue-100 text-blue-700 border-blue-300',
-  'Gebelik Kontrolü': 'bg-yellow-100 text-yellow-700 border-yellow-300',
+  'Tohumlama/Aşım': 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 border-blue-300',
+  'Gebelik Kontrolü': 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400 border-yellow-300',
   'Kuruya Çıkarma': 'bg-orange-100 text-orange-700 border-orange-300',
   'Doğum': 'bg-green-100 text-green-700 border-green-300',
-  'Doğal Aşım': 'bg-purple-100 text-purple-700 border-purple-300',
+  'Doğal Aşım': 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400 border-purple-300',
   'Sperma Alımı': 'bg-teal-100 text-teal-700 border-teal-300',
   'Damızlık Muayenesi': 'bg-indigo-100 text-indigo-700 border-indigo-300',
 };

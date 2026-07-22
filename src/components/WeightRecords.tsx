@@ -228,7 +228,7 @@ const WeightRecords: React.FC<Props> = ({ hayvan }) => {
                       <td className="p-2 text-right">
                         <div className="flex justify-end space-x-1">
                           <button onClick={saveEdit} className="p-1.5 text-green-600 hover:bg-green-100 rounded transition" title="Kaydet"><Check className="w-4 h-4" /></button>
-                          <button onClick={cancelEdit} className="p-1.5 text-red-600 hover:bg-red-100 rounded transition" title="İptal"><X className="w-4 h-4" /></button>
+                          <button onClick={cancelEdit} className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 rounded transition" title="İptal"><X className="w-4 h-4" /></button>
                         </div>
                       </td>
                     </tr>
