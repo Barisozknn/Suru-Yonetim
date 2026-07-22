@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
+import { useStore } from '../store/useStore';
+import { ArrowRight } from 'lucide-react';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -8,6 +10,7 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const setIsGuest = useStore((state) => state.setIsGuest);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +60,21 @@ const Login: React.FC = () => {
             {loading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
           </button>
         </form>
+
+        <div className="mt-4">
+          <button
+            onClick={() => {
+              setIsGuest(true);
+              navigate('/');
+            }}
+            type="button"
+            className="w-full flex items-center justify-center space-x-2 bg-earth-100 hover:bg-earth-200 text-earth-800 font-bold py-3 rounded-lg transition"
+          >
+            <span>Kaydolmadan Devam Et</span>
+            <ArrowRight className="w-5 h-5" />
+          </button>
+        </div>
+
         <div className="mt-6 text-center text-sm font-medium text-earth-600 space-y-2">
           <div><Link to="/forgot-password" className="text-nature-600 hover:underline">Şifremi unuttum</Link></div>
           <div>Hesabın yok mu? <Link to="/register" className="text-nature-600 hover:underline">Kayıt Ol</Link></div>

@@ -44,6 +44,7 @@ const Settings: React.FC = () => {
   };
 
   const handleLogout = async () => {
+    useStore.getState().setIsGuest(false);
     await supabase.auth.signOut();
     navigate('/login');
   };

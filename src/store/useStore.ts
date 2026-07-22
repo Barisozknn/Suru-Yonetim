@@ -25,8 +25,10 @@ interface StoreState {
   // Auth
   user: User | null;
   session: Session | null;
+  isGuest: boolean;
   setUser: (user: User | null) => void;
   setSession: (session: Session | null) => void;
+  setIsGuest: (guest: boolean) => void;
 
   // Filters
   aramaMetni: string;
@@ -68,8 +70,10 @@ export const useStore = create<StoreState>()(
 
       user: null,
       session: null,
+      isGuest: false,
       setUser: (user) => set({ user }),
       setSession: (session) => set({ session }),
+      setIsGuest: (guest) => set({ isGuest: guest }),
 
       aramaMetni: '',
       turFiltresi: 'Tümü',
