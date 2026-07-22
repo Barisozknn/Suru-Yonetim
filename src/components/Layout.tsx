@@ -69,7 +69,7 @@ const Layout: React.FC = () => {
 
 
   const NavContent = ({ isMobile }: { isMobile?: boolean }) => (
-    <nav className={`flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar ${isMobile ? 'p-4 flex flex-col justify-between gap-2.5' : 'px-3 py-1 flex flex-col justify-center gap-1'}`}>
+    <nav className={`flex-1 overflow-x-hidden custom-scrollbar ${isMobile ? 'p-2.5 flex flex-col justify-between gap-1 overflow-y-auto' : 'px-3 py-1 flex flex-col justify-center gap-1 overflow-y-auto'}`}>
       {NAV_ITEMS.map((item) => (
         <NavLink
           key={item.path}
@@ -77,7 +77,7 @@ const Layout: React.FC = () => {
           onClick={() => isMobile && setIsMobileMenuOpen(false)}
           className={({ isActive }) => `
             flex items-center space-x-3.5 rounded-xl font-bold transition w-full
-            ${isMobile ? 'px-4 py-3 sm:py-3.5 text-base shadow-xs' : 'px-4 py-2 text-[14.5px]'}
+            ${isMobile ? 'px-3.5 py-2 text-[14px]' : 'px-4 py-2 text-[14.5px]'}
             ${isActive 
               ? 'bg-nature-600 text-white shadow-md' 
               : 'text-earth-600 hover:bg-nature-50 hover:text-nature-700'
