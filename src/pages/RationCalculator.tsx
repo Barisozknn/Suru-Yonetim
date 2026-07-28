@@ -128,6 +128,7 @@ const RationCalculator: React.FC = () => {
   // Sağlanan Toplamları Hesaplama
   const toplamSaglanan = useMemo(() => {
     let dmi = 0, me = 0, hp_g = 0, ca_g = 0, p_g = 0;
+    let kabaKm = 0, kesifKm = 0, vitMinKm = 0;
 
     const list = Array.isArray(rasyonListesi) ? rasyonListesi : EMPTY_ARRAY;
     list.forEach(item => {
@@ -141,6 +142,14 @@ const RationCalculator: React.FC = () => {
         hp_g += kuruMaddeKg * 1000 * ((Number(yem.hpYuzde) || 0) / 100);
         ca_g += kuruMaddeKg * 1000 * ((Number(yem.caYuzde) || 0) / 100);
         p_g += kuruMaddeKg * 1000 * ((Number(yem.pYuzde) || 0) / 100);
+
+        if (yem.tur === 'Kaba Yem') {
+          kabaKm += kuruMaddeKg;
+        } else if (yem.tur === 'Kesif Yem') {
+          kesifKm += kuruMaddeKg;
+        } else if (yem.tur === 'Mineral/Vitamin' || yem.tur === 'Sıvı Takviye') {
+          vitMinKm += kuruMaddeKg;
+        }
       }
     });
 
@@ -152,7 +161,10 @@ const RationCalculator: React.FC = () => {
       hp_g: isNaN(hp_g) || !isFinite(hp_g) ? 0 : hp_g,
       hp_yuzde: isNaN(hp_yuzde) || !isFinite(hp_yuzde) ? 0 : hp_yuzde,
       ca: isNaN(ca_g) || !isFinite(ca_g) ? 0 : ca_g,
-      p: isNaN(p_g) || !isFinite(p_g) ? 0 : p_g
+      p: isNaN(p_g) || !isFinite(p_g) ? 0 : p_g,
+      kabaKm: isNaN(kabaKm) || !isFinite(kabaKm) ? 0 : kabaKm,
+      kesifKm: isNaN(kesifKm) || !isFinite(kesifKm) ? 0 : kesifKm,
+      vitMinKm: isNaN(vitMinKm) || !isFinite(vitMinKm) ? 0 : vitMinKm
     };
   }, [rasyonListesi, yemlerRaw]); // yemlerRaw: gerçek veri değişince tetikle
 
@@ -329,7 +341,32 @@ const RationCalculator: React.FC = () => {
           </div>
 
           <div className="bg-nature-50 dark:bg-nature-900/30 p-4 rounded-xl border border-nature-200 dark:border-nature-800 mt-6">
-            <h3 className="font-bold text-nature-800 dark:text-nature-200 text-sm mb-1">Rasyon Özeti</h3>
+            <h3 className="font-bold text-nature-800 dark:text-nature-200 text-sm mb-3">Rasyon Kompozisyonu</h3>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-nature-100 dark:border-nature-800">
+                <span className="block text-xs font-bold text-nature-500 dark:text-nature-400 mb-1">Kaba / Kesif Yem Oranı</span>
+                <span className="text-lg font-black text-nature-700 dark:text-nature-300">
+                  {(() => {
+                    const totalKabaKesif = toplamSaglanan.kabaKm + toplamSaglanan.kesifKm;
+                    if (totalKabaKesif === 0) return '%0 / %0';
+                    const kabaYuzde = Math.round((toplamSaglanan.kabaKm / totalKabaKesif) * 100);
+                    const kesifYuzde = Math.round((toplamSaglanan.kesifKm / totalKabaKesif) * 100);
+                    return `%${kabaYuzde} / %${kesifYuzde}`;
+                  })()}
+                </span>
+              </div>
+              <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-nature-100 dark:border-nature-800">
+                <span className="block text-xs font-bold text-nature-500 dark:text-nature-400 mb-1">Vit/Min (KM Oranı)</span>
+                <span className="text-lg font-black text-nature-700 dark:text-nature-300">
+                  {(() => {
+                    if (toplamSaglanan.dmi === 0) return '%0.0';
+                    return `%${((toplamSaglanan.vitMinKm / toplamSaglanan.dmi) * 100).toFixed(1)}`;
+                  })()}
+                </span>
+              </div>
+            </div>
+            
+            <h3 className="font-bold text-nature-800 dark:text-nature-200 text-sm mb-1 mt-4 border-t border-nature-200 dark:border-nature-800 pt-4">Rasyon Özeti</h3>
             <p className="text-xs text-nature-600 dark:text-nature-400 mb-4">
               Bu rasyonun kuru maddesindeki ham protein oranı <strong>%{toplamSaglanan.hp_yuzde.toFixed(1)}</strong> olarak hesaplanmıştır. 
               {toplamSaglanan.hp_yuzde < hedefIhtiyac.hp_yuzde ? ' (Hedefin altında)' : ' (Hedef uygun)'}

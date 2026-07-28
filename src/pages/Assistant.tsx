@@ -6,6 +6,8 @@ import { db } from '../lib/db';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import type { Sohbet, Mesaj } from '../types';
 import { v4 as uuidv4 } from 'uuid';
+import { useStore } from '../store/useStore';
+import { calculateTotalDailyFeedCost } from '../utils/dashboardCalculations';
 
 const SAMPLE_QUESTIONS = [
   "Son gelir giderlerim nelerdir?",
@@ -39,14 +41,28 @@ const gatherFarmContext = async () => {
     ekFinansalIslemler,
     sutKayitlari,
     planlananAsilar,
-    uremeKayitlari
+    uremeKayitlari,
+    saglikOlaylari,
+    gunlukYemMaliyetleri,
+    gruplar,
+    agirlikKayitlari,
+    asiProtokolleri,
+    buzagiKayitlari,
+    yemHareketleri
   ] = await Promise.all([
     db.hayvanlar.toArray(),
     db.yemler.toArray(),
     db.ekFinansalIslemler.toArray(),
     db.sutKayitlari.toArray(),
     db.planlananAsilar.toArray(),
-    db.uremeKayitlari.toArray()
+    db.uremeKayitlari.toArray(),
+    db.saglikOlaylari.toArray(),
+    db.gunlukYemMaliyetleri.toArray(),
+    db.gruplar.toArray(),
+    db.agirlikKayitlari.toArray(),
+    db.asiProtokolleri.toArray(),
+    db.buzagiKayitlari.toArray(),
+    db.yemHareketleri.toArray()
   ]);
 
   const now = new Date();
@@ -63,12 +79,48 @@ const gatherFarmContext = async () => {
   };
 
   // Finansal Özet (Bu ay)
-  const buAykiFinans = ekFinansalIslemler.filter(islem => {
-    const d = new Date(islem.tarih);
+  const isInThisMonth = (dateStr?: string) => {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
     return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-  });
-  const toplamGelir = buAykiFinans.filter(i => i.tip === 'Gelir').reduce((sum, i) => sum + i.miktar, 0);
-  const toplamGider = buAykiFinans.filter(i => i.tip === 'Gider').reduce((sum, i) => sum + i.miktar, 0);
+  };
+
+  const sutLitreFiyati = useStore.getState().sutLitreFiyati;
+
+  // 1. Süt Geliri
+  const buAySut = sutKayitlari.filter(k => isInThisMonth(k.tarih));
+  const sutGeliri = buAySut.reduce((acc, curr) => acc + curr.litre, 0) * sutLitreFiyati;
+
+  // 2. Hayvan Satış Geliri
+  const buAySatis = hayvanlar.filter(h => h.durum === 'Satıldı' && isInThisMonth(h.satisTarihi));
+  const hayvanSatisGeliri = buAySatis.reduce((acc, curr) => acc + (curr.satisFiyati || 0), 0);
+
+  // 3. Sağlık Gideri
+  const buAySaglik = saglikOlaylari.filter(s => isInThisMonth(s.tarih));
+  let saglikGideri = buAySaglik.reduce((acc, curr) => acc + (curr.maliyet || 0), 0);
+  const buAyAsilar = planlananAsilar.filter(a => a.yapildiMi && isInThisMonth(a.yapilmaTarihi));
+  saglikGideri += buAyAsilar.reduce((acc, curr) => acc + (curr.maliyet || 0), 0);
+
+  // 4. Üreme Gideri
+  const buAyUreme = uremeKayitlari.filter(u => isInThisMonth(u.tarih));
+  const uremeGideri = buAyUreme.reduce((acc, curr) => acc + (curr.maliyet || 0), 0);
+
+  // 5. Yem Gideri
+  const todayStr = new Date().toISOString().split('T')[0];
+  const buAyYemler = gunlukYemMaliyetleri.filter(y => isInThisMonth(y.tarih) && y.tarih !== todayStr);
+  let yemGideri = buAyYemler.reduce((acc, curr) => acc + curr.toplamMaliyet, 0);
+  
+  if (isInThisMonth(todayStr)) {
+    yemGideri += calculateTotalDailyFeedCost(yemler, gruplar, hayvanlar);
+  }
+
+  // 6. Ek Gelir / Giderler
+  const buAykiFinans = ekFinansalIslemler.filter(islem => isInThisMonth(islem.tarih));
+  const ekGelir = buAykiFinans.filter(i => i.tip === 'Gelir').reduce((sum, i) => sum + i.miktar, 0);
+  const ekGider = buAykiFinans.filter(i => i.tip === 'Gider').reduce((sum, i) => sum + i.miktar, 0);
+
+  const toplamGelir = sutGeliri + hayvanSatisGeliri + ekGelir;
+  const toplamGider = saglikGideri + uremeGideri + yemGideri + ekGider;
 
   // Süt Özeti (Son 7 gün)
   const sevenDaysAgo = new Date();
@@ -96,7 +148,33 @@ const gatherFarmContext = async () => {
       sutUretimi_Son7GunLitre: son7GunSut,
       gebeHayvanSayisi: gebeSayisi,
       tohumlamaKayıtları: asimBekleyen,
-      gecikmisAsiSayisi: bekleyenAsiSayisi
+      gecikmisAsiSayisi: bekleyenAsiSayisi,
+      tumGruplar: gruplar,
+      tumYemler: yemler,
+      tumYemHareketleri: yemHareketleri,
+      tumSutKayitlari: sutKayitlari,
+      tumAgirlikKayitlari: agirlikKayitlari,
+      tumSaglikOlaylari: saglikOlaylari,
+      tumUremeKayitlari: uremeKayitlari,
+      tumBuzagiKayitlari: buzagiKayitlari,
+      tumAsiProtokolleri: asiProtokolleri,
+      tumPlanlananAsilar: planlananAsilar,
+      aktifHayvanListesi: hayvanlar
+        .filter(h => h.durum === 'Aktif')
+        .map(h => ({
+          id: h.id,
+          kupeNo: h.kupeNo,
+          tur: h.tur,
+          cinsiyet: h.cinsiyet,
+          irk: h.irk,
+          dogumTarihi: h.dogumTarihi,
+          guncelAgirlikKg: h.guncelAgirlikKg,
+          grupId: h.grupId,
+          anneKupeNo: h.anneKupeNo || 'Bilinmiyor',
+          babaKupeNo: h.babaKupeNo || 'Bilinmiyor',
+          gebeMi: uremeKayitlari.some(u => u.hayvanId === h.id && u.tur === 'Gebelik Kontrolü' && u.durum === 'Gebe') ? 'Evet' : 'Hayır',
+          notlar: h.notlar || 'Yok'
+        }))
     },
     esikUyarilari: kritikYemler.map(y => `Kritik Yem Stoğu: ${y}`)
   };
