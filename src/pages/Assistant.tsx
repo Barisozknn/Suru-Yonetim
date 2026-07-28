@@ -8,69 +8,117 @@ import type { Sohbet, Mesaj } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
 const SAMPLE_QUESTIONS = [
+  "Son gelir giderlerim nelerdir?",
   "Sürümde toplam kaç hayvan var?",
   "Hangi hayvanlarım gebe?",
-  "Yakında doğuracak hayvanlar hangileri?",
   "Kaba yem stoklarım ne durumda?"
 ];
 
-// Tools definition
-const tools = [
-  {
-    type: "function",
-    function: {
-      name: "get_hayvan_sayisi",
-      description: "Sürüdeki toplam hayvan sayısını ve türlere göre dağılımını getirir.",
-      parameters: { type: "object", properties: {}, required: [] },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "get_gebe_hayvanlar",
-      description: "Sürüdeki gebe olan hayvanların küpe numaralarını ve durumlarını getirir.",
-      parameters: { type: "object", properties: {}, required: [] },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "get_yem_stoklari",
-      description: "Depodaki mevcut yem stoklarını, miktarlarını ve kritik seviyede olanları getirir.",
-      parameters: { type: "object", properties: {}, required: [] },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "get_sut_verimi",
-      description: "Sürünün son 7 günlük toplam süt verimini getirir.",
-      parameters: { type: "object", properties: {}, required: [] },
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "get_hayvan_detay",
-      description: "Belirli bir küpe numarasına sahip hayvanın detaylarını (yaş, tür, durum, ırk) getirir.",
-      parameters: { 
-        type: "object", 
-        properties: {
-          kupeNo: { type: "string", description: "Hayvanın küpe numarası (Örn: TR 11)" }
-        }, 
-        required: ["kupeNo"] 
+const STATIC_SYSTEM_PROMPT = `
+# KİMLİK
+Sen SürüMetri uygulamasının entegre zootekni asistanısın. Görevin, çiftlik sahibi veya sürü yöneticisinin uygulamadaki gerçek hayvan ve sürü verilerini yorumlamasına yardımcı olmaktır. 
+
+# KAPSAM VE UZMANLIK ALANI
+Süt ve besi sığırcılığı yönetimi, rasyon, süt verimi, üreme, gelir/gider analizi ve sağlık kayıtları konularında uzmansın.
+
+# TEMEL DAVRANIŞ KURALLARI
+1. **Veriye dayan, tahmin etme.** Sana sağlanan güncel sürü verisi dışındaki bilgileri uydurma. Veri boşsa kaydın girilmediğini belirt.
+2. **Kısa ve eyleme dönük yaz.** Çiftlik sahibi genelde sahada telefondan bakar. Madde işaretleriyle kısa özetler ve öneriler ver.
+3. **Veteriner/ilaç sınırı.** Teşhis koymaz, ilaç dozu önermezsin. 
+
+# YANITLAMA FORMATI
+- Formatlamak için Markdown kullan.
+- Maksimum 3-4 maddelik kısa listeler tercih et. Sayısal verilerde birim belirt.
+- Sana iletilen gelir, gider, hayvan sayısı gibi metrikleri net bir şekilde kullanıcıya sun.
+`.trim();
+
+const gatherFarmContext = async () => {
+  const [
+    hayvanlar,
+    yemler,
+    ekFinansalIslemler,
+    sutKayitlari,
+    planlananAsilar,
+    uremeKayitlari
+  ] = await Promise.all([
+    db.hayvanlar.toArray(),
+    db.yemler.toArray(),
+    db.ekFinansalIslemler.toArray(),
+    db.sutKayitlari.toArray(),
+    db.planlananAsilar.toArray(),
+    db.uremeKayitlari.toArray()
+  ]);
+
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  // Hayvan Özeti
+  const hayvanOzeti = {
+    toplam: hayvanlar.length,
+    inek: hayvanlar.filter(h => h.tur === 'İnek').length,
+    duve: hayvanlar.filter(h => h.tur === 'Düve').length,
+    dana: hayvanlar.filter(h => h.tur === 'Dana').length,
+    buzagi: hayvanlar.filter(h => h.tur === 'Buzağı').length
+  };
+
+  // Finansal Özet (Bu ay)
+  const buAykiFinans = ekFinansalIslemler.filter(islem => {
+    const d = new Date(islem.tarih);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+  const toplamGelir = buAykiFinans.filter(i => i.tip === 'Gelir').reduce((sum, i) => sum + i.miktar, 0);
+  const toplamGider = buAykiFinans.filter(i => i.tip === 'Gider').reduce((sum, i) => sum + i.miktar, 0);
+
+  // Süt Özeti (Son 7 gün)
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const son7GunSut = sutKayitlari.filter(k => new Date(k.tarih).getTime() >= sevenDaysAgo.getTime()).reduce((sum, k) => sum + k.litre, 0);
+
+  // Yem Özeti
+  const kritikYemler = yemler.filter(y => y.stokKg <= y.minStokUyariKg).map(y => `${y.ad} (${y.stokKg} kg)`);
+
+  // Üreme Özeti
+  const gebeSayisi = uremeKayitlari.filter(u => u.tur === 'Gebelik Kontrolü' && u.durum === 'Gebe').length;
+  const asimBekleyen = uremeKayitlari.filter(u => u.tur === 'Tohumlama/Aşım').length;
+  
+  // Bekleyen Aşılar
+  const bekleyenAsiSayisi = planlananAsilar.filter(a => !a.yapildiMi && new Date(a.planlanaTarih).getTime() < Date.now()).length;
+
+  return {
+    veriler: {
+      hayvanOzeti,
+      finansalOzet_BuAy: {
+        toplamGelir_TL: toplamGelir,
+        toplamGider_TL: toplamGider,
+        netDurum_TL: toplamGelir - toplamGider
       },
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "get_bugun_yapilacaklar",
-      description: "Bugün yapılması gereken işleri (bekleyen aşılar ve yaklaşan doğumlar vb.) özet olarak getirir.",
-      parameters: { type: "object", properties: {}, required: [] },
-    }
-  }
-];
+      sutUretimi_Son7GunLitre: son7GunSut,
+      gebeHayvanSayisi: gebeSayisi,
+      tohumlamaKayıtları: asimBekleyen,
+      gecikmisAsiSayisi: bekleyenAsiSayisi
+    },
+    esikUyarilari: kritikYemler.map(y => `Kritik Yem Stoğu: ${y}`)
+  };
+};
+
+export function buildContextBlock(ctx: any): string {
+  const uyarilar =
+    ctx.esikUyarilari && ctx.esikUyarilari.length > 0
+      ? `\n## Eşik Dışı Değerler (öncelikli)\n${ctx.esikUyarilari.map((u: string) => `- ${u}`).join("\n")}\n`
+      : "";
+  
+  const today = new Date().toLocaleDateString('tr-TR');
+
+  return `
+# GÜNCEL SÜRÜ VERİSİ (Tarih: ${today})
+${uyarilar}
+## İlgili Metrikler (Tüm Modüllerden Özet)
+${JSON.stringify(ctx.veriler || {}, null, 2)}
+
+Yukarıdaki veriler dışında hiçbir sayısal değer varsayma. Sadece bu veriler üzerinden yorum yap.
+`.trim();
+}
 
 const Assistant: React.FC = () => {
   const sohbetler = useLiveFarmQuery(() => db.sohbetler.orderBy('guncellenmeTarihi').reverse().toArray()) || [];
@@ -150,18 +198,21 @@ const Assistant: React.FC = () => {
         throw new Error('VITE_DEEPSEEK_API_KEY bulunamadı. Lütfen .env.local dosyasına ekleyin.');
       }
 
+      // Veritabanından tüm farm verisini (gelir/gider dahil) özet olarak topla
+      const contextData = await gatherFarmContext();
+      
       const systemPrompt = {
         role: 'system',
-        content: `Sen uzman bir zooteknist ve sürü yönetimi asistanısın. Kullanıcının çiftlik verilerine erişim araçların (tools) var. Gerekli durumlarda araçları çağırarak bilgi al ve net, kısa, profesyonel cevaplar ver. Markdown kullanabilirsin.`
+        content: STATIC_SYSTEM_PROMPT
       };
 
-      let apiMessages: any[] = [systemPrompt, ...currentMessages.map(m => {
-          const msg: any = { role: m.role };
-          if (m.content) msg.content = m.content;
-          else if (!m.tool_calls) msg.content = "";
-          if (m.tool_call_id) msg.tool_call_id = m.tool_call_id;
-          if (m.tool_calls) msg.tool_calls = m.tool_calls;
-          return msg;
+      const contextPrompt = {
+        role: 'system',
+        content: buildContextBlock(contextData)
+      };
+
+      let apiMessages: any[] = [systemPrompt, contextPrompt, ...currentMessages.map(m => {
+          return { role: m.role, content: m.content || "" };
       }).filter(m => m.role !== 'system')];
 
       let response = await fetch("https://api.deepseek.com/chat/completions", {
@@ -173,7 +224,6 @@ const Assistant: React.FC = () => {
         body: JSON.stringify({
           model: "deepseek-chat",
           messages: apiMessages,
-          tools: tools,
           temperature: 0.3,
         }),
       });
@@ -182,121 +232,6 @@ const Assistant: React.FC = () => {
 
       if (!response.ok || !data.choices || data.choices.length === 0) {
         throw new Error(data.error?.message || `API Hatası: ${response.status}`);
-      }
-
-      let responseMessage = data.choices[0].message;
-
-      if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
-        apiMessages.push(responseMessage);
-        const toolCallMessage: Mesaj = {
-           role: 'assistant',
-           content: responseMessage.content || '',
-           tool_calls: responseMessage.tool_calls,
-           createdAt: Date.now()
-        };
-        currentMessages.push(toolCallMessage);
-        
-        for (const toolCall of responseMessage.tool_calls) {
-          const functionName = toolCall.function.name;
-          let functionResult = "";
-        
-          if (functionName === "get_hayvan_sayisi") {
-            try {
-              const hayvanlar = await db.hayvanlar.toArray();
-              const inekSayisi = hayvanlar.filter(h => h.tur === 'İnek').length;
-              const tosunSayisi = hayvanlar.filter(h => h.tur === 'Tosun').length;
-              const bogaSayisi = hayvanlar.filter(h => h.tur === 'Boğa').length;
-              const okuzSayisi = hayvanlar.filter(h => h.tur === 'Öküz').length;
-              const duveSayisi = hayvanlar.filter(h => h.tur === 'Düve').length;
-              const danaSayisi = hayvanlar.filter(h => h.tur === 'Dana').length;
-              const buzagiSayisi = hayvanlar.filter(h => h.tur === 'Buzağı').length;
-              functionResult = `Toplam ${hayvanlar.length} hayvan. İnek: ${inekSayisi}, Tosun: ${tosunSayisi}, Boğa: ${bogaSayisi}, Öküz: ${okuzSayisi}, Düve: ${duveSayisi}, Dana: ${danaSayisi}, Buzağı: ${buzagiSayisi}.`;
-            } catch (error: any) {
-               functionResult = "Veritabanı hatası: " + error.message;
-            }
-          } 
-          else if (functionName === "get_gebe_hayvanlar") {
-            try {
-              const ureme = await db.uremeKayitlari.where('tur').equals('Gebelik Kontrolü').toArray();
-              const gebeHayvanIdler = ureme.filter(u => u.durum === 'Gebe').map(u => u.hayvanId);
-              if (gebeHayvanIdler.length > 0) {
-                const gebeHayvanlar = await db.hayvanlar.where('id').anyOf(gebeHayvanIdler).toArray();
-                if (gebeHayvanlar.length > 0) {
-                  functionResult = `Şu hayvanlar gebedir: ${gebeHayvanlar.map(h => h.kupeNo).join(', ')}`;
-                } else { functionResult = "Kayıtlarda gebe hayvan bulunamadı."; }
-              } else { functionResult = "Kayıtlarda gebe hayvan bulunamadı."; }
-            } catch (error: any) { functionResult = "Veritabanı hatası: " + error.message; }
-          }
-          else if (functionName === "get_yem_stoklari") {
-            try {
-              const yemler = await db.yemler.toArray();
-              if (yemler.length > 0) {
-                const yemListesi = yemler.map(y => `${y.ad} (${y.tur}): ${y.stokKg} kg (Kritik sınır: ${y.minStokUyariKg} kg)`).join('\n');
-                const kritikYemler = yemler.filter(y => y.stokKg <= y.minStokUyariKg);
-                functionResult = `Mevcut Yem Stokları:\n${yemListesi}`;
-                if (kritikYemler.length > 0) { functionResult += `\n\nDİKKAT: Şu yemler kritik seviyenin altında: ${kritikYemler.map(y => y.ad).join(', ')}`; }
-              } else { functionResult = "Depoda kayıtlı yem bulunmamaktadır."; }
-            } catch (error: any) { functionResult = "Veritabanı hatası: " + error.message; }
-          }
-          else if (functionName === "get_sut_verimi") {
-            try {
-              const now = new Date(); now.setHours(0,0,0,0);
-              const sevenDaysAgo = new Date(now); sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-              const sutKayitlari = await db.sutKayitlari.toArray();
-              const son7GunSut = sutKayitlari.filter(k => new Date(k.tarih) >= sevenDaysAgo);
-              const toplamSut = son7GunSut.reduce((sum, k) => sum + k.litre, 0);
-              functionResult = `Sürünün son 7 günde ürettiği toplam süt miktarı: ${toplamSut} Litre'dir. Toplam ${son7GunSut.length} adet sağım kaydı bulunmaktadır.`;
-            } catch (error: any) { functionResult = "Veritabanı hatası: " + error.message; }
-          }
-          else if (functionName === "get_hayvan_detay") {
-            try {
-              const args = JSON.parse(toolCall.function.arguments);
-              const kupeNo = args.kupeNo;
-              const hayvanlar = await db.hayvanlar.toArray();
-              const hayvan = hayvanlar.find(h => h.kupeNo.toLowerCase().includes(kupeNo.toLowerCase()));
-              if (hayvan) {
-                const yasMs = Date.now() - new Date(hayvan.dogumTarihi).getTime();
-                const yasGun = Math.floor(yasMs / (1000 * 60 * 60 * 24));
-                functionResult = `Küpe No: ${hayvan.kupeNo}, Tür: ${hayvan.tur}, Irk: ${hayvan.irk}, Yaş: ${yasGun} gün, Durum: ${hayvan.durum}, Cinsiyet: ${hayvan.cinsiyet}, Güncel Ağırlık: ${hayvan.guncelAgirlikKg} kg.`;
-              } else { functionResult = `${kupeNo} numaralı hayvan bulunamadı.`; }
-            } catch (error: any) { functionResult = "Araç hatası: " + error.message; }
-          }
-          else if (functionName === "get_bugun_yapilacaklar") {
-            try {
-              const now = new Date().getTime();
-              const tumAsilar = await db.planlananAsilar.toArray();
-              const asilar = tumAsilar.filter(a => a.yapildiMi === false);
-              const gecikmisAsilar = asilar.filter(a => new Date(a.planlanaTarih).getTime() < now);
-              const uremeler = await db.uremeKayitlari.where('tur').equals('Tohumlama/Aşım').toArray();
-              let yaklasanDogumlar = 0;
-              for (const u of uremeler) {
-                if (u.durum === 'Gebe') {
-                  const dogumTarihi = new Date(u.tarih).getTime() + (283 * 24 * 60 * 60 * 1000);
-                  const gunKaldı = Math.floor((dogumTarihi - now) / (1000 * 60 * 60 * 24));
-                  if (gunKaldı <= 30 && gunKaldı >= -10) yaklasanDogumlar++;
-                }
-              }
-              functionResult = `Şu an sistemde ${gecikmisAsilar.length} adet gecikmiş/bekleyen aşı ve önümüzdeki 30 gün içinde beklenen ${yaklasanDogumlar} adet doğum bulunmaktadır.`;
-            } catch (error: any) { functionResult = "Araç hatası: " + error.message; }
-          }
-          
-          const toolResultMessage: Mesaj = { role: 'tool', tool_call_id: toolCall.id, content: functionResult, createdAt: Date.now() };
-          currentMessages.push(toolResultMessage);
-          
-          apiMessages.push({ role: "tool", tool_call_id: toolCall.id, content: functionResult });
-        }
-
-        response = await fetch("https://api.deepseek.com/chat/completions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-          body: JSON.stringify({ model: "deepseek-chat", messages: apiMessages, temperature: 0.3 }),
-        });
-        
-        data = await response.json();
-
-        if (!response.ok || !data.choices || data.choices.length === 0) {
-          throw new Error(data.error?.message || `API Hatası: ${response.status}`);
-        }
       }
 
       const replyContent = data.choices[0].message.content;
@@ -470,7 +405,7 @@ const Assistant: React.FC = () => {
                   Merhaba! Sürü yönetimi ve hayvanlarınız ile ilgili tüm sorularınızı sorabilirsiniz.
                 </h3>
                 <p className="text-xs md:text-sm text-earth-500 dark:text-gray-400 max-w-md leading-relaxed">
-                  Hayvan verilerinizi, aşı ve sağlık geçmişini, üreme durumlarını ve sürü performansınızı sormaktan çekinmeyin.
+                  Hayvan verilerinizi, gelir giderinizi, sağlık geçmişini ve sürü performansınızı sormaktan çekinmeyin.
                 </p>
               </div>
             )}
