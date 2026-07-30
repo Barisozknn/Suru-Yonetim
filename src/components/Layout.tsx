@@ -190,28 +190,37 @@ const Layout: React.FC = () => {
       </header>
 
       {/* Mobil Menü (Drawer) */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-40 flex">
-          <div className="fixed inset-0 bg-earth-900/60 dark:bg-black/60 transition-opacity" onClick={() => setIsMobileMenuOpen(false)}></div>
-          <div className="relative flex-1 flex flex-col h-full w-80 max-w-[85vw] bg-white dark:bg-gray-800 shadow-2xl animate-in slide-in-from-left duration-300 transition-colors">
-            {/* Üst Çizgi & Başlık */}
-            <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex items-center justify-between shrink-0 bg-white dark:bg-gray-800 transition-colors">
-              <h1 className="text-xl font-black text-nature-800 dark:text-nature-400 tracking-tight">Sürü<span className="text-earth-500 dark:text-gray-400">Metri</span></h1>
-              <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-earth-500 dark:text-gray-400 hover:bg-earth-100 dark:hover:bg-gray-700 rounded-lg">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            
-            {/* 2 Çizgi Arasında Ortalanmış Sekme Butonları */}
-            <NavContent isMobile />
-            
-            {/* Alt Çizgi & Menü Etiketi */}
-            <div className="p-3.5 border-t border-earth-200 dark:border-gray-700 shrink-0 bg-earth-50/80 dark:bg-gray-800/80 transition-colors">
-              <span className="text-xs font-bold text-earth-500 dark:text-gray-400 uppercase tracking-widest block text-center">Menü</span>
-            </div>
+      <div 
+        className={`md:hidden fixed inset-0 z-40 flex transition-opacity duration-300 ${
+          isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        <div 
+          className="fixed inset-0 bg-earth-900/60 dark:bg-black/60" 
+          onClick={() => setIsMobileMenuOpen(false)}
+        ></div>
+        <div 
+          className={`relative flex-1 flex flex-col h-full w-80 max-w-[85vw] bg-white dark:bg-gray-800 shadow-2xl transition-transform duration-300 ease-in-out ${
+            isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          {/* Üst Çizgi & Başlık */}
+          <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex items-center justify-between shrink-0 bg-white dark:bg-gray-800 transition-colors">
+            <h1 className="text-xl font-black text-nature-800 dark:text-nature-400 tracking-tight">Sürü<span className="text-earth-500 dark:text-gray-400">Metri</span></h1>
+            <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-earth-500 dark:text-gray-400 hover:bg-earth-100 dark:hover:bg-gray-700 rounded-lg">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+          
+          {/* 2 Çizgi Arasında Ortalanmış Sekme Butonları */}
+          <NavContent isMobile />
+          
+          {/* Alt Çizgi & Menü Etiketi */}
+          <div className="p-3.5 border-t border-earth-200 dark:border-gray-700 shrink-0 bg-earth-50/80 dark:bg-gray-800/80 transition-colors">
+            <span className="text-xs font-bold text-earth-500 dark:text-gray-400 uppercase tracking-widest block text-center">Menü</span>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Ana İçerik Alanı */}
       <main className="flex-1 relative min-w-0 md:pt-0 pt-16 h-full overflow-y-auto">
