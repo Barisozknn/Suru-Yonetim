@@ -59,7 +59,7 @@ const calculateExpectedTur = (h: HayvanInput): HayvanTur => {
   if (ageDays <= 180) {
     expectedTur = 'Buzağı';
   } else if (ageDays > 180 && ageDays <= 365) {
-    expectedTur = h.cinsiyet === 'Erkek' ? 'Dana' : 'Düve';
+    expectedTur = 'Dana';
   } else if (ageDays > 365) {
     if (h.cinsiyet === 'Erkek') {
       expectedTur = ageDays <= 730 ? 'Tosun' : (h.kisirlastirildiMi ? 'Öküz' : 'Boğa');

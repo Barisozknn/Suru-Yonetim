@@ -199,3 +199,32 @@ export interface Ciftlik {
   olusturulmaTarihi: string;
   user_id?: string;
 }
+
+// ─── Anomali & Uyarı Sistemi ───────────────────────────────────────────────
+
+export type UyariTipi =
+  | 'SUT_DUSUS'          // Süt verimi ani düşüşü (kayan ortalama karşılaştırması)
+  | 'AGIRLIK_SAPMA'      // Ağırlık büyüme sapması (beklenen ADG'den)
+  | 'UREME_GECIKME'      // Doğum sonrası tohumlama süresi aşıldı
+  | 'LAKTASYON_UZADI'    // Laktasyon süresi normalin üzerinde (kuru kayıt yok)
+  | 'KIZGINLIK_BEKLIYOR' // Kızgınlık dönemine girdi ama kayıt girilmedi
+  | 'KURUYA_CIKARMA_GECIKTI'; // Gebelik kontrolü 'Gebe' ise ve kuruya çıkarma tarihi geçtiyse
+
+export type UyariSiddeti = 'DUSUK' | 'ORTA' | 'KRITIK';
+
+export interface UyariItem {
+  /** hayvanId + '_' + tip kombinasyonundan türetilen benzersiz anahtar */
+  id: string;
+  hayvanId: string;
+  hayvanKupeNo: string;
+  tip: UyariTipi;
+  siddet: UyariSiddeti;
+  /** Kullanıcıya gösterilecek kısa açıklama */
+  mesaj: string;
+  /** Opsiyonel ek detay (örn. kaç gün geciktiği) */
+  detay?: string;
+  /** Uyarının hesaplandığı tarih */
+  tarih: Date;
+  /** Tıklanınca yönlendirilecek route (örn. '/ureme', '/hayvanlar?id=...') */
+  linkTo?: string;
+}

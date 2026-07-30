@@ -140,7 +140,7 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
         if (ageDays <= 180) {
           data.tur = 'Buzağı';
         } else if (ageDays > 180 && ageDays <= 365) {
-          data.tur = data.cinsiyet === 'Erkek' ? 'Dana' : 'Düve';
+          data.tur = 'Dana';
         } else if (ageDays > 365) {
           if (data.cinsiyet === 'Erkek') {
              data.tur = 'Boğa';

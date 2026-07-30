@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Send, Loader2, Plus, MessageSquare, Trash2, User, Menu, X, Sparkles } from 'lucide-react';
+import { Send, Loader2, Plus, MessageSquare, Trash2, User, Menu, X, Sparkles, Mic, MicOff } from 'lucide-react';
 import { db } from '../lib/db';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import type { Sohbet, Mesaj } from '../types';
@@ -24,15 +24,363 @@ Sen SürüMetri uygulamasının entegre zootekni asistanısın. Görevin, çiftl
 Süt ve besi sığırcılığı yönetimi, rasyon, süt verimi, üreme, gelir/gider analizi ve sağlık kayıtları konularında uzmansın.
 
 # TEMEL DAVRANIŞ KURALLARI
-1. **Veriye dayan, tahmin etme.** Sana sağlanan güncel sürü verisi dışındaki bilgileri uydurma. Veri boşsa kaydın girilmediğini belirt.
+1. **Sürü Verisi ve Uzmanlık Bilgisi:** Çiftliğin kendi verilerini (hayvanlar, stok vb.) uydurma, mutlaka elindeki verilere dayan. ANCAK, kullanıcı senden genel bir hayvancılık bilgisi, hammadde (yem) besin içerikleri (HP, ME, KM vb.) veya araştırma yapmanı isterse, ASLA "internetim yok" veya "erişimim yok" deme! Zootekni/hayvancılık alanındaki geniş bilgi birikimini kullanarak uluslararası veya Türkiye standartlarındaki (literatürdeki) ortalama, makul değerleri sun ve işlemleri bu değerlere göre yap.
 2. **Kısa ve eyleme dönük yaz.** Çiftlik sahibi genelde sahada telefondan bakar. Madde işaretleriyle kısa özetler ve öneriler ver.
-3. **Veteriner/ilaç sınırı.** Teşhis koymaz, ilaç dozu önermezsin. 
+3. **Veteriner/ilaç sınırı.** Teşhis koymaz, ilaç dozu önermezsin.
+4. **ARAÇ KULLANIMI VE ÇOKLU İŞLEM:** Kullanıcı senden bir işlem yapmanı isterse araçları (tools) kullan. Kullanıcı birden fazla gün için veya birden fazla hayvan için işlem yapmanı isterse, ARACI GEREKTİĞİ KADAR (örneğin 2 kez) ÇAĞIR. Asla "sen yapmalısın" deme. Tarih formatı ZORUNLU olarak **YYYY-MM-DD** (Örn: "2026-07-28") olmalıdır. Kullanıcı farklı tarih yazsa bile YYYY-MM-DD formatına çevir! DİKKAT: Aynı anda birden çok iş yapman gerekirse bunları standart "tool_calls" fonksiyonuyla çağır. Asla metin içerisine XML veya DSML etiketleri (<|DSML|>, <|invoke|>) YAZMA! Tarih belirtilmezse bugünü kullan.
 
 # YANITLAMA FORMATI
 - Formatlamak için Markdown kullan.
 - Maksimum 3-4 maddelik kısa listeler tercih et. Sayısal verilerde birim belirt.
 - Sana iletilen gelir, gider, hayvan sayısı gibi metrikleri net bir şekilde kullanıcıya sun.
 `.trim();
+
+const parseDateString = (dateStr: string | undefined): string => {
+  if (!dateStr) return new Date().toISOString().split('T')[0];
+  
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+  
+  let match = dateStr.match(/^(\d{1,2})[\.\/](\d{1,2})[\.\/](\d{4})$/);
+  if (match) {
+    const day = match[1].padStart(2, '0');
+    const month = match[2].padStart(2, '0');
+    return `${match[3]}-${month}-${day}`;
+  }
+  
+  const aylar: Record<string, string> = {
+    "ocak": "01", "şubat": "02", "subat": "02", "mart": "03", "nisan": "04",
+    "mayıs": "05", "mayis": "05", "haziran": "06", "temmuz": "07", 
+    "ağustos": "08", "agustos": "08", "eylül": "09", "eylul": "09",
+    "ekim": "10", "kasım": "11", "kasim": "11", "aralık": "12", "aralik": "12"
+  };
+  
+  match = dateStr.toLowerCase().match(/^(\d{1,2})\s+([a-zşçöğüı]+)\s+(\d{4})$/);
+  if (match) {
+    const day = match[1].padStart(2, '0');
+    const ayIsmi = match[2];
+    const month = aylar[ayIsmi] || "01";
+    return `${match[3]}-${month}-${day}`;
+  }
+
+  if (dateStr.toLowerCase() === "dün" || dateStr.toLowerCase() === "dun") {
+     const yesterday = new Date();
+     yesterday.setDate(yesterday.getDate() - 1);
+     return yesterday.toISOString().split('T')[0];
+  }
+
+  return new Date().toISOString().split('T')[0];
+};
+
+const ASSISTANT_TOOLS = [
+  {
+    type: "function",
+    function: {
+      name: "addMilkRecord",
+      description: "Belirtilen küpe numarasına sahip ineğe yeni bir günlük süt kaydı ekler.",
+      parameters: {
+        type: "object",
+        properties: {
+          kupeNo: { type: "string", description: "Hayvanın küpe numarası (örn: TR123456)" },
+          litre: { type: "number", description: "O gün sağılan toplam süt miktarı (litre)" },
+          tarih: { type: "string", description: "İşlem tarihi (YYYY-MM-DD). Belirtilmezse bugünün tarihi kullanılır." }
+        },
+        required: ["kupeNo", "litre", "tarih"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "addHealthRecord",
+      description: "Belirtilen küpe numarasına sahip hayvana sağlık veya aşı kaydı ekler.",
+      parameters: {
+        type: "object",
+        properties: {
+          kupeNo: { type: "string", description: "Hayvanın tam küpe numarası" },
+          tur: { type: "string", enum: ["Aşı", "Muayene", "İlaç", "Operasyon", "Diğer"], description: "Sağlık olayının türü" },
+          aciklama: { type: "string", description: "Sağlık olayı hakkında açıklama, teşhis veya aşı adı" },
+          tarih: { type: "string", description: "İşlem tarihi (YYYY-MM-DD). Belirtilmezse bugünün tarihi kullanılır." }
+        },
+        required: ["kupeNo", "tur", "aciklama", "tarih"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "updateFeedStock",
+      description: "Depodaki mevcut bir yeme stok girişi yapar veya stoktan harcar.",
+      parameters: {
+        type: "object",
+        properties: {
+          yemAdi: { type: "string", description: "Yemin adı (örn: Mısır Silajı)" },
+          miktarKg: { type: "number", description: "Eklenecek veya harcanacak miktar (kg). Pozitif bir sayı olmalıdır." },
+          islemTipi: { type: "string", enum: ["Giriş", "Çıkış"], description: "Giriş (alım) veya Çıkış (harcama)" },
+          tarih: { type: "string", description: "İşlem tarihi (YYYY-MM-DD). Belirtilmezse bugünün tarihi kullanılır." }
+        },
+        required: ["yemAdi", "miktarKg", "islemTipi", "tarih"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "updateFeedNutrition",
+      description: "Mevcut bir yemin besin değerlerini (Kuru Madde, Enerji/ME, Protein/HP vb.) ve fiyatını günceller.",
+      parameters: {
+        type: "object",
+        properties: {
+          yemAdi: { type: "string", description: "Yemin adı (örn: Mısır Silajı)" },
+          tur: { type: "string", enum: ["Kaba Yem", "Kesif Yem", "Mineral/Vitamin", "Premiks", "Katkı"], description: "Yem türü" },
+          minStokUyariKg: { type: "number", description: "Minimum stok uyarı seviyesi (kg)" },
+          birimFiyat: { type: "number", description: "Yeni birim fiyatı (TL/Kg). Güncellenmeyecekse 0 veya boş bırakın." },
+          kmYuzde: { type: "number", description: "Kuru Madde (KM %)" },
+          meMcalKg: { type: "number", description: "Metabolik Enerji (ME Mcal/kg)" },
+          hpYuzde: { type: "number", description: "Ham Protein (HP %)" },
+          caYuzde: { type: "number", description: "Kalsiyum (Ca %)" },
+          pYuzde: { type: "number", description: "Fosfor (P %)" }
+        },
+        required: ["yemAdi"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "addFeed",
+      description: "Sisteme sıfırdan yeni bir yem türü / hammaddesi ekler.",
+      parameters: {
+        type: "object",
+        properties: {
+          yemAdi: { type: "string", description: "Yemin adı (örn: Mısır Silajı)" },
+          tur: { type: "string", enum: ["Kaba Yem", "Kesif Yem", "Mineral/Vitamin", "Premiks", "Katkı", "Sıvı"], description: "Yem türü" },
+          birimFiyat: { type: "number", description: "Birim fiyatı (TL/Kg)" },
+          minStokUyariKg: { type: "number", description: "Minimum stok uyarı seviyesi (kg)" },
+          ilkStokKg: { type: "number", description: "Yem eklendiğindeki başlangıç/ilk stok miktarı (kg)" },
+          tarih: { type: "string", description: "Yemin veya ilk stoğun eklendiği tarih (YYYY-MM-DD)" },
+          kmYuzde: { type: "number", description: "Kuru Madde (KM %). Eğer bir değer hesapladıysan veya tahmin ettiysen mutlaka argüman olarak gönder!" },
+          meMcalKg: { type: "number", description: "Metabolik Enerji (ME Mcal/kg). Hesapladıysan veya tahmin ettiysen mutlaka argüman olarak gönder!" },
+          hpYuzde: { type: "number", description: "Ham Protein (HP %). Hesapladıysan veya tahmin ettiysen mutlaka argüman olarak gönder!" },
+          caYuzde: { type: "number", description: "Kalsiyum (Ca %). Hesapladıysan veya tahmin ettiysen mutlaka argüman olarak gönder!" },
+          pYuzde: { type: "number", description: "Fosfor (P %). Hesapladıysan veya tahmin ettiysen mutlaka argüman olarak gönder!" }
+        },
+        required: ["yemAdi", "tur"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "addVaccineProtocol",
+      description: "Sisteme yeni bir aşı protokolü veya sağlık uygulama programı (örneğin Buzağı Aşı Protokolü) ekler.",
+      parameters: {
+        type: "object",
+        properties: {
+          protokolAd: { type: "string", description: "Protokolün adı (örn: Buzağı İshal Aşısı Protokolü)" },
+          hedefTur: { type: "string", enum: ["İnek", "Tosun", "Boğa", "Öküz", "Düve", "Dana", "Buzağı", "Tümü"], description: "Hangi hayvan türüne uygulanacağı" },
+          uygulamalar: { 
+            type: "array", 
+            description: "Protokoldeki aşı/uygulama adımları",
+            items: {
+              type: "object",
+              properties: {
+                asiAd: { type: "string", description: "Aşının veya ilacın adı" },
+                gunFarki: { type: "number", description: "Doğumdan veya başlangıçtan kaç gün sonra yapılacağı (0 = doğduğunda)" },
+                tekrarGun: { type: "number", description: "Kaç günde bir tekrarlanacağı (isteğe bağlı, yoksa 0)" },
+                tekrarSayisi: { type: "number", description: "Kaç kez tekrar edileceği (isteğe bağlı, yoksa 1)" }
+              }
+            }
+          }
+        },
+        required: ["protokolAd", "hedefTur", "uygulamalar"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "addAnimal",
+      description: "Sisteme sıfırdan yeni bir hayvan ekler.",
+      parameters: {
+        type: "object",
+        properties: {
+          kupeNo: { type: "string", description: "Hayvanın küpe numarası" },
+          tur: { type: "string", enum: ["İnek", "Tosun", "Boğa", "Öküz", "Düve", "Dana", "Buzağı"], description: "Hayvanın türü" },
+          cinsiyet: { type: "string", enum: ["Erkek", "Dişi"], description: "Cinsiyet" },
+          irk: { type: "string", description: "Hayvanın ırkı (Holstein, Simental vb.)" },
+          dogumTarihi: { type: "string", description: "Doğum tarihi (YYYY-MM-DD formatında, bilinmiyorsa bugünün tarihi)" },
+          guncelAgirlikKg: { type: "number", description: "Mevcut ağırlığı (kg)" }
+        },
+        required: ["kupeNo", "tur", "cinsiyet", "irk", "dogumTarihi", "guncelAgirlikKg"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "updateAnimalStatus",
+      description: "Hayvanın genel durumunu değiştirir (Örn: Satıldı veya Öldü).",
+      parameters: {
+        type: "object",
+        properties: {
+          kupeNo: { type: "string", description: "Hayvanın küpe numarası" },
+          durum: { type: "string", enum: ["Aktif", "Satıldı", "Öldü"], description: "Hayvanın yeni durumu" },
+          satisFiyati: { type: "number", description: "Satıldıysa satış fiyatı (TL). Satılmadıysa veya verilmediyse 0 gönderin." },
+          tarih: { type: "string", description: "İşlem tarihi (YYYY-MM-DD)" }
+        },
+        required: ["kupeNo", "durum", "tarih"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "changeAnimalGroup",
+      description: "Hayvanı bulunduğu gruptan başka bir gruba taşır.",
+      parameters: {
+        type: "object",
+        properties: {
+          kupeNo: { type: "string", description: "Hayvanın küpe numarası" },
+          hedefGrupAdi: { type: "string", description: "Taşınacağı hedefin (grubun) tam adı veya adına çok benzeyen kelime" }
+        },
+        required: ["kupeNo", "hedefGrupAdi"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "updateAnimalNote",
+      description: "Belirtilen küpe numarasına sahip hayvanın notlar/açıklama bilgisini günceller veya not ekler.",
+      parameters: {
+        type: "object",
+        properties: {
+          kupeNo: { type: "string", description: "Hayvanın küpe numarası" },
+          not: { type: "string", description: "Eklenecek veya güncellenecek yeni not metni" }
+        },
+        required: ["kupeNo", "not"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "addWeightRecord",
+      description: "Hayvan için canlı ağırlık (tartım) kaydı ekler ve güncel ağırlığını günceller.",
+      parameters: {
+        type: "object",
+        properties: {
+          kupeNo: { type: "string", description: "Hayvanın küpe numarası" },
+          kg: { type: "number", description: "Tartılan yeni ağırlık (kg)" },
+          tarih: { type: "string", description: "İşlem tarihi (YYYY-MM-DD). Belirtilmezse bugünün tarihi kullanılır." }
+        },
+        required: ["kupeNo", "kg", "tarih"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "addReproductionRecord",
+      description: "İnek veya düveler için üreme (reprodüksiyon) takvimi olayı ekler.",
+      parameters: {
+        type: "object",
+        properties: {
+          kupeNo: { type: "string", description: "Hayvanın küpe numarası" },
+          tur: { type: "string", enum: ["Kızgınlık", "Tohumlama/Aşım", "Gebelik Kontrolü", "Doğum", "Kuruya Çıkarma", "Düşük/Ölü Doğum", "Diğer"], description: "Olay Türü" },
+          durum: { type: "string", enum: ["Gebe", "Boş", "Şüpheli", "Başarılı", "Başarısız", "Beklemede"], description: "Olayın veya tohumlamanın durumu" },
+          notlar: { type: "string", description: "Varsa olaya ait ekstra açıklama" },
+          tarih: { type: "string", description: "İşlem tarihi (YYYY-MM-DD). Belirtilmezse bugünün tarihi kullanılır." }
+        },
+        required: ["kupeNo", "tur", "durum", "tarih"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "addCalfRecord",
+      description: "Yeni doğan veya mevcut bir buzağıya 'Buzağı Büyütme Takibi' kaydı açar.",
+      parameters: {
+        type: "object",
+        properties: {
+          kupeNo: { type: "string", description: "Buzağının kendi küpe numarası" },
+          dogumAgirligiKg: { type: "number", description: "Doğum ağırlığı (kg)" },
+          agizSutuLitre: { type: "number", description: "İçtiği ağız sütü miktarı (Litre)" }
+        },
+        required: ["kupeNo", "dogumAgirligiKg", "agizSutuLitre"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "addNewFeedType",
+      description: "Yem deposuna sistemde hiç olmayan yeni bir yem cinsi tanımlar.",
+      parameters: {
+        type: "object",
+        properties: {
+          yemAdi: { type: "string", description: "Yemin adı (Örn: Yonca Balyası, Mısır Silajı)" },
+          tur: { type: "string", enum: ["Kaba Yem", "Kesif Yem", "Mineral/Vitamin"], description: "Yemin türü" },
+          birimFiyat: { type: "number", description: "KG başına birim fiyatı (TL)" },
+          stokKg: { type: "number", description: "Mevcut/Başlangıç stok miktarı (kg)" },
+          minStokUyariKg: { type: "number", description: "Uyarı verilecek minimum stok seviyesi (kg)" }
+        },
+        required: ["yemAdi", "tur", "birimFiyat", "stokKg", "minStokUyariKg"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "createNewGroup",
+      description: "Çiftliğe yeni bir fiziksel/mantıksal hayvan grubu (padok/bölme) ekler.",
+      parameters: {
+        type: "object",
+        properties: {
+          grupAdi: { type: "string", description: "Grubun adı (Örn: 1. Laktasyon İnekler, Besi Danaları)" },
+          tur: { type: "string", enum: ["İnek", "Tosun", "Boğa", "Öküz", "Düve", "Dana", "Buzağı", "Karma"], description: "Grupta barınacak hayvan türü" },
+          aciklama: { type: "string", description: "Grup hakkında kısa bilgi" }
+        },
+        required: ["grupAdi", "tur"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "addFinancialTransaction",
+      description: "Çiftliğin genel finans defterine ek Gelir veya Gider kaydeder (Süt satışı veya hayvan satışı HARİCİ tüm masraflar).",
+      parameters: {
+        type: "object",
+        properties: {
+          tip: { type: "string", enum: ["Gelir", "Gider"], description: "İşlemin tipi" },
+          kategori: { type: "string", description: "İşlem kategorisi (Örn: Veteriner & İlaç, Ekipman, Yakıt, Yem, İşçilik)" },
+          miktar: { type: "number", description: "İşlem tutarı (TL)" },
+          aciklama: { type: "string", description: "Harcamanın detayı" },
+          tarih: { type: "string", description: "İşlem tarihi (YYYY-MM-DD). Belirtilmezse bugünün tarihi kullanılır." }
+        },
+        required: ["tip", "kategori", "miktar", "aciklama", "tarih"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "assignRationToGroup",
+      description: "Bir hayvan grubuna özel bir rasyon reçetesi (isim ve içerik özeti) tanımlar veya atar.",
+      parameters: {
+        type: "object",
+        properties: {
+          grupAdi: { type: "string", description: "Rasyonun atanacağı grubun adı (Örn: Sağmallar, Besi Danaları)" },
+          rasyonAdi: { type: "string", description: "Atanacak rasyonun adı (Örn: Yüksek Verimli Süt Rasyonu)" },
+          rasyonOzet: { type: "string", description: "Rasyonun içeriği (Örn: 15 kg mısır silajı, 5 kg yonca, 2 kg süt yemi vb.)" }
+        },
+        required: ["grupAdi", "rasyonAdi", "rasyonOzet"]
+      }
+    }
+  }
+];
 
 const gatherFarmContext = async () => {
   const [
@@ -212,6 +560,8 @@ const Assistant: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [tempMessages, setTempMessages] = useState<Mesaj[]>([]);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
   
   const displayMessages = activeChat ? messages : tempMessages;
 
@@ -236,6 +586,68 @@ const Assistant: React.FC = () => {
       await db.syncQueue.add({ table: 'sohbetler', action: 'DELETE', payload: { id }, created_at: Date.now() });
       if(activeChatId === id) handleCreateNewChat();
     }
+  };
+
+  const toggleListening = () => {
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Tarayıcınız sesli komut özelliğini desteklemiyor. Lütfen Chrome, Edge veya Safari kullanın.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+    recognition.lang = 'tr-TR';
+    recognition.interimResults = true;
+    recognition.continuous = true;
+    
+    let finalTranscript = input;
+    let silenceTimer: any = null;
+
+    recognition.onstart = () => setIsListening(true);
+
+    recognition.onresult = (event: any) => {
+      if (silenceTimer) clearTimeout(silenceTimer);
+      
+      let interimTranscript = '';
+      let currentFinal = '';
+      
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          currentFinal += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
+      }
+      
+      if (currentFinal) {
+         finalTranscript = (finalTranscript + " " + currentFinal).trim();
+         setInput(finalTranscript);
+      } else {
+         setInput((finalTranscript + " " + interimTranscript).trim());
+      }
+      
+      silenceTimer = setTimeout(() => {
+        if (recognitionRef.current) {
+          recognitionRef.current.stop();
+        }
+      }, 1500);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Ses tanıma hatası:", event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => setIsListening(false);
+
+    recognition.start();
   };
 
   const handleSend = async (text: string = input) => {
@@ -281,7 +693,7 @@ const Assistant: React.FC = () => {
       
       const systemPrompt = {
         role: 'system',
-        content: STATIC_SYSTEM_PROMPT
+        content: `${STATIC_SYSTEM_PROMPT}\n\n# BİLGİ\nBugünün Tarihi: ${new Date().toISOString().split('T')[0]}`
       };
 
       const contextPrompt = {
@@ -303,6 +715,8 @@ const Assistant: React.FC = () => {
           model: "deepseek-chat",
           messages: apiMessages,
           temperature: 0.3,
+          tools: ASSISTANT_TOOLS,
+          tool_choice: "auto"
         }),
       });
 
@@ -312,7 +726,350 @@ const Assistant: React.FC = () => {
         throw new Error(data.error?.message || `API Hatası: ${response.status}`);
       }
 
-      const replyContent = data.choices[0].message.content;
+      let responseMessage = data.choices[0].message;
+
+      if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
+        apiMessages.push(responseMessage); // Asistanın fonksiyon çağırma niyetini history'e ekle
+
+        for (const toolCall of responseMessage.tool_calls) {
+          const functionName = toolCall.function.name;
+          const functionArgs = JSON.parse(toolCall.function.arguments);
+          let functionResult = "";
+
+          try {
+            if (functionName === "addMilkRecord") {
+               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase()).first();
+               if (!hayvan) throw new Error("Belirtilen küpe numarasına sahip hayvan bulunamadı.");
+               const payload = {
+                 id: uuidv4(),
+                 hayvanId: hayvan.id,
+                 tarih: parseDateString(functionArgs.tarih),
+                 litre: functionArgs.litre
+               };
+               await db.sutKayitlari.add(payload);
+               await db.syncQueue.add({ table: 'sutKayitlari', action: 'INSERT', payload, created_at: Date.now() });
+               functionResult = `Süt kaydı başarıyla eklendi. (Litre: ${payload.litre})`;
+
+            } else if (functionName === "addHealthRecord") {
+               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase()).first();
+               if (!hayvan) throw new Error("Belirtilen küpe numarasına sahip hayvan bulunamadı.");
+               const payload = {
+                  id: uuidv4(),
+                  hayvanId: hayvan.id,
+                  tarih: parseDateString(functionArgs.tarih),
+                  tur: functionArgs.tur,
+                  aciklama: functionArgs.aciklama,
+                  arinmaSuresiGun: 0
+               };
+               await db.saglikOlaylari.add(payload as any);
+               await db.syncQueue.add({ table: 'saglikOlaylari', action: 'INSERT', payload, created_at: Date.now() });
+               functionResult = `Sağlık kaydı başarıyla eklendi. (Tür: ${payload.tur})`;
+
+            } else if (functionName === "updateFeedStock") {
+               const yems = await db.yemler.toArray();
+               const hedefYem = yems.find(y => y.ad.toLowerCase() === functionArgs.yemAdi.toLowerCase());
+               if (!hedefYem) throw new Error(`"${functionArgs.yemAdi}" isminde bir yem bulunamadı.`);
+               
+               const artisMi = functionArgs.islemTipi === "Giriş";
+               const miktar = functionArgs.miktarKg;
+               const newStock = artisMi ? (hedefYem.stokKg + miktar) : (hedefYem.stokKg - miktar);
+               
+               const hareketPayload = {
+                  id: uuidv4(),
+                  yemId: hedefYem.id,
+                  islemTarihi: parseDateString(functionArgs.tarih),
+                  islemTuru: functionArgs.islemTipi,
+                  miktarKg: miktar,
+                  birimFiyat: hedefYem.birimFiyat,
+                  toplamTutar: miktar * hedefYem.birimFiyat
+               };
+               
+               await db.yemHareketleri.add(hareketPayload as any);
+               await db.syncQueue.add({ table: 'yemHareketleri', action: 'INSERT', payload: hareketPayload, created_at: Date.now() });
+               
+               const updatedYem = { ...hedefYem, stokKg: newStock };
+               await db.yemler.update(hedefYem.id, updatedYem);
+               await db.syncQueue.add({ table: 'yemler', action: 'UPDATE', payload: updatedYem, created_at: Date.now() });
+               
+               functionResult = `Yem stoğu güncellendi. Yeni Stok: ${newStock} kg.`;
+               
+            } else if (functionName === "updateFeedNutrition") {
+               const yems = await db.yemler.toArray();
+               const hedefYem = yems.find(y => y.ad.toLowerCase() === functionArgs.yemAdi.toLowerCase());
+               if (!hedefYem) throw new Error(`"${functionArgs.yemAdi}" isminde bir yem bulunamadı.`);
+               
+               const updatedYem = { 
+                  ...hedefYem,
+                  tur: functionArgs.tur !== undefined ? functionArgs.tur : hedefYem.tur,
+                  minStokUyariKg: functionArgs.minStokUyariKg !== undefined ? functionArgs.minStokUyariKg : hedefYem.minStokUyariKg,
+                  birimFiyat: functionArgs.birimFiyat !== undefined && functionArgs.birimFiyat > 0 ? functionArgs.birimFiyat : hedefYem.birimFiyat,
+                  kmYuzde: functionArgs.kmYuzde !== undefined ? functionArgs.kmYuzde : hedefYem.kmYuzde,
+                  meMcalKg: functionArgs.meMcalKg !== undefined ? functionArgs.meMcalKg : hedefYem.meMcalKg,
+                  hpYuzde: functionArgs.hpYuzde !== undefined ? functionArgs.hpYuzde : hedefYem.hpYuzde,
+                  caYuzde: functionArgs.caYuzde !== undefined ? functionArgs.caYuzde : hedefYem.caYuzde,
+                  pYuzde: functionArgs.pYuzde !== undefined ? functionArgs.pYuzde : hedefYem.pYuzde
+               };
+               
+               await db.yemler.update(hedefYem.id, updatedYem);
+               await db.syncQueue.add({ table: 'yemler', action: 'UPDATE', payload: updatedYem, created_at: Date.now() });
+               
+               functionResult = `Yem besin değerleri güncellendi. (Yeni Fiyat: ${updatedYem.birimFiyat} TL, KM: ${updatedYem.kmYuzde}%, ME: ${updatedYem.meMcalKg}, HP: ${updatedYem.hpYuzde}%)`;
+               
+            } else if (functionName === "addFeed") {
+               const yems = await db.yemler.toArray();
+               const existingYem = yems.find(y => y.ad.toLowerCase() === functionArgs.yemAdi.toLowerCase());
+               if (existingYem) throw new Error(`"${functionArgs.yemAdi}" isminde bir yem zaten var.`);
+               
+               const baslangicStok = functionArgs.ilkStokKg || 0;
+               const fiyat = functionArgs.birimFiyat || 0;
+               const islemTarihiStr = parseDateString(functionArgs.tarih);
+               
+               const payload = {
+                 id: uuidv4(),
+                 ad: functionArgs.yemAdi,
+                 tur: functionArgs.tur,
+                 stokKg: baslangicStok,
+                 birimFiyat: fiyat,
+                 minStokUyariKg: functionArgs.minStokUyariKg !== undefined ? functionArgs.minStokUyariKg : 500,
+                 kmYuzde: functionArgs.kmYuzde !== undefined ? functionArgs.kmYuzde : 88,
+                 meMcalKg: functionArgs.meMcalKg !== undefined ? functionArgs.meMcalKg : 2.2,
+                 hpYuzde: functionArgs.hpYuzde !== undefined ? functionArgs.hpYuzde : 12,
+                 caYuzde: functionArgs.caYuzde !== undefined ? functionArgs.caYuzde : 0.5,
+                 pYuzde: functionArgs.pYuzde !== undefined ? functionArgs.pYuzde : 0.3,
+                 eklenmeTarihi: Date.now()
+               };
+               
+               await db.yemler.add(payload as any);
+               await db.syncQueue.add({ table: 'yemler', action: 'INSERT', payload, created_at: Date.now() });
+               
+               if (baslangicStok > 0) {
+                 const hareketPayload = {
+                    id: uuidv4(),
+                    yemId: payload.id,
+                    islemTarihi: islemTarihiStr,
+                    islemTuru: "Giriş",
+                    miktarKg: baslangicStok,
+                    birimFiyat: fiyat,
+                    toplamTutar: baslangicStok * fiyat
+                 };
+                 await db.yemHareketleri.add(hareketPayload as any);
+                 await db.syncQueue.add({ table: 'yemHareketleri', action: 'INSERT', payload: hareketPayload, created_at: Date.now() });
+               }
+               
+               functionResult = `"${payload.ad}" başarıyla sisteme yeni yem olarak kaydedildi. (Fiyat: ${payload.birimFiyat} TL, Stok: ${baslangicStok} kg)`;
+               
+            } else if (functionName === "addVaccineProtocol") {
+               const payload = {
+                 id: uuidv4(),
+                 ad: functionArgs.protokolAd,
+                 hedefTur: functionArgs.hedefTur,
+                 uygulamalar: (functionArgs.uygulamalar || []).map((u: any) => ({
+                    ad: u.asiAd,
+                    gunFarki: u.gunFarki || 0,
+                    tekrarGun: u.tekrarGun || undefined,
+                    tekrarSayisi: u.tekrarSayisi || undefined,
+                    surekliTekrar: false,
+                    maliyet: 0
+                 }))
+               };
+               
+               await db.asiProtokolleri.add(payload as any);
+               await db.syncQueue.add({ table: 'asiProtokolleri', action: 'INSERT', payload, created_at: Date.now() });
+               
+               functionResult = `"${payload.ad}" isimli aşı protokolü başarıyla eklendi (${payload.uygulamalar.length} farklı aşama içeriyor).`;
+               
+            } else if (functionName === "addAnimal") {
+               const payload = {
+                 id: uuidv4(),
+                 kupeNo: functionArgs.kupeNo,
+                 tur: functionArgs.tur,
+                 cinsiyet: functionArgs.cinsiyet,
+                 irk: functionArgs.irk,
+                 dogumTarihi: functionArgs.dogumTarihi,
+                 guncelAgirlikKg: functionArgs.guncelAgirlikKg,
+                 durum: 'Aktif',
+                 grupId: null
+               };
+               await db.hayvanlar.add(payload as any);
+               await db.syncQueue.add({ table: 'hayvanlar', action: 'INSERT', payload, created_at: Date.now() });
+               functionResult = `Hayvan başarıyla sisteme kaydedildi. (Küpe: ${payload.kupeNo})`;
+
+            } else if (functionName === "updateAnimalStatus") {
+               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase()).first();
+               if (!hayvan) throw new Error("Hayvan bulunamadı.");
+               
+               const updatedHayvan = { 
+                 ...hayvan, 
+                 durum: functionArgs.durum, 
+                 satisFiyati: functionArgs.satisFiyati || 0,
+                 satisTarihi: functionArgs.satisFiyati ? functionArgs.tarih : undefined 
+               };
+               
+               await db.hayvanlar.update(hayvan.id, updatedHayvan);
+               await db.syncQueue.add({ table: 'hayvanlar', action: 'UPDATE', payload: updatedHayvan, created_at: Date.now() });
+               functionResult = `Hayvanın durumu '${functionArgs.durum}' olarak güncellendi.`;
+
+            } else if (functionName === "changeAnimalGroup") {
+               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase()).first();
+               if (!hayvan) throw new Error("Hayvan bulunamadı.");
+               
+               const gruplar = await db.gruplar.toArray();
+               const hedefGrup = gruplar.find(g => g.ad.toLowerCase().includes(functionArgs.hedefGrupAdi.toLowerCase()));
+               if (!hedefGrup) throw new Error(`'${functionArgs.hedefGrupAdi}' isminde bir grup bulunamadı.`);
+               
+               const updatedHayvan = { ...hayvan, grupId: hedefGrup.id };
+               await db.hayvanlar.update(hayvan.id, updatedHayvan);
+               await db.syncQueue.add({ table: 'hayvanlar', action: 'UPDATE', payload: updatedHayvan, created_at: Date.now() });
+               functionResult = `Hayvan başarıyla '${hedefGrup.ad}' grubuna taşındı.`;
+
+            } else if (functionName === "updateAnimalNote") {
+                const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase()).first();
+                if (!hayvan) throw new Error("Belirtilen küpe numarasına sahip hayvan bulunamadı.");
+                
+                const updatedHayvan = { ...hayvan, notlar: functionArgs.not };
+                await db.hayvanlar.update(hayvan.id, updatedHayvan);
+                await db.syncQueue.add({ table: 'hayvanlar', action: 'UPDATE', payload: updatedHayvan, created_at: Date.now() });
+                functionResult = `Hayvan notları başarıyla güncellendi. Yeni Not: ${functionArgs.not}`;
+
+             } else if (functionName === "addWeightRecord") {
+               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase()).first();
+               if (!hayvan) throw new Error("Hayvan bulunamadı.");
+               
+               const payload = {
+                 id: uuidv4(),
+                 hayvanId: hayvan.id,
+                 tarih: parseDateString(functionArgs.tarih),
+                 kg: functionArgs.kg
+               };
+               await db.agirlikKayitlari.add(payload);
+               await db.syncQueue.add({ table: 'agirlikKayitlari', action: 'INSERT', payload, created_at: Date.now() });
+               
+               const updatedHayvan = { ...hayvan, guncelAgirlikKg: functionArgs.kg };
+               await db.hayvanlar.update(hayvan.id, updatedHayvan);
+               await db.syncQueue.add({ table: 'hayvanlar', action: 'UPDATE', payload: updatedHayvan, created_at: Date.now() });
+               functionResult = `Ağırlık kaydı eklendi. Güncel ağırlık: ${functionArgs.kg} kg.`;
+
+            } else if (functionName === "addReproductionRecord") {
+               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase()).first();
+               if (!hayvan) throw new Error("Hayvan bulunamadı.");
+               
+               const payload = {
+                 id: uuidv4(),
+                 hayvanId: hayvan.id,
+                 tarih: parseDateString(functionArgs.tarih),
+                 tur: functionArgs.tur,
+                 durum: functionArgs.durum,
+                 notlar: functionArgs.notlar || ""
+               };
+               await db.uremeKayitlari.add(payload as any);
+               await db.syncQueue.add({ table: 'uremeKayitlari', action: 'INSERT', payload, created_at: Date.now() });
+               functionResult = `Üreme kaydı başarıyla eklendi. (${payload.tur} - ${payload.durum})`;
+
+            } else if (functionName === "addCalfRecord") {
+               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase()).first();
+               if (!hayvan) throw new Error("Belirtilen küpe numarasına sahip buzağı bulunamadı.");
+               
+               const payload = {
+                 id: uuidv4(),
+                 hayvanId: hayvan.id,
+                 dogumAgirligiKg: functionArgs.dogumAgirligiKg,
+                 suttenKesimHedefTarihi: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                 gunlukAgizSutuLitre: functionArgs.agizSutuLitre,
+                 guncelDurum: 'Süt İçiyor'
+               };
+               await db.buzagiKayitlari.add(payload as any);
+               await db.syncQueue.add({ table: 'buzagiKayitlari', action: 'INSERT', payload, created_at: Date.now() });
+               functionResult = `Buzağı büyütme kaydı oluşturuldu. Doğum Ağırlığı: ${payload.dogumAgirligiKg} kg.`;
+
+            } else if (functionName === "addNewFeedType") {
+               const payload = {
+                 id: uuidv4(),
+                 ad: functionArgs.yemAdi,
+                 tur: functionArgs.tur,
+                 birimFiyat: functionArgs.birimFiyat,
+                 stokKg: functionArgs.stokKg,
+                 minStokUyariKg: functionArgs.minStokUyariKg
+               };
+               await db.yemler.add(payload as any);
+               await db.syncQueue.add({ table: 'yemler', action: 'INSERT', payload, created_at: Date.now() });
+               functionResult = `Yeni yem türü başarıyla eklendi: ${payload.ad}`;
+
+            } else if (functionName === "createNewGroup") {
+               const payload = {
+                 id: uuidv4(),
+                 ad: functionArgs.grupAdi,
+                 tur: functionArgs.tur,
+                 aciklama: functionArgs.aciklama || ""
+               };
+               await db.gruplar.add(payload as any);
+               await db.syncQueue.add({ table: 'gruplar', action: 'INSERT', payload, created_at: Date.now() });
+               functionResult = `Yeni grup başarıyla oluşturuldu: ${payload.ad}`;
+
+            } else if (functionName === "addFinancialTransaction") {
+               const payload = {
+                 id: uuidv4(),
+                 tip: functionArgs.tip,
+                 kategori: functionArgs.kategori,
+                 miktar: functionArgs.miktar,
+                 aciklama: functionArgs.aciklama,
+                 tarih: parseDateString(functionArgs.tarih)
+               };
+               await db.ekFinansalIslemler.add(payload as any);
+               await db.syncQueue.add({ table: 'ekFinansalIslemler', action: 'INSERT', payload, created_at: Date.now() });
+               functionResult = `Finansal kayıt başarıyla işlendi. (${payload.tip}: ${payload.miktar} TL)`;
+
+            } else if (functionName === "assignRationToGroup") {
+               const gruplar = await db.gruplar.toArray();
+               const hedefGrup = gruplar.find(g => g.ad.toLowerCase().includes(functionArgs.grupAdi.toLowerCase()));
+               if (!hedefGrup) throw new Error(`'${functionArgs.grupAdi}' isminde bir grup bulunamadı.`);
+               
+               const updatedGrup = {
+                 ...hedefGrup,
+                 rasyonAdi: functionArgs.rasyonAdi,
+                 rasyonOzet: functionArgs.rasyonOzet,
+                 rasyonTarihi: new Date().toISOString().split('T')[0]
+               };
+               
+               await db.gruplar.update(hedefGrup.id, updatedGrup);
+               await db.syncQueue.add({ table: 'gruplar', action: 'UPDATE', payload: updatedGrup, created_at: Date.now() });
+               functionResult = `'${updatedGrup.ad}' grubunun rasyonu başarıyla '${updatedGrup.rasyonAdi}' olarak ayarlandı.`;
+
+
+            } else {
+              throw new Error("Bilinmeyen fonksiyon çağrısı.");
+            }
+          } catch (err: any) {
+             functionResult = `İşlem Başarısız: ${err.message}`;
+          }
+
+          apiMessages.push({
+            tool_call_id: toolCall.id,
+            role: "tool",
+            name: functionName,
+            content: functionResult
+          });
+        }
+
+        let secondResponse = await fetch("https://api.deepseek.com/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model: "deepseek-chat",
+            messages: apiMessages,
+            temperature: 0.3
+          }),
+        });
+
+        let secondData = await secondResponse.json();
+        if (secondData.choices && secondData.choices.length > 0) {
+           responseMessage = secondData.choices[0].message;
+        }
+      }
+
+      const replyContent = responseMessage.content;
       const finalAssistantMessage: Mesaj = { role: 'assistant', content: replyContent, createdAt: Date.now() };
       currentMessages.push(finalAssistantMessage);
 
@@ -558,15 +1315,25 @@ const Assistant: React.FC = () => {
                 onChange={(e) => setInput(e.target.value)}
                 disabled={isLoading}
                 placeholder="Yapay zekaya bir soru sorun..."
-                className="w-full pl-5 pr-14 py-3.5 bg-white dark:bg-gray-800 border border-earth-300 dark:border-gray-600 rounded-2xl md:rounded-full focus:outline-none focus:ring-2 focus:ring-nature-500 focus:border-nature-500 text-earth-900 dark:text-gray-100 text-sm md:text-base disabled:opacity-50 transition shadow-sm"
+                className="w-full pl-5 pr-[100px] py-3.5 bg-white dark:bg-gray-800 border border-earth-300 dark:border-gray-600 rounded-2xl md:rounded-full focus:outline-none focus:ring-2 focus:ring-nature-500 focus:border-nature-500 text-earth-900 dark:text-gray-100 text-sm md:text-base disabled:opacity-50 transition shadow-sm"
               />
-              <button 
-                type="submit" 
-                disabled={!input.trim() || isLoading}
-                className="absolute right-2 p-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full disabled:opacity-40 disabled:hover:bg-blue-600 transition shadow-md"
-              >
-                <Send className="w-4.5 h-4.5 md:w-5 md:h-5" />
-              </button>
+              <div className="absolute right-2 flex items-center space-x-1">
+                <button 
+                  type="button" 
+                  onClick={toggleListening}
+                  title={isListening ? "Dinleniyor... (Kapatmak için tıklayın)" : "Sesli komut için tıklayın"}
+                  className={`p-2.5 rounded-full transition shadow-md ${isListening ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' : 'bg-earth-100 hover:bg-earth-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-earth-600 dark:text-gray-300'}`}
+                >
+                  {isListening ? <MicOff className="w-4.5 h-4.5 md:w-5 md:h-5" /> : <Mic className="w-4.5 h-4.5 md:w-5 md:h-5" />}
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={!input.trim() || isLoading}
+                  className="p-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full disabled:opacity-40 disabled:hover:bg-blue-600 transition shadow-md"
+                >
+                  <Send className="w-4.5 h-4.5 md:w-5 md:h-5" />
+                </button>
+              </div>
             </form>
           </div>
 

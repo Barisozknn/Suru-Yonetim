@@ -218,10 +218,11 @@ export const SmartCalendar: React.FC = () => {
 
     // Yem
     yemHareketleri.forEach(k => {
+      if (!k.islemTarihi) return;
       events.push({
         id: `yem-${k.id}`,
         type: 'Yem',
-        title: `${getYemAd(k.yemId)} ${k.islemTuru}`,
+        title: `${getYemAd(k.yemId)} ${k.islemTuru || 'Bilinmiyor'}`,
         details: `${k.miktarKg} kg`,
         dateStr: k.islemTarihi.split('T')[0],
         icon: <Wheat className="w-4 h-4" />,

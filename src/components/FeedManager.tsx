@@ -80,6 +80,9 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
     setCaYuzde(yem.caYuzde ?? 0.5);
     setPYuzde(yem.pYuzde ?? 0.3);
     setIsAddingNew(true);
+    setTimeout(() => {
+      document.getElementById('yem-form-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
   };
 
   const handleDeleteClick = async (id: string) => {
@@ -130,7 +133,7 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
           </div>
 
           {isAddingNew && (
-            <form onSubmit={handleAddNewFeed} className="mb-6 bg-white dark:bg-gray-800 p-5 rounded-xl border border-earth-200 dark:border-gray-700 shadow-sm animate-fade-in">
+            <form id="yem-form-container" onSubmit={handleAddNewFeed} className="mb-6 bg-white dark:bg-gray-800 p-5 rounded-xl border border-earth-200 dark:border-gray-700 shadow-sm animate-fade-in">
               <div className="flex justify-between items-center mb-4 border-b pb-2">
                 <h4 className="font-bold text-earth-800 dark:text-gray-200">
                   {editingFeedId ? 'Yemi Düzenle' : 'Yeni Yem Kaydı'}

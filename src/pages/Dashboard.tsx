@@ -23,6 +23,8 @@ import { Link } from 'react-router-dom';
 import { SmartCalendar } from '../components/SmartCalendar';
 import { useStore } from '../store/useStore';
 import FarmSwitcher from '../components/FarmSwitcher';
+import UyariPanel from '../components/UyariPanel';
+import { useAnomalyDetection } from '../hooks/useAnomalyDetection';
 
 const Dashboard: React.FC = () => {
   const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
@@ -32,11 +34,14 @@ const Dashboard: React.FC = () => {
   const yemler = useLiveFarmQuery(() => db.yemler.toArray()) || [];
   const gruplar = useLiveFarmQuery(() => db.gruplar.toArray()) || [];
   const { uremeAyarlari } = useStore();
+  const anomalyUyarilar = useAnomalyDetection();
 
   const totalAnimals = calculateTotalAnimals(hayvanlar);
   const speciesDist = calculateSpeciesDistribution(hayvanlar);
   const avgMilk = calculateAverageMilkYield7Days(sutKayitlari);
-  const activeAlerts = getActiveHealthAlertsCount(asilar, hayvanlar);
+  const vaccineAlerts = getActiveHealthAlertsCount(asilar, hayvanlar);
+  // Toplam uyarı = gecikmiş aşılar + anomali uyarıları
+  const activeAlerts = vaccineAlerts + anomalyUyarilar.filter(u => u.siddet === 'KRITIK').length;
   const expectedBirths = getExpectedBirths30DaysCount(uremeKayitlari, hayvanlar);
   const heatChecks = getUpcomingHeatChecks(uremeKayitlari, hayvanlar);
   const reInseminations = getUpcomingReInseminations(uremeKayitlari, hayvanlar);
@@ -106,6 +111,9 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Akıllı Anomali & Uyarı Paneli */}
+      <UyariPanel uyarilar={anomalyUyarilar} />
 
       {/* Sürü Üreme Performansı (İnekler) */}
       <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800/50 rounded-2xl p-6">
@@ -219,7 +227,7 @@ const Dashboard: React.FC = () => {
               </div>
             ) : (
               <>
-                {activeAlerts > 0 && (
+                {vaccineAlerts > 0 && (
                   <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 p-4 rounded-xl">
                     <div className="flex items-center space-x-3 mb-3">
                       <div className="bg-white dark:bg-gray-800 p-2 rounded-lg"><Syringe className="w-5 h-5 text-red-600 dark:text-red-400" /></div>
@@ -242,6 +250,18 @@ const Dashboard: React.FC = () => {
                       </div>
                     )}
                     <Link to="/saglik" className="mt-3 ml-12 inline-block text-red-600 dark:text-red-400 font-bold text-sm hover:underline">Tümünü Gör &rarr;</Link>
+                  </div>
+                )}
+
+                {anomalyUyarilar.filter(u => u.siddet === 'KRITIK').length > 0 && (
+                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 p-4 rounded-xl">
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-white dark:bg-gray-800 p-2 rounded-lg"><AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" /></div>
+                      <div>
+                        <p className="font-bold text-amber-900">Kritik Akıllı Uyarılar</p>
+                        <p className="text-sm text-amber-700 dark:text-amber-400">Akıllı Uyarılar panelinden detayları inceleyin.</p>
+                      </div>
+                    </div>
                   </div>
                 )}
 
