@@ -400,3 +400,42 @@ ADD COLUMN IF NOT EXISTS hp_yuzde NUMERIC,
 ADD COLUMN IF NOT EXISTS ca_yuzde NUMERIC,
 ADD COLUMN IF NOT EXISTS p_yuzde NUMERIC;
 
+-- =============================================================
+-- Yeni Modüller: To-Do (Kişisel Görevler) ve Çiftlik Günlüğü
+-- =============================================================
+
+-- 1. TODOS (GÖREVLER) TABLOSU
+CREATE TABLE IF NOT EXISTS public."todos" (
+    id UUID PRIMARY KEY,
+    "ciftlikId" UUID REFERENCES public.ciftlikler(id) ON DELETE CASCADE,
+    "user_id" UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    metin TEXT NOT NULL,
+    "yapildiMi" BOOLEAN DEFAULT FALSE,
+    "olusturulmaTarihi" BIGINT NOT NULL
+);
+
+ALTER TABLE public."todos" ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their farm todos" ON public."todos" FOR SELECT USING ("user_id" = auth.uid());
+CREATE POLICY "Users can insert todos" ON public."todos" FOR INSERT WITH CHECK ("user_id" = auth.uid());
+CREATE POLICY "Users can update todos" ON public."todos" FOR UPDATE USING ("user_id" = auth.uid());
+CREATE POLICY "Users can delete todos" ON public."todos" FOR DELETE USING ("user_id" = auth.uid());
+
+-- 2. ÇİFTLİK GÜNLÜĞÜ (NOTLAR) TABLOSU
+CREATE TABLE IF NOT EXISTS public."gunlukNotlari" (
+    id UUID PRIMARY KEY,
+    "ciftlikId" UUID REFERENCES public.ciftlikler(id) ON DELETE CASCADE,
+    "user_id" UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    tarih TEXT NOT NULL,
+    metin TEXT NOT NULL,
+    "olusturulmaTarihi" BIGINT NOT NULL,
+    medyalar JSONB DEFAULT '[]'::jsonb,
+    etiketler JSONB DEFAULT '[]'::jsonb
+);
+
+ALTER TABLE public."gunlukNotlari" ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their farm notes" ON public."gunlukNotlari" FOR SELECT USING ("user_id" = auth.uid());
+CREATE POLICY "Users can insert notes" ON public."gunlukNotlari" FOR INSERT WITH CHECK ("user_id" = auth.uid());
+CREATE POLICY "Users can update notes" ON public."gunlukNotlari" FOR UPDATE USING ("user_id" = auth.uid());
+CREATE POLICY "Users can delete notes" ON public."gunlukNotlari" FOR DELETE USING ("user_id" = auth.uid());

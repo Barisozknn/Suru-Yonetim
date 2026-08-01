@@ -1,6 +1,6 @@
 import { useStore } from '../store/useStore';
 import Dexie, { type Table } from 'dexie';
-import type { Hayvan, Grup, Yem, YemHareketi, SutKaydi, AgirlikKaydi, SaglikOlayi, AsiProtokolu, PlanlananAsi, UremeKaydi, BuzagiKaydi, Sohbet, EkFinansalIslem, GunlukYemMaliyeti } from '../types';
+import type { Hayvan, Grup, Yem, YemHareketi, SutKaydi, AgirlikKaydi, SaglikOlayi, AsiProtokolu, PlanlananAsi, UremeKaydi, BuzagiKaydi, Sohbet, EkFinansalIslem, GunlukYemMaliyeti, Todo, GunlukNotu } from '../types';
 
 export interface SyncOperation {
   id?: number;
@@ -26,12 +26,76 @@ export class SuruYonetimDB extends Dexie {
   sohbetler!: Table<Sohbet, string>;
   ekFinansalIslemler!: Table<EkFinansalIslem, string>;
   gunlukYemMaliyetleri!: Table<GunlukYemMaliyeti, string>;
+  todos!: Table<Todo, string>;
+  gunlukNotlari!: Table<GunlukNotu, string>;
   syncQueue!: Table<SyncOperation, number>;
 
   constructor() {
     super('SuruYonetimDB');
 
     
+
+    this.version(13).stores({
+      ciftlikler: 'id, ad',
+      hayvanlar: 'id, ciftlikId, kupeNo, tur, irk, durum, grupId',
+      gruplar: 'id, ciftlikId, ad, tur',
+      yemler: 'id, ciftlikId, ad, tur',
+      yemHareketleri: 'id, ciftlikId, yemId, islemTarihi',
+      sutKayitlari: 'id, ciftlikId, hayvanId, tarih',
+      agirlikKayitlari: 'id, ciftlikId, hayvanId, tarih',
+      saglikOlaylari: 'id, ciftlikId, hayvanId, tarih, tur',
+      asiProtokolleri: 'id, ciftlikId, ad, hedefTur',
+      planlananAsilar: 'id, ciftlikId, hayvanId, planlanaTarih, yapildiMi',
+      uremeKayitlari: 'id, ciftlikId, hayvanId, tarih, tur',
+      buzagiKayitlari: 'id, ciftlikId, hayvanId',
+      sohbetler: 'id, ciftlikId, olusturulmaTarihi, guncellenmeTarihi',
+      ekFinansalIslemler: 'id, ciftlikId, tarih, tip, kategori',
+      gunlukYemMaliyetleri: 'id, ciftlikId, tarih',
+      todos: 'id, ciftlikId, yapildiMi, olusturulmaTarihi',
+      gunlukNotlari: 'id, ciftlikId, tarih, olusturulmaTarihi, *etiketler',
+      syncQueue: '++id, ciftlikId, table, created_at'
+    });
+
+    this.version(12).stores({
+      ciftlikler: 'id, ad',
+      hayvanlar: 'id, ciftlikId, kupeNo, tur, irk, durum, grupId',
+      gruplar: 'id, ciftlikId, ad, tur',
+      yemler: 'id, ciftlikId, ad, tur',
+      yemHareketleri: 'id, ciftlikId, yemId, islemTarihi',
+      sutKayitlari: 'id, ciftlikId, hayvanId, tarih',
+      agirlikKayitlari: 'id, ciftlikId, hayvanId, tarih',
+      saglikOlaylari: 'id, ciftlikId, hayvanId, tarih, tur',
+      asiProtokolleri: 'id, ciftlikId, ad, hedefTur',
+      planlananAsilar: 'id, ciftlikId, hayvanId, planlanaTarih, yapildiMi',
+      uremeKayitlari: 'id, ciftlikId, hayvanId, tarih, tur',
+      buzagiKayitlari: 'id, ciftlikId, hayvanId',
+      sohbetler: 'id, ciftlikId, olusturulmaTarihi, guncellenmeTarihi',
+      ekFinansalIslemler: 'id, ciftlikId, tarih, tip, kategori',
+      gunlukYemMaliyetleri: 'id, ciftlikId, tarih',
+      todos: 'id, ciftlikId, yapildiMi, olusturulmaTarihi',
+      gunlukNotlari: 'id, ciftlikId, tarih, olusturulmaTarihi',
+      syncQueue: '++id, ciftlikId, table, created_at'
+    });
+
+    this.version(11).stores({
+      ciftlikler: 'id, ad',
+      hayvanlar: 'id, ciftlikId, kupeNo, tur, irk, durum, grupId',
+      gruplar: 'id, ciftlikId, ad, tur',
+      yemler: 'id, ciftlikId, ad, tur',
+      yemHareketleri: 'id, ciftlikId, yemId, islemTarihi',
+      sutKayitlari: 'id, ciftlikId, hayvanId, tarih',
+      agirlikKayitlari: 'id, ciftlikId, hayvanId, tarih',
+      saglikOlaylari: 'id, ciftlikId, hayvanId, tarih, tur',
+      asiProtokolleri: 'id, ciftlikId, ad, hedefTur',
+      planlananAsilar: 'id, ciftlikId, hayvanId, planlanaTarih, yapildiMi',
+      uremeKayitlari: 'id, ciftlikId, hayvanId, tarih, tur',
+      buzagiKayitlari: 'id, ciftlikId, hayvanId',
+      sohbetler: 'id, ciftlikId, olusturulmaTarihi, guncellenmeTarihi',
+      ekFinansalIslemler: 'id, ciftlikId, tarih, tip, kategori',
+      gunlukYemMaliyetleri: 'id, ciftlikId, tarih',
+      todos: 'id, ciftlikId, yapildiMi, olusturulmaTarihi',
+      syncQueue: '++id, ciftlikId, table, created_at'
+    });
 
     this.version(10).stores({
       ciftlikler: 'id, ad',

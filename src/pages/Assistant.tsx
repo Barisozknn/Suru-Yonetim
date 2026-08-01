@@ -199,6 +199,73 @@ const ASSISTANT_TOOLS = [
   {
     type: "function",
     function: {
+      name: "createRation",
+      description: "Belirli bir hayvan grubu için yeni bir rasyon (beslenme tarifi) oluşturup kaydeder.",
+      parameters: {
+        type: "object",
+        properties: {
+          hedefGrupAdi: { type: "string", description: "Rasyonun uygulanacağı hayvan grubunun adı" },
+          rasyonAdi: { type: "string", description: "Oluşturulan rasyonun adı (Örn: Yüksek Verimli Süt Rasyonu)" },
+          rasyonOzet: { type: "string", description: "Hangi yemden kaç kg kullanılacağını anlatan özet (Örn: 20kg Silaj, 5kg Yonca)" }
+        },
+        required: ["hedefGrupAdi", "rasyonAdi", "rasyonOzet"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "addFinancialTransaction",
+      description: "Çiftlik için yeni bir gelir veya gider (finansal işlem) kaydı oluşturur.",
+      parameters: {
+        type: "object",
+        properties: {
+          tip: { type: "string", enum: ["Gelir", "Gider"], description: "İşlem tipi" },
+          kategori: { type: "string", enum: ["Süt Satışı", "Hayvan Satışı", "Yem Gideri", "Sağlık Gideri", "Üreme Gideri", "Ek Gelir", "Ek Gider"], description: "İşlemin kategorisi" },
+          miktar: { type: "number", description: "İşlem tutarı (TL vb.)" },
+          aciklama: { type: "string", description: "İşlem açıklaması (Örn: Firmaya süt satışı, Veteriner ilaç parası)" },
+          tarih: { type: "string", description: "İşlem tarihi (YYYY-MM-DD)" }
+        },
+        required: ["tip", "kategori", "miktar", "tarih"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "addFarmReminder",
+      description: "Çiftlik takvimine gelecekte yapılması gereken bir işlem için hatırlatıcı ekler.",
+      parameters: {
+        type: "object",
+        properties: {
+          kupeNo: { type: "string", description: "Hatırlatıcının ekleneceği hayvanın küpe numarası (Sürü geneli ise boş bırakın)" },
+          aciklama: { type: "string", description: "Hatırlatıcı mesajı veya yapılacak iş (Örn: Tohumlama kontrolü yapılacak)" },
+          tarih: { type: "string", description: "Hatırlatmanın yapılacağı tarih (YYYY-MM-DD)" }
+        },
+        required: ["aciklama", "tarih"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "bulkApplyHealthRecord",
+      description: "Belirli bir gruptaki TÜM hayvanlara aynı anda (topluca) sağlık işlemi, aşı veya tedavi kaydı ekler.",
+      parameters: {
+        type: "object",
+        properties: {
+          grupAdi: { type: "string", description: "Uygulamanın yapılacağı grubun adı (Örn: Sağmallar)" },
+          tur: { type: "string", enum: ["Muayene", "Aşı", "İlaç", "Operasyon", "Diğer"], description: "Uygulanan işlemin türü" },
+          aciklama: { type: "string", description: "Uygulamanın detayı (Örn: Şap aşısı yapıldı)" },
+          tarih: { type: "string", description: "İşlem tarihi (YYYY-MM-DD)" }
+        },
+        required: ["grupAdi", "tur", "aciklama", "tarih"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
       name: "addAnimal",
       description: "Sisteme sıfırdan yeni bir hayvan ekler.",
       parameters: {
@@ -878,6 +945,87 @@ const Assistant: React.FC = () => {
                
                functionResult = `"${payload.ad}" isimli aşı protokolü başarıyla eklendi (${payload.uygulamalar.length} farklı aşama içeriyor).`;
                
+            } else if (functionName === "createRation") {
+               const gruplar = await db.gruplar.toArray();
+               const hedefGrup = gruplar.find(g => g.ad.toLowerCase() === functionArgs.hedefGrupAdi.toLowerCase());
+               if (!hedefGrup) throw new Error(`'${functionArgs.hedefGrupAdi}' isminde bir grup bulunamadı.`);
+               
+               const updatedGrup = { 
+                 ...hedefGrup, 
+                 rasyonAdi: functionArgs.rasyonAdi,
+                 rasyonOzet: functionArgs.rasyonOzet,
+                 rasyonTarihi: new Date().toISOString()
+               };
+               
+               await db.gruplar.update(hedefGrup.id, updatedGrup);
+               await db.syncQueue.add({ table: 'gruplar', action: 'UPDATE', payload: updatedGrup, created_at: Date.now() });
+               
+               functionResult = `"${functionArgs.rasyonAdi}" adlı rasyon "${hedefGrup.ad}" grubuna başarıyla atandı.`;
+
+            } else if (functionName === "addFinancialTransaction") {
+               const payload = {
+                 id: uuidv4(),
+                 tarih: parseDateString(functionArgs.tarih),
+                 tip: functionArgs.tip,
+                 kategori: functionArgs.kategori,
+                 miktar: functionArgs.miktar,
+                 aciklama: functionArgs.aciklama || ""
+               };
+               
+               await db.ekFinansalIslemler.add(payload as any);
+               await db.syncQueue.add({ table: 'ekFinansalIslemler', action: 'INSERT', payload, created_at: Date.now() });
+               
+               functionResult = `Finansal işlem başarıyla eklendi (${payload.tip}: ${payload.miktar} TL).`;
+
+            } else if (functionName === "addFarmReminder") {
+               let hayvanId = "sürü-geneli";
+               if (functionArgs.kupeNo && functionArgs.kupeNo.trim() !== "") {
+                 const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase()).first();
+                 if (!hayvan) throw new Error("Belirtilen küpe numarasına sahip hayvan bulunamadı.");
+                 hayvanId = hayvan.id;
+               }
+               
+               const payload = {
+                 id: uuidv4(),
+                 hayvanId,
+                 tarih: parseDateString(functionArgs.tarih),
+                 tur: 'Diğer',
+                 aciklama: `[HATIRLATICI] ${functionArgs.aciklama}`,
+                 arinmaSuresiGun: 0
+               };
+               
+               await db.saglikOlaylari.add(payload as any);
+               await db.syncQueue.add({ table: 'saglikOlaylari', action: 'INSERT', payload, created_at: Date.now() });
+               
+               functionResult = `Akıllı Takvime hatırlatıcı başarıyla eklendi: ${functionArgs.aciklama}`;
+
+            } else if (functionName === "bulkApplyHealthRecord") {
+               const gruplar = await db.gruplar.toArray();
+               const hedefGrup = gruplar.find(g => g.ad.toLowerCase() === functionArgs.grupAdi.toLowerCase());
+               if (!hedefGrup) throw new Error(`'${functionArgs.grupAdi}' isminde bir grup bulunamadı.`);
+               
+               const gruptakiHayvanlar = await db.hayvanlar.where('grupId').equals(hedefGrup.id).toArray();
+               if (gruptakiHayvanlar.length === 0) throw new Error("Grupta hiç hayvan bulunmuyor.");
+               
+               const islemTarihi = parseDateString(functionArgs.tarih);
+               let successCount = 0;
+               
+               for (const hayvan of gruptakiHayvanlar) {
+                 const payload = {
+                   id: uuidv4(),
+                   hayvanId: hayvan.id,
+                   tarih: islemTarihi,
+                   tur: functionArgs.tur,
+                   aciklama: `(Toplu İşlem) ${functionArgs.aciklama}`,
+                   arinmaSuresiGun: 0
+                 };
+                 await db.saglikOlaylari.add(payload as any);
+                 await db.syncQueue.add({ table: 'saglikOlaylari', action: 'INSERT', payload, created_at: Date.now() });
+                 successCount++;
+               }
+               
+               functionResult = `"${hedefGrup.ad}" grubundaki ${successCount} hayvana "${functionArgs.aciklama}" işlemi topluca eklendi.`;
+
             } else if (functionName === "addAnimal") {
                const payload = {
                  id: uuidv4(),

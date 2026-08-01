@@ -3,7 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { 
   Menu, X, Home, Users, Layers, Wheat, Activity, Network, Calculator,
   Syringe, CalendarDays, Settings, Sparkles, Wifi, WifiOff, RefreshCw,
-  Droplets, Wallet, User, Sun, Moon
+  Droplets, Wallet, User, Sun, Moon, Mic
 } from 'lucide-react';
 import { processSyncQueue, pullInitialData, subscribeToRealtimeChanges } from '../services/syncService';
 import { useStore } from '../store/useStore';
@@ -21,6 +21,7 @@ const NAV_ITEMS = [
   { path: '/rasyon', label: 'Rasyon Hesaplama', icon: <Calculator className="w-[22px] h-[22px]" /> },
   { path: '/finans', label: 'Gelir Gider Analizi', icon: <Wallet className="w-[22px] h-[22px]" /> },
   { path: '/asistan', label: 'AI Asistan', icon: <Sparkles className="w-[22px] h-[22px]" /> },
+  { path: '/gunluk', label: 'Çiftlik Günlüğü', icon: <Mic className="w-[22px] h-[22px]" /> },
   { path: '/ayarlar', label: 'Ayarlar', icon: <Settings className="w-[22px] h-[22px]" /> },
 ];
 

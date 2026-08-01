@@ -12,6 +12,7 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import Settings from './pages/Settings';
 import Assistant from './pages/Assistant';
+import FarmDiary from './pages/FarmDiary';
 import UpdatePrompt from './components/UpdatePrompt';
 import { requestNotificationPermission } from './utils/notifications';
 
@@ -98,6 +99,7 @@ function App() {
             <Route path="/soy-agaci" element={<PedigreePage />} />
             <Route path="/finans" element={<FinancialAnalysis />} />
             <Route path="/asistan" element={<Assistant />} />
+            <Route path="/gunluk" element={<FarmDiary />} />
             <Route path="/ayarlar" element={<Settings />} />
           </Route>
         </Route>

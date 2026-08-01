@@ -228,3 +228,21 @@ export interface UyariItem {
   /** Tıklanınca yönlendirilecek route (örn. '/ureme', '/hayvanlar?id=...') */
   linkTo?: string;
 }
+
+export interface Todo {
+  ciftlikId?: string;
+  id: string;
+  metin: string;
+  yapildiMi: boolean;
+  olusturulmaTarihi: number;
+}
+
+export interface GunlukNotu {
+  id: string;
+  ciftlikId?: string;
+  tarih: string; // YYYY-MM-DD
+  metin: string;
+  olusturulmaTarihi: number;
+  medyalar?: string[];
+  etiketler?: string[];
+}

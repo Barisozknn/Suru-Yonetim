@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { 
   Users, Activity, AlertTriangle, TrendingDown, Heart,
-  CalendarCheck, Syringe, Droplets
+  CalendarCheck, Syringe, Droplets, Plus, Trash2, CheckCircle2, Circle
 } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
 import { CalfIcon } from '../components/icons/CalfIcon';
 import { 
   calculateTotalAnimals, 
@@ -33,8 +34,34 @@ const Dashboard: React.FC = () => {
   const uremeKayitlari = useLiveFarmQuery(() => db.uremeKayitlari.toArray()) || [];
   const yemler = useLiveFarmQuery(() => db.yemler.toArray()) || [];
   const gruplar = useLiveFarmQuery(() => db.gruplar.toArray()) || [];
-  const { uremeAyarlari } = useStore();
+  const { uremeAyarlari, activeCiftlikId } = useStore();
   const anomalyUyarilar = useAnomalyDetection();
+
+  const todos = useLiveFarmQuery(() => db.todos.orderBy('olusturulmaTarihi').reverse().toArray()) || [];
+  const [newTodo, setNewTodo] = useState('');
+
+  const handleAddTodo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTodo.trim()) return;
+    const payload = {
+      id: uuidv4(),
+      ciftlikId: activeCiftlikId || 'default',
+      metin: newTodo.trim(),
+      yapildiMi: false,
+      olusturulmaTarihi: Date.now()
+    };
+    await db.todos.add(payload);
+    await db.syncQueue.add({ table: 'todos', action: 'INSERT', payload, created_at: Date.now() });
+    setNewTodo('');
+  };
+
+  const toggleTodo = async (id: string, currentStatus: boolean) => {
+    await db.todos.update(id, { yapildiMi: !currentStatus });
+  };
+
+  const deleteTodo = async (id: string) => {
+    await db.todos.delete(id);
+  };
 
   const totalAnimals = calculateTotalAnimals(hayvanlar);
   const speciesDist = calculateSpeciesDistribution(hayvanlar);
@@ -216,14 +243,45 @@ const Dashboard: React.FC = () => {
         <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex flex-col">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-xl font-black text-earth-900 dark:text-gray-100">Bugün Yapılacaklar</h3>
-            <span className="bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">{activeAlerts} İşlem Bekliyor</span>
+            <span className="bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">{activeAlerts} Sistem Uyarısı</span>
           </div>
 
           <div className="flex-1 space-y-4">
+             {/* Manuel To-Do Formu */}
+             <form onSubmit={handleAddTodo} className="flex gap-2 mb-4">
+               <input 
+                 type="text" 
+                 value={newTodo}
+                 onChange={(e) => setNewTodo(e.target.value)}
+                 placeholder="Bugün ne yapacaksınız? (Görev ekleyin...)"
+                 className="flex-1 px-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-nature-500 text-sm"
+               />
+               <button type="submit" disabled={!newTodo.trim()} className="bg-nature-600 hover:bg-nature-700 text-white p-2 rounded-xl disabled:opacity-50 transition-colors">
+                 <Plus className="w-5 h-5" />
+               </button>
+             </form>
+
+             {/* Manuel Görevler Listesi */}
+             {todos.length > 0 && (
+               <div className="space-y-2 mb-6">
+                 {todos.map(todo => (
+                   <div key={todo.id} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${todo.yapildiMi ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-700 opacity-60' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 shadow-sm'}`}>
+                     <div className="flex items-center gap-3 flex-1 cursor-pointer" onClick={() => toggleTodo(todo.id, todo.yapildiMi)}>
+                       {todo.yapildiMi ? <CheckCircle2 className="w-5 h-5 text-nature-500" /> : <Circle className="w-5 h-5 text-gray-400" />}
+                       <span className={`text-sm font-medium ${todo.yapildiMi ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-700 dark:text-gray-200'}`}>{todo.metin}</span>
+                     </div>
+                     <button onClick={() => deleteTodo(todo.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                       <Trash2 className="w-4 h-4" />
+                     </button>
+                   </div>
+                 ))}
+               </div>
+             )}
+
             {activeAlerts === 0 && expectedBirths === 0 && heatChecks.length === 0 && reInseminations.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-earth-400 space-y-3 py-12">
+              <div className="flex flex-col items-center justify-center h-full text-earth-400 space-y-3 py-8">
                 <CalendarCheck className="w-16 h-16 opacity-50" />
-                <p className="font-bold text-lg">Bugün için planlanan acil bir işlem yok.</p>
+                <p className="font-bold text-lg text-center">Planlanan acil bir sistem işlemi yok.</p>
               </div>
             ) : (
               <>
