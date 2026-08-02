@@ -3,13 +3,39 @@ import { parseRasyonCost } from './dashboardCalculations';
 import { v4 as uuidv4 } from 'uuid';
 import { useStore } from '../store/useStore';
 
-export const syncDailyAnimalFeedCosts = async () => {
-  const ciftlikId = useStore.getState().activeCiftlikId;
-  if (!ciftlikId) return;
+// Concurrency kilidi (React Strict Mode için)
+declare global {
+  interface Window {
+    __isFeedSyncing?: boolean;
+  }
+}
 
-  const today = new Date().toISOString().split('T')[0];
+export const syncDailyAnimalFeedCosts = async () => {
+  if (window.__isFeedSyncing) return;
+  window.__isFeedSyncing = true;
 
   try {
+    const ciftlikId = useStore.getState().activeCiftlikId;
+    if (!ciftlikId) return;
+
+    const today = new Date().toISOString().split('T')[0];
+
+    // TEMİZLİK: React Strict Mode yüzünden aynı güne 2 kere kayıt atılmışsa fazlalıkları siliyoruz.
+    const bugunKayitlariTumu = await db.hayvanGunlukYemMaliyetleri
+      .where('ciftlikId')
+      .equals(ciftlikId)
+      .filter(k => k.tarih === today)
+      .toArray();
+
+    const islenmisHayvanlar = new Set();
+    for (const kayit of bugunKayitlariTumu) {
+      if (islenmisHayvanlar.has(kayit.hayvanId)) {
+        await db.hayvanGunlukYemMaliyetleri.delete(kayit.id);
+      } else {
+        islenmisHayvanlar.add(kayit.hayvanId);
+      }
+    }
+
     // Tüm aktif inekleri bul
     const inekler = await db.hayvanlar
       .where('ciftlikId')
@@ -63,5 +89,7 @@ export const syncDailyAnimalFeedCosts = async () => {
 
   } catch (error) {
     console.error('Günlük hayvan yem maliyeti senkronizasyon hatası:', error);
+  } finally {
+    window.__isFeedSyncing = false;
   }
 };

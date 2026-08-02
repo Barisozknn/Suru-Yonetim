@@ -9,6 +9,12 @@ export const runDailyAutomations = async () => {
     
     const hayvanlar = await db.hayvanlar.toArray();
     
+    // --- İNEKLER İÇİN GÜNLÜK BİREYSEL YEM MALİYETİ KAYDI ---
+    // (Bunu early return'den önce yapıyoruz çünkü bugün zaten çalışmış olsa bile
+    // yeni hayvan eklenmiş olabilir veya kod yeni devreye girmiş olabilir)
+    await syncDailyAnimalFeedCosts();
+    // ---------------------------------------------
+    
     // Check if we already ran automations today to avoid redundant DB writes on every render
     const lastRun = localStorage.getItem('lastAutomationRunV3');
     if (lastRun === todayStr) {
@@ -66,10 +72,6 @@ export const runDailyAutomations = async () => {
         await db.syncQueue.add({ table: 'gunlukYemMaliyetleri', action: 'INSERT', payload, created_at: Date.now() });
       }
     }
-    // ---------------------------------------------
-
-    // --- İNEKLER İÇİN GÜNLÜK BİREYSEL YEM MALİYETİ KAYDI ---
-    await syncDailyAnimalFeedCosts();
     // ---------------------------------------------
 
     // --- HAYVAN YAŞ / KATEGORİ GÜNCELLEMESI (WEB WORKER ile) ---
