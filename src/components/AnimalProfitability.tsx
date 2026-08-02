@@ -242,7 +242,7 @@ const AnimalProfitability: React.FC<Props> = ({ hayvan }) => {
               <XAxis dataKey="name" stroke="#888" fontSize={12} fontWeight="bold" />
               <YAxis stroke="#888" fontSize={12} tickFormatter={(value) => `${value / 1000}k ₺`} />
               <Tooltip 
-                formatter={(value: number) => formatMoney(value)}
+                formatter={(value: any) => formatMoney(Number(value) || 0)}
                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
               />
               <Legend wrapperStyle={{ paddingTop: '20px' }} />
