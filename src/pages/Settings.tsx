@@ -8,10 +8,11 @@ import { STANDART_IRKLAR } from '../components/AnimalForm';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
-  const { user, uremeAyarlari, setUremeAyarlari, theme, setTheme } = useStore();
+  const { user, uremeAyarlari, setUremeAyarlari, theme, setTheme, sutLitreFiyati, setSutLitreFiyati } = useStore();
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [localUremeAyarlari, setLocalUremeAyarlari] = useState(uremeAyarlari);
+  const [localSutFiyati, setLocalSutFiyati] = useState(sutLitreFiyati.toString());
   const [selectedIrk, setSelectedIrk] = useState<string>('Varsayılan');
 
   const currentValues = selectedIrk === 'Varsayılan' 
@@ -129,6 +130,16 @@ const Settings: React.FC = () => {
   const handleSaveUremeAyarlari = async () => {
     setUremeAyarlari(localUremeAyarlari);
     alert('Üreme ve Uyarı ayarları başarıyla kaydedildi.');
+  };
+
+  const handleSaveEkonomikAyarlar = () => {
+    const val = parseFloat(localSutFiyati);
+    if (!isNaN(val) && val > 0) {
+      setSutLitreFiyati(val);
+      alert('Ekonomik ayarlar başarıyla kaydedildi.');
+    } else {
+      alert('Lütfen geçerli bir süt fiyatı giriniz.');
+    }
   };
 
   const handleLogout = async () => {
@@ -345,6 +356,43 @@ const Settings: React.FC = () => {
               <Save className="w-5 h-5" />
               <span>Ayarları Kaydet</span>
             </button>
+          </div>
+        </div>
+
+        {/* Ekonomik Ayarlar */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 space-y-6 md:col-span-2 transition-colors">
+          <div className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-green-100 text-green-600 rounded-lg">
+              <span className="font-black text-xl">₺</span>
+            </div>
+            <h2 className="text-xl font-bold text-earth-900 dark:text-gray-100">Ekonomik Ayarlar</h2>
+          </div>
+          
+          <p className="text-sm text-earth-600 dark:text-gray-400">
+            Sistemdeki finansal hesaplamalar ve gelir projeksiyonları için kullanılacak temel fiyatlandırmaları belirleyin.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 items-end">
+            <div className="space-y-1 w-full sm:w-1/4">
+              <label className="text-xs font-bold text-earth-700 dark:text-gray-300">Süt Litre Fiyatı (₺)</label>
+              <input 
+                type="number" 
+                step="0.1"
+                value={localSutFiyati}
+                onChange={e => setLocalSutFiyati(e.target.value)}
+                className="w-full p-3 border-2 border-earth-200 dark:border-gray-700 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-nature-500 outline-none"
+              />
+            </div>
+            
+            <div className="w-full sm:w-auto">
+              <button 
+                onClick={handleSaveEkonomikAyarlar}
+                className="w-full sm:w-auto flex items-center justify-center space-x-2 bg-nature-600 hover:bg-nature-700 text-white px-6 py-3 rounded-xl font-bold transition shadow-sm"
+              >
+                <Save className="w-5 h-5" />
+                <span>Kaydet</span>
+              </button>
+            </div>
           </div>
         </div>
 

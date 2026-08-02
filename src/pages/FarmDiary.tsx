@@ -3,7 +3,7 @@ import { db } from '../lib/db';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { useStore } from '../store/useStore';
 import { v4 as uuidv4 } from 'uuid';
-import { Mic, MicOff, Save, Trash2, Calendar, FileText, CheckCircle2, Edit2, X, Paperclip, Sparkles, Hash, Loader2, Download } from 'lucide-react';
+import { Mic, MicOff, Save, Trash2, Calendar, FileText, CheckCircle2, Edit2, X, Paperclip, Sparkles, Hash, Loader2, Download, Camera } from 'lucide-react';
 import { analyzeDiaryNotes } from '../services/aiService';
 import ReactMarkdown from 'react-markdown';
 
@@ -29,7 +29,8 @@ const FarmDiary: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<string | null>(null);
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const recognitionRef = useRef<any>(null);
 
@@ -211,15 +212,17 @@ const FarmDiary: React.FC = () => {
 
   // Not metni render edildiğinde tag'leri ve mention'ları renklendirme
   const parseNoteText = (text: string) => {
-    const words = text.split(/(\s+)/);
-    return words.map((word, i) => {
-      if (word.match(/^#[\wçğıöşüÇĞİÖŞÜ]+/)) {
-        return <span key={i} className="text-nature-600 font-bold cursor-pointer hover:bg-nature-100 px-1 rounded transition-colors" onClick={() => setTagFilter(word)}>{word}</span>;
+    // Regex: @işaretinden sonra harfler, opsiyonel boşluk ve opsiyonel rakamlar (örn: @TR 11) VEYA #etiketler
+    const parts = text.split(/(@[a-zA-ZçğıöşüÇĞİÖŞÜ]+\s*\d*|#[\wçğıöşüÇĞİÖŞÜ]+)/g);
+    
+    return parts.map((part, i) => {
+      if (part.match(/^#[\wçğıöşüÇĞİÖŞÜ]+/)) {
+        return <span key={i} className="text-nature-600 font-bold cursor-pointer hover:bg-nature-100 px-1 rounded transition-colors" onClick={() => setTagFilter(part)}>{part}</span>;
       }
-      if (word.match(/^@[\w]+/)) {
-        return <span key={i} className="text-blue-600 font-bold cursor-pointer hover:underline bg-blue-50 px-1 rounded" title="Hayvan Profili" onClick={() => alert(word + ' küpeli hayvanın profili buraya bağlanacak.')}>{word}</span>;
+      if (part.match(/^@[a-zA-ZçğıöşüÇĞİÖŞÜ]+\s*\d*/)) {
+        return <span key={i} className="text-blue-600 font-bold cursor-pointer hover:underline bg-blue-50 px-1 rounded" title="Hayvan Profili" onClick={() => alert(part + ' küpeli hayvanın profili buraya bağlanacak.')}>{part}</span>;
       }
-      return <span key={i}>{word}</span>;
+      return <span key={i}>{part}</span>;
     });
   };
 
@@ -257,15 +260,30 @@ const FarmDiary: React.FC = () => {
               
               <div className="flex items-center gap-2">
                 <button 
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => galleryInputRef.current?.click()}
                   className="p-2 bg-white text-earth-500 border border-earth-200 hover:bg-earth-100 rounded-full dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 transition-colors"
-                  title="Fotoğraf/Belge Ekle"
+                  title="Galeri veya Dosya Ekle"
                 >
                   <Paperclip className="w-4 h-4" />
                 </button>
                 <input 
                   type="file" 
-                  ref={fileInputRef} 
+                  ref={galleryInputRef} 
+                  onChange={handleImageUpload} 
+                  accept="image/*, .pdf, .doc, .docx" 
+                  className="hidden" 
+                />
+
+                <button 
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="p-2 bg-white text-earth-500 border border-earth-200 hover:bg-earth-100 rounded-full dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 transition-colors md:hidden"
+                  title="Kamera ile Çek"
+                >
+                  <Camera className="w-4 h-4" />
+                </button>
+                <input 
+                  type="file" 
+                  ref={cameraInputRef} 
                   onChange={handleImageUpload} 
                   accept="image/*" 
                   capture="environment"

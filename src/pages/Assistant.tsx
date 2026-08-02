@@ -416,24 +416,6 @@ const ASSISTANT_TOOLS = [
   {
     type: "function",
     function: {
-      name: "addFinancialTransaction",
-      description: "Çiftliğin genel finans defterine ek Gelir veya Gider kaydeder (Süt satışı veya hayvan satışı HARİCİ tüm masraflar).",
-      parameters: {
-        type: "object",
-        properties: {
-          tip: { type: "string", enum: ["Gelir", "Gider"], description: "İşlemin tipi" },
-          kategori: { type: "string", description: "İşlem kategorisi (Örn: Veteriner & İlaç, Ekipman, Yakıt, Yem, İşçilik)" },
-          miktar: { type: "number", description: "İşlem tutarı (TL)" },
-          aciklama: { type: "string", description: "Harcamanın detayı" },
-          tarih: { type: "string", description: "İşlem tarihi (YYYY-MM-DD). Belirtilmezse bugünün tarihi kullanılır." }
-        },
-        required: ["tip", "kategori", "miktar", "aciklama", "tarih"]
-      }
-    }
-  },
-  {
-    type: "function",
-    function: {
       name: "assignRationToGroup",
       description: "Bir hayvan grubuna özel bir rasyon reçetesi (isim ve içerik özeti) tanımlar veya atar.",
       parameters: {
@@ -444,6 +426,77 @@ const ASSISTANT_TOOLS = [
           rasyonOzet: { type: "string", description: "Rasyonun içeriği (Örn: 15 kg mısır silajı, 5 kg yonca, 2 kg süt yemi vb.)" }
         },
         required: ["grupAdi", "rasyonAdi", "rasyonOzet"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "getFarmDiaryNotes",
+      description: "Çiftlik Günlüğü notlarını (geçmiş, bugün veya ileri tarihli) getirir. Kullanıcı notları analiz etmeni veya özetlemeni isterse bu aracı kullan.",
+      parameters: {
+        type: "object",
+        properties: {
+          tarihFiltresi: { type: "string", description: "Notları getirmek için YYYY-MM-DD formatında spesifik bir tarih veya ay (Örn: 2026-07). Boş bırakılırsa tüm notlar getirilir." }
+        },
+        required: []
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "addFarmDiaryNote",
+      description: "Çiftlik günlüğüne yeni bir metin/not kaydeder.",
+      parameters: {
+        type: "object",
+        properties: {
+          metin: { type: "string", description: "Günlüğe eklenecek not metni. Küpe numaralarını @ işaretiyle (Örn: @TR12345), etiketleri # işaretiyle (Örn: #aşılama) yazınız." },
+          tarih: { type: "string", description: "Notun kaydedileceği tarih (YYYY-MM-DD). Boş bırakılırsa bugünün tarihi kullanılır." }
+        },
+        required: ["metin"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "getDashboardTodos",
+      description: "Ana sayfadaki 'Bugün Yapılacaklar' listesini getirir. Görev eklemeden, silmeden veya tamamlamadan önce mevcut görevleri görmek için bu aracı kullanın.",
+      parameters: {
+        type: "object",
+        properties: {},
+        required: []
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "addDashboardTodo",
+      description: "Ana sayfadaki 'Bugün Yapılacaklar' listesine yeni bir görev ekler.",
+      parameters: {
+        type: "object",
+        properties: {
+          metin: { type: "string", description: "Yapılacak görevin açıklaması." }
+        },
+        required: ["metin"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "updateDashboardTodo",
+      description: "Ana sayfadaki 'Bugün Yapılacaklar' listesinde var olan bir görevin durumunu günceller, metnini değiştirir veya görevi siler.",
+      parameters: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Güncellenecek veya silinecek görevin benzersiz ID'si (getDashboardTodos ile elde edilir)." },
+          islem: { type: "string", enum: ["tamamla", "iptal_et", "sil", "duzenle"], description: "Yapılacak işlem türü: tamamla (yapıldı olarak işaretler), iptal_et (yapılmadı olarak işaretler), sil (görevi tamamen siler), duzenle (metnini günceller)." },
+          yeniMetin: { type: "string", description: "Eğer işlem 'duzenle' seçilmişse yeni görev metni." }
+        },
+        required: ["id", "islem"]
       }
     }
   }
@@ -805,7 +858,7 @@ const Assistant: React.FC = () => {
 
           try {
             if (functionName === "addMilkRecord") {
-               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase()).first();
+               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
                if (!hayvan) throw new Error("Belirtilen küpe numarasına sahip hayvan bulunamadı.");
                const payload = {
                  id: uuidv4(),
@@ -818,7 +871,7 @@ const Assistant: React.FC = () => {
                functionResult = `Süt kaydı başarıyla eklendi. (Litre: ${payload.litre})`;
 
             } else if (functionName === "addHealthRecord") {
-               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase()).first();
+               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
                if (!hayvan) throw new Error("Belirtilen küpe numarasına sahip hayvan bulunamadı.");
                const payload = {
                   id: uuidv4(),
@@ -980,7 +1033,7 @@ const Assistant: React.FC = () => {
             } else if (functionName === "addFarmReminder") {
                let hayvanId = "sürü-geneli";
                if (functionArgs.kupeNo && functionArgs.kupeNo.trim() !== "") {
-                 const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase()).first();
+                 const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
                  if (!hayvan) throw new Error("Belirtilen küpe numarasına sahip hayvan bulunamadı.");
                  hayvanId = hayvan.id;
                }
@@ -1043,7 +1096,7 @@ const Assistant: React.FC = () => {
                functionResult = `Hayvan başarıyla sisteme kaydedildi. (Küpe: ${payload.kupeNo})`;
 
             } else if (functionName === "updateAnimalStatus") {
-               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase()).first();
+               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
                if (!hayvan) throw new Error("Hayvan bulunamadı.");
                
                const updatedHayvan = { 
@@ -1058,7 +1111,7 @@ const Assistant: React.FC = () => {
                functionResult = `Hayvanın durumu '${functionArgs.durum}' olarak güncellendi.`;
 
             } else if (functionName === "changeAnimalGroup") {
-               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase()).first();
+               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
                if (!hayvan) throw new Error("Hayvan bulunamadı.");
                
                const gruplar = await db.gruplar.toArray();
@@ -1071,7 +1124,7 @@ const Assistant: React.FC = () => {
                functionResult = `Hayvan başarıyla '${hedefGrup.ad}' grubuna taşındı.`;
 
             } else if (functionName === "updateAnimalNote") {
-                const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase()).first();
+                const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
                 if (!hayvan) throw new Error("Belirtilen küpe numarasına sahip hayvan bulunamadı.");
                 
                 const updatedHayvan = { ...hayvan, notlar: functionArgs.not };
@@ -1080,7 +1133,7 @@ const Assistant: React.FC = () => {
                 functionResult = `Hayvan notları başarıyla güncellendi. Yeni Not: ${functionArgs.not}`;
 
              } else if (functionName === "addWeightRecord") {
-               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase()).first();
+               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
                if (!hayvan) throw new Error("Hayvan bulunamadı.");
                
                const payload = {
@@ -1098,7 +1151,7 @@ const Assistant: React.FC = () => {
                functionResult = `Ağırlık kaydı eklendi. Güncel ağırlık: ${functionArgs.kg} kg.`;
 
             } else if (functionName === "addReproductionRecord") {
-               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase()).first();
+               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
                if (!hayvan) throw new Error("Hayvan bulunamadı.");
                
                const payload = {
@@ -1114,7 +1167,7 @@ const Assistant: React.FC = () => {
                functionResult = `Üreme kaydı başarıyla eklendi. (${payload.tur} - ${payload.durum})`;
 
             } else if (functionName === "addCalfRecord") {
-               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase()).first();
+               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
                if (!hayvan) throw new Error("Belirtilen küpe numarasına sahip buzağı bulunamadı.");
                
                const payload = {
@@ -1153,19 +1206,6 @@ const Assistant: React.FC = () => {
                await db.syncQueue.add({ table: 'gruplar', action: 'INSERT', payload, created_at: Date.now() });
                functionResult = `Yeni grup başarıyla oluşturuldu: ${payload.ad}`;
 
-            } else if (functionName === "addFinancialTransaction") {
-               const payload = {
-                 id: uuidv4(),
-                 tip: functionArgs.tip,
-                 kategori: functionArgs.kategori,
-                 miktar: functionArgs.miktar,
-                 aciklama: functionArgs.aciklama,
-                 tarih: parseDateString(functionArgs.tarih)
-               };
-               await db.ekFinansalIslemler.add(payload as any);
-               await db.syncQueue.add({ table: 'ekFinansalIslemler', action: 'INSERT', payload, created_at: Date.now() });
-               functionResult = `Finansal kayıt başarıyla işlendi. (${payload.tip}: ${payload.miktar} TL)`;
-
             } else if (functionName === "assignRationToGroup") {
                const gruplar = await db.gruplar.toArray();
                const hedefGrup = gruplar.find(g => g.ad.toLowerCase().includes(functionArgs.grupAdi.toLowerCase()));
@@ -1182,6 +1222,72 @@ const Assistant: React.FC = () => {
                await db.syncQueue.add({ table: 'gruplar', action: 'UPDATE', payload: updatedGrup, created_at: Date.now() });
                functionResult = `'${updatedGrup.ad}' grubunun rasyonu başarıyla '${updatedGrup.rasyonAdi}' olarak ayarlandı.`;
 
+            } else if (functionName === "getFarmDiaryNotes") {
+               const notlar = await db.gunlukNotlari.toArray();
+               let filtered = notlar;
+               if (functionArgs.tarihFiltresi) {
+                 filtered = notlar.filter(n => n.tarih.startsWith(functionArgs.tarihFiltresi));
+               }
+               if (filtered.length === 0) {
+                  functionResult = "Belirtilen tarihte veya kriterde herhangi bir not bulunamadı.";
+               } else {
+                  functionResult = "Bulunan Notlar:\n" + filtered.map(n => `- [${n.tarih}] ${n.metin}`).join("\n");
+               }
+
+            } else if (functionName === "addFarmDiaryNote") {
+               const payload = {
+                 id: uuidv4(),
+                 user_id: 'local',
+                 ciftlikId: useStore.getState().activeCiftlikId || 'default',
+                 tarih: parseDateString(functionArgs.tarih),
+                 metin: functionArgs.metin,
+                 medyalar: [],
+                 etiketler: [],
+                 olusturulmaTarihi: Date.now()
+               };
+               await db.gunlukNotlari.add(payload as any);
+               await db.syncQueue.add({ table: 'gunlukNotlari', action: 'INSERT', payload, created_at: Date.now() });
+               functionResult = `Not başarıyla çiftlik günlüğüne kaydedildi: "${payload.metin}"`;
+
+            } else if (functionName === "getDashboardTodos") {
+               const todos = await db.todos.orderBy('olusturulmaTarihi').reverse().toArray();
+               if (todos.length === 0) {
+                  functionResult = "Şu anda 'Bugün Yapılacaklar' listesinde hiç görev bulunmuyor.";
+               } else {
+                  functionResult = "Mevcut Görevler:\n" + todos.map(t => `- [ID: ${t.id}] ${t.yapildiMi ? '(TAMAMLANDI)' : '(BEKLİYOR)'} ${t.metin}`).join("\n");
+               }
+
+            } else if (functionName === "addDashboardTodo") {
+               const payload = {
+                 id: uuidv4(),
+                 ciftlikId: useStore.getState().activeCiftlikId || 'default',
+                 metin: functionArgs.metin,
+                 yapildiMi: false,
+                 olusturulmaTarihi: Date.now()
+               };
+               await db.todos.add(payload as any);
+               await db.syncQueue.add({ table: 'todos', action: 'INSERT', payload, created_at: Date.now() });
+               functionResult = `Yeni görev başarıyla yapılacaklar listesine eklendi: "${payload.metin}"`;
+
+            } else if (functionName === "updateDashboardTodo") {
+               const todo = await db.todos.get(functionArgs.id);
+               if (!todo) throw new Error("Belirtilen ID'ye sahip bir görev bulunamadı.");
+
+               if (functionArgs.islem === "sil") {
+                 await db.todos.delete(todo.id);
+                 functionResult = "Görev başarıyla listeden silindi.";
+               } else if (functionArgs.islem === "duzenle") {
+                 const updated = { ...todo, metin: functionArgs.yeniMetin };
+                 await db.todos.update(todo.id, updated);
+                 await db.syncQueue.add({ table: 'todos', action: 'UPDATE', payload: updated, created_at: Date.now() });
+                 functionResult = `Görev metni başarıyla güncellendi: "${functionArgs.yeniMetin}"`;
+               } else {
+                 const yapildi = functionArgs.islem === "tamamla";
+                 const updated = { ...todo, yapildiMi: yapildi };
+                 await db.todos.update(todo.id, updated);
+                 await db.syncQueue.add({ table: 'todos', action: 'UPDATE', payload: updated, created_at: Date.now() });
+                 functionResult = yapildi ? "Görev 'TAMAMLANDI' olarak işaretlendi." : "Görev 'BEKLİYOR' olarak geri alındı.";
+               }
 
             } else {
               throw new Error("Bilinmeyen fonksiyon çağrısı.");

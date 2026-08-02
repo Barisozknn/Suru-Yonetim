@@ -89,16 +89,34 @@ const FinancialAnalysis: React.FC = () => {
     const uremeGideri = filteredUreme.reduce((acc, curr) => acc + (curr.maliyet || 0), 0);
 
     // 5. Yem Gideri (Günlük Kayıtlar Üzerinden)
-    // Not: Grup filtresi geçmişteki yem maliyeti genel kaydedildiği için şu an tüm sürüyü kapsar.
-    const todayStr = new Date().toISOString().split('T')[0];
-    const filteredYemMaliyetleri = gunlukYemMaliyetleri.filter(y => isInRange(y.tarih) && y.tarih !== todayStr);
-    const pastYemGideri = filteredYemMaliyetleri.reduce((acc, curr) => acc + curr.toplamMaliyet, 0);
+    let yemGideri = 0;
     
-    let todayYemGideri = 0;
-    if (isInRange(todayStr)) {
-      todayYemGideri = calculateTotalDailyFeedCost(yemler, gruplar, hayvanlar);
+    if (groupFilter === 'all') {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const filteredYemMaliyetleri = gunlukYemMaliyetleri.filter(y => isInRange(y.tarih) && y.tarih !== todayStr);
+      const pastYemGideri = filteredYemMaliyetleri.reduce((acc, curr) => acc + curr.toplamMaliyet, 0);
+      
+      let todayYemGideri = 0;
+      if (isInRange(todayStr)) {
+        todayYemGideri = calculateTotalDailyFeedCost(yemler, gruplar, hayvanlar);
+      }
+      yemGideri = pastYemGideri + todayYemGideri;
+    } else {
+      // Grup seçiliyse, geçmiş kayıtları filtrelemek zor olduğu için seçili grubun mevcut rasyon maliyeti
+      // üzerinden gün sayısı kadar tahmini bir yem gideri çıkarılır.
+      const seciliGrup = gruplar.find(g => g.id === groupFilter);
+      if (seciliGrup) {
+        const dailyCost = calculateTotalDailyFeedCost(yemler, [seciliGrup], hayvanlar);
+        let days = 1;
+        if (timeFilter !== 'all') {
+          days = Math.ceil((now.getTime() - targetDate.getTime()) / (1000 * 3600 * 24));
+        } else {
+          days = 30; // 'Tüm Zamanlar' için 30 günlük varsayılan tahmin
+        }
+        if (days === 0) days = 1;
+        yemGideri = dailyCost * days;
+      }
     }
-    const yemGideri = pastYemGideri + todayYemGideri;
 
     // 6. Ek Gelir / Giderler (Grup filtresi bunlara etki etmez, geneldir)
     const filteredEk = ekFinansalIslemler.filter(e => isInRange(e.tarih));
@@ -215,7 +233,7 @@ const FinancialAnalysis: React.FC = () => {
       {groupFilter !== 'all' && (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 p-3 rounded-xl flex items-start space-x-2 text-blue-800 text-sm">
           <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
-          <p><strong>Not:</strong> Belirli bir grup seçildiğinde Süt, Sağlık, Üreme ve Satış verileri filtrelenir. Yem Tüketimi ve Ek Finansal işlemler sürü geneli olarak hesaplamaya dahil edilir.</p>
+          <p><strong>Not:</strong> Belirli bir grup seçildiğinde Ek Finansal işlemler sürü geneli olarak kalır. Yem maliyeti ise seçili grubun <strong>mevcut rasyon maliyeti üzerinden tahmini olarak</strong> hesaplanmıştır.</p>
         </div>
       )}
 

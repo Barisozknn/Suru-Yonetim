@@ -4,8 +4,9 @@ import { db } from '../lib/db';
 import type { UremeKaydi, UremeKaydiTur } from '../types';
 import { useStore } from '../store/useStore';
 import { getUremeAyarForIrk } from '../utils/reproductionSettings';
-import { Plus, Trash2, Heart, Info, CalendarCheck, ShieldAlert, CalendarDays, GitMerge, Droplet, Activity, Droplets } from 'lucide-react';
+import { Plus, Trash2, Heart, Info, CalendarCheck, ShieldAlert, CalendarDays, GitMerge, Droplet, Activity, Droplets, Dna } from 'lucide-react';
 import ReproductionModal from './ReproductionModal';
+import { calculatePregnancyProbability } from '../utils/reproductionProbability';
 
 interface Props {
   hayvanId: string;
@@ -98,6 +99,10 @@ const ReproductionTimeline: React.FC<Props> = ({ hayvanId }) => {
     }
   }
 
+  const probResult = hayvan && mevcutDurum !== 'Gebe' && !mevcutDurum.includes('Kuruya')
+    ? calculatePregnancyProbability(hayvan, olaylar)
+    : null;
+
   return (
     <div className="space-y-6">
       {/* Özet Kartı */}
@@ -127,11 +132,29 @@ const ReproductionTimeline: React.FC<Props> = ({ hayvanId }) => {
                </div>
               )}
               {tahminiDogum && (
-                <div className="flex justify-between items-center text-sm">
+                <div className="flex justify-between items-center text-sm mt-2 border-t border-pink-100 pt-2">
                   <span className="text-earth-600 dark:text-gray-400">Tahmini Doğum:</span>
                   <span className="font-bold text-green-600">{formatDate(tahminiDogum)}</span>
                 </div>
               )}
+            </div>
+          )}
+          {probResult && (
+            <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-pink-100 md:col-span-2 flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
+                  <Dna className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="text-xs text-earth-500 dark:text-gray-400 font-bold uppercase tracking-wider mb-0.5">Sıradaki Tohumlama İçin Başarı Tahmini</div>
+                  <div className="flex items-end space-x-2">
+                    <span className="font-black text-purple-700 dark:text-purple-400 text-2xl">% {probResult.probability}</span>
+                    <span className="text-xs text-earth-500 dark:text-gray-400 font-medium mb-1 line-clamp-1 truncate max-w-[200px]" title={probResult.factors.join(', ')}>
+                      Etkenler: {probResult.factors.join(', ')}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>

@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { Camera, Save, X, ImagePlus, UserCircle2 } from 'lucide-react';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
-import BarcodeScanner from './BarcodeScanner';
+import OcrScanner from './OcrScanner';
 import { v4 as uuidv4 } from 'uuid';
 
 export const STANDART_IRKLAR = [
@@ -468,7 +468,7 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
       </div>
 
       {scannerTarget && (
-        <BarcodeScanner 
+        <OcrScanner 
           onScan={(res) => {
             setValue(scannerTarget, res);
           }}
