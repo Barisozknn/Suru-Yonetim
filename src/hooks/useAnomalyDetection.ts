@@ -15,23 +15,31 @@ import type { UyariItem } from '../types';
 export function useAnomalyDetection(): UyariItem[] {
   const uremeAyarlari = useStore((s) => s.uremeAyarlari);
 
-  const hayvanlar        = useLiveFarmQuery(() => db.hayvanlar.toArray())        ?? [];
-  const sutKayitlari     = useLiveFarmQuery(() => db.sutKayitlari.toArray())     ?? [];
-  const agirlikKayitlari = useLiveFarmQuery(() => db.agirlikKayitlari.toArray()) ?? [];
-  const uremeKayitlari   = useLiveFarmQuery(() => db.uremeKayitlari.toArray())   ?? [];
+  const hayvanlar        = useLiveFarmQuery(() => db.hayvanlar.toArray());
+  const sutKayitlari     = useLiveFarmQuery(() => db.sutKayitlari.toArray());
+  const agirlikKayitlari = useLiveFarmQuery(() => db.agirlikKayitlari.toArray());
+  const uremeKayitlari   = useLiveFarmQuery(() => db.uremeKayitlari.toArray());
 
-  const uyarilar = useMemo(
-    () =>
-      detectAllAnomalies({
-        hayvanlar,
-        sutKayitlari,
-        agirlikKayitlari,
-        uremeKayitlari,
-        uremeAyarlari,
-      }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [hayvanlar, sutKayitlari, agirlikKayitlari, uremeKayitlari, uremeAyarlari],
-  );
+  const uyarilar = useMemo(() => {
+    // Dexie'den tüm veriler asenkron olarak gelene kadar (undefined iken)
+    // yarım yamalak veriyle yanlış (false-positive) anomali hesaplamamak için bekle.
+    if (
+      hayvanlar === undefined ||
+      sutKayitlari === undefined ||
+      agirlikKayitlari === undefined ||
+      uremeKayitlari === undefined
+    ) {
+      return [];
+    }
+
+    return detectAllAnomalies({
+      hayvanlar,
+      sutKayitlari,
+      agirlikKayitlari,
+      uremeKayitlari,
+      uremeAyarlari,
+    });
+  }, [hayvanlar, sutKayitlari, agirlikKayitlari, uremeKayitlari, uremeAyarlari]);
 
   return uyarilar;
 }

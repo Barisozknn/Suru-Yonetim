@@ -8,6 +8,7 @@ import type { Sohbet, Mesaj } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 import { useStore } from '../store/useStore';
 import { calculateTotalDailyFeedCost } from '../utils/dashboardCalculations';
+import { calculateAnimalProfitability } from '../utils/profitability';
 
 const SAMPLE_QUESTIONS = [
   "Son gelir giderlerim nelerdir?",
@@ -553,7 +554,7 @@ const gatherFarmContext = async () => {
     return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
   };
 
-  const sutLitreFiyati = useStore.getState().sutLitreFiyati;
+  const { sutLitreFiyati, buzagiFiyati } = useStore.getState();
 
   // 1. Süt Geliri
   const buAySut = sutKayitlari.filter(k => isInThisMonth(k.tarih));
@@ -629,20 +630,34 @@ const gatherFarmContext = async () => {
       tumPlanlananAsilar: planlananAsilar,
       aktifHayvanListesi: hayvanlar
         .filter(h => h.durum === 'Aktif')
-        .map(h => ({
-          id: h.id,
-          kupeNo: h.kupeNo,
-          tur: h.tur,
-          cinsiyet: h.cinsiyet,
-          irk: h.irk,
-          dogumTarihi: h.dogumTarihi,
-          guncelAgirlikKg: h.guncelAgirlikKg,
-          grupId: h.grupId,
-          anneKupeNo: h.anneKupeNo || 'Bilinmiyor',
-          babaKupeNo: h.babaKupeNo || 'Bilinmiyor',
-          gebeMi: uremeKayitlari.some(u => u.hayvanId === h.id && u.tur === 'Gebelik Kontrolü' && u.durum === 'Gebe') ? 'Evet' : 'Hayır',
-          notlar: h.notlar || 'Yok'
-        }))
+        .map(h => {
+          const profitData = calculateAnimalProfitability(
+            h,
+            sutKayitlari,
+            saglikOlaylari,
+            uremeKayitlari,
+            yemler,
+            gruplar,
+            sutLitreFiyati,
+            buzagiFiyati || 50000
+          );
+          return {
+            id: h.id,
+            kupeNo: h.kupeNo,
+            tur: h.tur,
+            cinsiyet: h.cinsiyet,
+            irk: h.irk,
+            dogumTarihi: h.dogumTarihi,
+            guncelAgirlikKg: h.guncelAgirlikKg,
+            grupId: h.grupId,
+            anneKupeNo: h.anneKupeNo || 'Bilinmiyor',
+            babaKupeNo: h.babaKupeNo || 'Bilinmiyor',
+            gebeMi: uremeKayitlari.some(u => u.hayvanId === h.id && u.tur === 'Gebelik Kontrolü' && u.durum === 'Gebe') ? 'Evet' : 'Hayır',
+            notlar: h.notlar || 'Yok',
+            son12AyKarlilik_TL: profitData.netProfit,
+            roi_Yuzde: profitData.roi
+          };
+        })
     },
     esikUyarilari: kritikYemler.map(y => `Kritik Yem Stoğu: ${y}`)
   };

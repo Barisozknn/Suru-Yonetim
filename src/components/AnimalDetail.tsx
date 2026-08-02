@@ -10,9 +10,10 @@ import HealthTimeline from './HealthTimeline';
 import ReproductionTimeline from './ReproductionTimeline';
 import CalfFormModal from './CalfFormModal';
 import MaleReproductionTimeline from './MaleReproductionTimeline';
+import AnimalProfitability from './AnimalProfitability';
 import { calculateAgeInDays, calculateGrowthStatus } from '../utils/calfCalculations';
 import { calculateFemalePerformance, calculateMalePerformance, formatDaysToText } from '../utils/performanceCalculations';
-import { CalendarDays, Droplets, Trophy } from 'lucide-react';
+import { CalendarDays, Droplets, Trophy, Banknote } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface AnimalDetailProps {
@@ -32,7 +33,7 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
   const uremeKayitlari = useLiveFarmQuery(() => db.uremeKayitlari.where('hayvanId').equals(id).toArray(), [id]) || [];
   const agirlikKayitlari = useLiveFarmQuery(() => db.agirlikKayitlari.where('hayvanId').equals(id).toArray(), [id]) || [];
 
-  const [activeTab, setActiveTab] = useState<'ozet' | 'verim' | 'soy' | 'saglik' | 'ureme' | 'notlar'>('ozet');
+  const [activeTab, setActiveTab] = useState<'ozet' | 'verim' | 'soy' | 'saglik' | 'ureme' | 'notlar' | 'ekonomi'>('ozet');
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [isCalfFormOpen, setIsCalfFormOpen] = useState(false);
 
@@ -40,7 +41,7 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['ozet', 'verim', 'soy', 'saglik', 'ureme', 'notlar'].includes(tabParam)) {
+    if (tabParam && ['ozet', 'verim', 'soy', 'saglik', 'ureme', 'notlar', 'ekonomi'].includes(tabParam)) {
       setActiveTab(tabParam as any);
     }
   }, [location.search]);
@@ -113,6 +114,7 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
     { id: 'soy', label: 'Soy Ağacı', icon: <GitMerge className="w-4 h-4" /> },
     { id: 'saglik', label: 'Sağlık', icon: <Activity className="w-4 h-4" /> },
     ...(['Buzağı', 'Dana', 'Öküz'].includes(hayvan.tur) ? [] : [{ id: 'ureme', label: 'Üreme', icon: <CalendarDays className="w-4 h-4" /> }]),
+    ...(hayvan.tur === 'İnek' ? [{ id: 'ekonomi', label: 'Ekonomi', icon: <Banknote className="w-4 h-4" /> }] : []),
     { id: 'notlar', label: 'Notlar', icon: <FileText className="w-4 h-4" /> },
   ];
 
@@ -335,12 +337,10 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
           </div>
         )}
 
-        {activeTab === 'saglik' && (
-          <HealthTimeline hayvanId={id} />
-        )}
-
+        {activeTab === 'saglik' && <HealthTimeline hayvanId={hayvan.id} />}
+        {activeTab === 'ekonomi' && <AnimalProfitability hayvan={hayvan} />}
         {activeTab === 'ureme' && (
-          hayvan.cinsiyet === 'Erkek' ? (
+          isMale ? (
             ['Boğa', 'Tosun'].includes(hayvan.tur) ? (
               <MaleReproductionTimeline hayvan={hayvan} />
             ) : (

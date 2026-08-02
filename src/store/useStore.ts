@@ -35,10 +35,12 @@ interface StoreState {
   turFiltresi: string;
   durumFiltresi: string;
   sutLitreFiyati: number;
+  buzagiFiyati: number;
   setAramaMetni: (metin: string) => void;
   setTurFiltresi: (tur: string) => void;
   setDurumFiltresi: (durum: string) => void;
   setSutLitreFiyati: (fiyat: number) => void;
+  setBuzagiFiyati: (fiyat: number) => void;
 
   // Ration Calculator State
   rationSelectedGrupId: string;
@@ -83,11 +85,13 @@ export const useStore = create<StoreState>()(
       turFiltresi: 'Tümü',
       durumFiltresi: 'Aktif',
       sutLitreFiyati: 15.0,
+      buzagiFiyati: 50000.0,
 
       setAramaMetni: (metin) => set({ aramaMetni: metin }),
       setTurFiltresi: (tur) => set({ turFiltresi: tur }),
       setDurumFiltresi: (durum) => set({ durumFiltresi: durum }),
       setSutLitreFiyati: (fiyat) => set({ sutLitreFiyati: fiyat }),
+      setBuzagiFiyati: (fiyat) => set({ buzagiFiyati: fiyat }),
 
       // Ration Calculator
       rationSelectedGrupId: '',
@@ -129,6 +133,7 @@ export const useStore = create<StoreState>()(
         activeCiftlikId: state.activeCiftlikId,
         ciftlikler: state.ciftlikler,
         sutLitreFiyati: state.sutLitreFiyati,
+        buzagiFiyati: state.buzagiFiyati,
         rationSelectedGrupId: state.rationSelectedGrupId,
         rationVerimYonu: state.rationVerimYonu,
         rationAvgWeight: state.rationAvgWeight,
@@ -151,6 +156,7 @@ useStore.subscribe((state, prevState) => {
   const ayarlar = { 
     activeCiftlikId: state.activeCiftlikId,
     sutLitreFiyati: state.sutLitreFiyati, 
+    buzagiFiyati: state.buzagiFiyati,
     rationSelectedGrupId: state.rationSelectedGrupId, 
     rationVerimYonu: state.rationVerimYonu, 
     rationAvgWeight: state.rationAvgWeight, 
@@ -163,6 +169,7 @@ useStore.subscribe((state, prevState) => {
   const prevAyarlar = { 
     activeCiftlikId: prevState.activeCiftlikId,
     sutLitreFiyati: prevState.sutLitreFiyati, 
+    buzagiFiyati: prevState.buzagiFiyati,
     rationSelectedGrupId: prevState.rationSelectedGrupId, 
     rationVerimYonu: prevState.rationVerimYonu, 
     rationAvgWeight: prevState.rationAvgWeight, 

@@ -8,11 +8,12 @@ import { STANDART_IRKLAR } from '../components/AnimalForm';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
-  const { user, uremeAyarlari, setUremeAyarlari, theme, setTheme, sutLitreFiyati, setSutLitreFiyati } = useStore();
+  const { user, uremeAyarlari, setUremeAyarlari, theme, setTheme, sutLitreFiyati, setSutLitreFiyati, buzagiFiyati, setBuzagiFiyati } = useStore();
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [localUremeAyarlari, setLocalUremeAyarlari] = useState(uremeAyarlari);
   const [localSutFiyati, setLocalSutFiyati] = useState(sutLitreFiyati.toString());
+  const [localBuzagiFiyati, setLocalBuzagiFiyati] = useState(buzagiFiyati.toString());
   const [selectedIrk, setSelectedIrk] = useState<string>('Varsayılan');
 
   const currentValues = selectedIrk === 'Varsayılan' 
@@ -133,12 +134,14 @@ const Settings: React.FC = () => {
   };
 
   const handleSaveEkonomikAyarlar = () => {
-    const val = parseFloat(localSutFiyati);
-    if (!isNaN(val) && val > 0) {
-      setSutLitreFiyati(val);
+    const valSut = parseFloat(localSutFiyati);
+    const valBuzagi = parseFloat(localBuzagiFiyati);
+    if (!isNaN(valSut) && valSut > 0 && !isNaN(valBuzagi) && valBuzagi >= 0) {
+      setSutLitreFiyati(valSut);
+      setBuzagiFiyati(valBuzagi);
       alert('Ekonomik ayarlar başarıyla kaydedildi.');
     } else {
-      alert('Lütfen geçerli bir süt fiyatı giriniz.');
+      alert('Lütfen geçerli bir fiyat giriniz.');
     }
   };
 
@@ -380,6 +383,17 @@ const Settings: React.FC = () => {
                 step="0.1"
                 value={localSutFiyati}
                 onChange={e => setLocalSutFiyati(e.target.value)}
+                className="w-full p-3 border-2 border-earth-200 dark:border-gray-700 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-nature-500 outline-none"
+              />
+            </div>
+
+            <div className="space-y-1 w-full sm:w-1/4">
+              <label className="text-xs font-bold text-earth-700 dark:text-gray-300">Varsayılan Buzağı Fiyatı (₺)</label>
+              <input 
+                type="number" 
+                step="100"
+                value={localBuzagiFiyati}
+                onChange={e => setLocalBuzagiFiyati(e.target.value)}
                 className="w-full p-3 border-2 border-earth-200 dark:border-gray-700 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-nature-500 outline-none"
               />
             </div>

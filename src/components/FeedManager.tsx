@@ -17,11 +17,11 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
   const [tur, setTur] = useState('Kaba Yem');
   const [birimFiyat, setBirimFiyat] = useState(0);
   const [minStokUyariKg, setMinStokUyariKg] = useState(500);
-  const [kmYuzde, setKmYuzde] = useState(88);
-  const [meMcalKg, setMeMcalKg] = useState(2.2);
-  const [hpYuzde, setHpYuzde] = useState(12);
-  const [caYuzde, setCaYuzde] = useState(0.5);
-  const [pYuzde, setPYuzde] = useState(0.3);
+  const [kmYuzde, setKmYuzde] = useState<number | ''>('');
+  const [meMcalKg, setMeMcalKg] = useState<number | ''>('');
+  const [hpYuzde, setHpYuzde] = useState<number | ''>('');
+  const [caYuzde, setCaYuzde] = useState<number | ''>('');
+  const [pYuzde, setPYuzde] = useState<number | ''>('');
 
   const handleAddNewFeed = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +29,12 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
 
     if (editingFeedId) {
       const payload: Partial<Yem> = {
-        ad, tur, birimFiyat, minStokUyariKg, kmYuzde, meMcalKg, hpYuzde, caYuzde, pYuzde
+        ad, tur, birimFiyat, minStokUyariKg, 
+        kmYuzde: kmYuzde === '' ? undefined : kmYuzde, 
+        meMcalKg: meMcalKg === '' ? undefined : meMcalKg, 
+        hpYuzde: hpYuzde === '' ? undefined : hpYuzde, 
+        caYuzde: caYuzde === '' ? undefined : caYuzde, 
+        pYuzde: pYuzde === '' ? undefined : pYuzde
       };
       await db.yemler.update(editingFeedId, payload);
       await db.syncQueue.add({
@@ -41,7 +46,12 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
     } else {
       const payload: Yem = {
         id: uuidv4(),
-        ad, tur, stokKg: 0, birimFiyat, minStokUyariKg, kmYuzde, meMcalKg, hpYuzde, caYuzde, pYuzde
+        ad, tur, stokKg: 0, birimFiyat, minStokUyariKg,
+        kmYuzde: kmYuzde === '' ? undefined : kmYuzde, 
+        meMcalKg: meMcalKg === '' ? undefined : meMcalKg, 
+        hpYuzde: hpYuzde === '' ? undefined : hpYuzde, 
+        caYuzde: caYuzde === '' ? undefined : caYuzde, 
+        pYuzde: pYuzde === '' ? undefined : pYuzde
       };
       await db.yemler.add(payload);
       await db.syncQueue.add({
@@ -61,11 +71,11 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
     setAd('');
     setBirimFiyat(0);
     setMinStokUyariKg(500);
-    setKmYuzde(88);
-    setMeMcalKg(2.2);
-    setHpYuzde(12);
-    setCaYuzde(0.5);
-    setPYuzde(0.3);
+    setKmYuzde('');
+    setMeMcalKg('');
+    setHpYuzde('');
+    setCaYuzde('');
+    setPYuzde('');
   };
 
   const handleEditClick = (yem: Yem) => {
@@ -74,11 +84,11 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
     setTur(yem.tur);
     setBirimFiyat(yem.birimFiyat || 0);
     setMinStokUyariKg(yem.minStokUyariKg || 0);
-    setKmYuzde(yem.kmYuzde ?? 88);
-    setMeMcalKg(yem.meMcalKg ?? 2.2);
-    setHpYuzde(yem.hpYuzde ?? 12);
-    setCaYuzde(yem.caYuzde ?? 0.5);
-    setPYuzde(yem.pYuzde ?? 0.3);
+    setKmYuzde(yem.kmYuzde ?? '');
+    setMeMcalKg(yem.meMcalKg ?? '');
+    setHpYuzde(yem.hpYuzde ?? '');
+    setCaYuzde(yem.caYuzde ?? '');
+    setPYuzde(yem.pYuzde ?? '');
     setIsAddingNew(true);
     setTimeout(() => {
       document.getElementById('yem-form-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -168,23 +178,23 @@ const FeedManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-earth-600 dark:text-gray-400 mb-1">Kuru Madde (%)</label>
-                  <input type="number" step="0.1" min="0" max="100" value={kmYuzde} onChange={e => setKmYuzde(Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
+                  <input type="number" step="0.1" min="0" max="100" value={kmYuzde} onChange={e => setKmYuzde(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-earth-600 dark:text-gray-400 mb-1">Enerji (ME Mcal/kg)</label>
-                  <input type="number" step="0.01" min="0" value={meMcalKg} onChange={e => setMeMcalKg(Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
+                  <input type="number" step="0.01" min="0" value={meMcalKg} onChange={e => setMeMcalKg(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-earth-600 dark:text-gray-400 mb-1">Ham Protein (%)</label>
-                  <input type="number" step="0.1" min="0" max="100" value={hpYuzde} onChange={e => setHpYuzde(Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
+                  <input type="number" step="0.1" min="0" max="100" value={hpYuzde} onChange={e => setHpYuzde(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-earth-600 dark:text-gray-400 mb-1">Kalsiyum (Ca %)</label>
-                  <input type="number" step="0.01" min="0" value={caYuzde} onChange={e => setCaYuzde(Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
+                  <input type="number" step="0.01" min="0" value={caYuzde} onChange={e => setCaYuzde(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-earth-600 dark:text-gray-400 mb-1">Fosfor (P %)</label>
-                  <input type="number" step="0.01" min="0" value={pYuzde} onChange={e => setPYuzde(Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
+                  <input type="number" step="0.01" min="0" value={pYuzde} onChange={e => setPYuzde(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none" />
                 </div>
               </div>
               <div className="mt-4 flex justify-end">

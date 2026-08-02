@@ -42,14 +42,15 @@ const ProgressBar = ({ current, target, label, unit }: { current: number, target
 const RationCalculator: React.FC = () => {
   // useLiveFarmQuery undefined döndürdüğünde EMPTY_ARRAY kullan (sabit referans)
   const gruplarRaw = useLiveFarmQuery(() => db.gruplar.toArray());
-  const yemlerRaw  = useLiveFarmQuery(() => db.yemler.toArray());
+  const yemlerRaw = useLiveFarmQuery(() => db.yemler.toArray());
   const hayvanlarRaw = useLiveFarmQuery(() => db.hayvanlar.toArray());
 
-  const gruplar  = gruplarRaw  ?? EMPTY_ARRAY;
-  const yemler   = yemlerRaw   ?? EMPTY_ARRAY;
+  const gruplar = gruplarRaw ?? EMPTY_ARRAY;
+  const yemler = yemlerRaw ?? EMPTY_ARRAY;
   const hayvanlar = hayvanlarRaw ?? EMPTY_ARRAY;
 
   const [selectedYemToAdd, setSelectedYemToAdd] = useState('');
+  const [isOptimizing, setIsOptimizing] = useState(false);
 
   const {
     rationSelectedGrupId: selectedGrupId,
@@ -93,13 +94,13 @@ const RationCalculator: React.FC = () => {
     let hedefDMI = 0;
     let hedefME = 0;
     let hedefHP_g = 0;
-    
+
     const weight = Number(avgWeight) || 600;
     const milk = Number(milkYield) || 0;
     const dailyAdg = Number(adg) || 0;
 
     const yasamaPayiME = 0.122 * Math.pow(Math.max(weight, 1), 0.75);
-    
+
     if (verimYonu === 'Sütçü') {
       hedefDMI = weight * 0.032;
       hedefME = yasamaPayiME + (milk * 0.74);
@@ -187,6 +188,85 @@ const RationCalculator: React.FC = () => {
 
   const safeRasyonListesi = Array.isArray(rasyonListesi) ? rasyonListesi : EMPTY_ARRAY;
 
+  const handleOptimize = () => {
+    if (safeRasyonListesi.length === 0) {
+      alert("Lütfen önce rasyona yem ekleyin.");
+      return;
+    }
+    setIsOptimizing(true);
+
+    setTimeout(() => {
+      const calculateMetrics = (ration: typeof safeRasyonListesi) => {
+        let dmi = 0, me = 0, hp_g = 0, cost = 0;
+        ration.forEach(r => {
+          const y = yemler.find(yem => yem && yem.id === r.yemId);
+          if (y && y.kmYuzde) {
+            const kg = r.kgAsFed;
+            const kuruMaddeKg = kg * (y.kmYuzde / 100);
+            dmi += kuruMaddeKg;
+            me += kuruMaddeKg * (y.meMcalKg || 0);
+            hp_g += kuruMaddeKg * 1000 * ((y.hpYuzde || 0) / 100);
+            cost += kg * (y.birimFiyat || 0);
+          }
+        });
+        return { dmi, me, hp_g, cost };
+      };
+
+      let bestRation = safeRasyonListesi.map(r => ({ ...r }));
+
+      const getScore = (metrics: { dmi: number, me: number, hp_g: number, cost: number }) => {
+        // Yüzdesel oranlar (1 = %100 tam karşılama)
+        const meRatio = hedefIhtiyac.me > 0 ? metrics.me / hedefIhtiyac.me : 1;
+        const hpRatio = hedefIhtiyac.hp_g > 0 ? metrics.hp_g / hedefIhtiyac.hp_g : 1;
+        const dmiRatio = hedefIhtiyac.dmi > 0 ? metrics.dmi / hedefIhtiyac.dmi : 1;
+
+        let penalty = 0;
+
+        // 1. ÖNCELİK: ME (Enerji) ve HP (Protein)
+        // Eksikliklerine devasa ceza (100.000 çarpan), fazlalıklarına israf cezası (10.000 çarpan)
+        if (meRatio < 1) penalty += Math.pow((1 - meRatio) * 100, 2) * 100000;
+        else penalty += Math.pow((meRatio - 1) * 100, 2) * 10000;
+
+        if (hpRatio < 1) penalty += Math.pow((1 - hpRatio) * 100, 2) * 100000;
+        else penalty += Math.pow((hpRatio - 1) * 100, 2) * 10000;
+
+        // 2. ÖNCELİK: KMT (Kuru Madde Tüketimi)
+        // Kullanıcı isteği: KMT cezası uygulansın ancak HP ve ME'den az olsun (10.000 çarpan)
+        if (dmiRatio < 1) penalty += Math.pow((1 - dmiRatio) * 100, 2) * 10000;
+        else penalty += Math.pow((dmiRatio - 1) * 100, 2) * 10000;
+
+        // KMT fiziksel sınırı (Hayvan midesi %5'ten fazla aşılırsa devasa ceza)
+        if (dmiRatio > 1.05) penalty += Math.pow((dmiRatio - 1.05) * 100, 2) * 500000;
+
+        // 3. ÖNCELİK: MALİYET
+        // Hedefler tutturulduğunda devasa cezalar 0'a yaklaşır, geriye maliyet minimizasyonu kalır
+        penalty += metrics.cost;
+
+        return -penalty;
+      };
+
+      let bestScore = getScore(calculateMetrics(bestRation));
+
+      for (let i = 0; i < 10000; i++) {
+        const candidate = bestRation.map(r => ({ ...r }));
+        const idx = Math.floor(Math.random() * candidate.length);
+        const change = (Math.random() - 0.5) * 1.5; // -0.75 to +0.75 kg
+        candidate[idx].kgAsFed = Math.max(0.1, candidate[idx].kgAsFed + change); // En az 0.1 kg
+
+        const metrics = calculateMetrics(candidate);
+        const score = getScore(metrics);
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestRation = candidate;
+        }
+      }
+
+      setRasyonListesi(bestRation.map(r => ({ ...r, kgAsFed: Number(r.kgAsFed.toFixed(2)) })));
+      setIsOptimizing(false);
+    }, 600);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -203,10 +283,10 @@ const RationCalculator: React.FC = () => {
         {/* Sol Panel: Parametreler */}
         <div className="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 space-y-6 lg:col-span-1">
           <h2 className="font-bold text-lg text-earth-900 dark:text-gray-100 border-b pb-2">1. Hedef Parametreleri</h2>
-          
+
           <div>
             <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Hedef Grup</label>
-            <select 
+            <select
               value={selectedGrupId}
               onChange={(e) => setSelectedGrupId(e.target.value)}
               className="w-full p-2.5 border border-earth-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-800 font-medium text-sm"
@@ -221,13 +301,13 @@ const RationCalculator: React.FC = () => {
           <div>
             <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Verim Yönü</label>
             <div className="flex space-x-2">
-              <button 
+              <button
                 onClick={() => setVerimYonu('Sütçü')}
                 className={`flex-1 py-2 px-3 rounded-lg font-bold flex items-center justify-center transition ${verimYonu === 'Sütçü' ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400 border-2 border-purple-500' : 'bg-earth-50 dark:bg-gray-900 text-earth-600 dark:text-gray-400 border-2 border-transparent'}`}
               >
                 <Droplets className="w-4 h-4 mr-2" /> Sütçü
               </button>
-              <button 
+              <button
                 onClick={() => setVerimYonu('Etçi')}
                 className={`flex-1 py-2 px-3 rounded-lg font-bold flex items-center justify-center transition ${verimYonu === 'Etçi' ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 border-2 border-red-500' : 'bg-earth-50 dark:bg-gray-900 text-earth-600 dark:text-gray-400 border-2 border-transparent'}`}
               >
@@ -268,19 +348,21 @@ const RationCalculator: React.FC = () => {
           <h2 className="font-bold text-lg text-earth-900 dark:text-gray-100 border-b pb-2 flex justify-between items-center">
             2. Rasyona Yem Ekle
           </h2>
-          
+
           <div className="flex space-x-2">
-            <select 
+            <select
               value={selectedYemToAdd}
               onChange={(e) => setSelectedYemToAdd(e.target.value)}
               className="flex-1 min-w-0 truncate p-2 border border-earth-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-800 font-medium text-sm"
             >
               <option value="">Yem Seçin...</option>
-              {yemler.filter(y => y && y.kmYuzde !== undefined).map(y => (
-                <option key={y.id} value={y.id}>{y.ad} (Stok: {y.stokKg || 0}kg)</option>
+              {yemler.filter(y => y).map(y => (
+                <option key={y.id} value={y.id}>
+                  {y.ad} {y.kmYuzde === undefined || y.kmYuzde === 0 ? '(Besin Değeri Eksik)' : `(Stok: ${y.stokKg || 0}kg)`}
+                </option>
               ))}
             </select>
-            <button 
+            <button
               onClick={() => {
                 if (selectedYemToAdd) {
                   addYem(selectedYemToAdd);
@@ -293,7 +375,7 @@ const RationCalculator: React.FC = () => {
             </button>
           </div>
 
-          <div className="space-y-2 mt-4 max-h-[400px] overflow-y-auto">
+          <div className="space-y-2 mt-4 max-h-[400px] lg:max-h-[600px] xl:max-h-[700px] overflow-y-auto custom-scrollbar pr-1">
             {safeRasyonListesi.length === 0 ? (
               <div className="text-center py-6 text-earth-400 text-sm">Henüz yem eklenmedi.</div>
             ) : (
@@ -308,11 +390,11 @@ const RationCalculator: React.FC = () => {
                     </button>
                     <div className="font-bold text-earth-800 dark:text-gray-200 text-sm">{y.ad}</div>
                     <div className="flex items-center space-x-2 mt-2">
-                      <input 
-                        type="number" 
-                        step="0.1" 
+                      <input
+                        type="number"
+                        step="0.1"
                         min="0"
-                        value={r.kgAsFed} 
+                        value={r.kgAsFed}
                         onChange={(e) => updateYemKg(r.id, Number(e.target.value))}
                         className="w-20 p-1 border border-earth-300 dark:border-gray-600 rounded text-center font-bold outline-none bg-white dark:bg-gray-800"
                       />
@@ -331,7 +413,7 @@ const RationCalculator: React.FC = () => {
             <Activity className="w-5 h-5 mr-2 text-nature-600 dark:text-nature-400" />
             3. Rasyon Çözümü
           </h2>
-          
+
           <div className="space-y-2 mt-4">
             <ProgressBar current={toplamSaglanan.dmi} target={hedefIhtiyac.dmi} label="Kuru Madde Tüketimi" unit="kg" />
             <ProgressBar current={toplamSaglanan.me} target={hedefIhtiyac.me} label="Enerji (ME)" unit="Mcal" />
@@ -365,10 +447,10 @@ const RationCalculator: React.FC = () => {
                 </span>
               </div>
             </div>
-            
+
             <h3 className="font-bold text-nature-800 dark:text-nature-200 text-sm mb-1 mt-4 border-t border-nature-200 dark:border-nature-800 pt-4">Rasyon Özeti</h3>
             <p className="text-xs text-nature-600 dark:text-nature-400 mb-4">
-              Bu rasyonun kuru maddesindeki ham protein oranı <strong>%{toplamSaglanan.hp_yuzde.toFixed(1)}</strong> olarak hesaplanmıştır. 
+              Bu rasyonun kuru maddesindeki ham protein oranı <strong>%{toplamSaglanan.hp_yuzde.toFixed(1)}</strong> olarak hesaplanmıştır.
               {toplamSaglanan.hp_yuzde < hedefIhtiyac.hp_yuzde ? ' (Hedefin altında)' : ' (Hedef uygun)'}
             </p>
 
@@ -391,7 +473,16 @@ const RationCalculator: React.FC = () => {
                 })()} <span className="text-xs text-orange-500 font-normal">/ Gün</span>
               </span>
             </div>
-            <button 
+
+            <button
+              onClick={handleOptimize}
+              disabled={isOptimizing || safeRasyonListesi.length === 0}
+              className="w-full py-2 mb-4 bg-orange-100 text-orange-700 border border-orange-300 rounded-lg font-bold hover:bg-orange-200 transition disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center"
+            >
+              {isOptimizing ? 'Optimizasyon Hesaplanıyor...' : 'Maliyeti Optimize Et (Akıllı Asistan)'}
+            </button>
+
+            <button
               onClick={async () => {
                 if (!selectedGrupId) {
                   alert('Lütfen önce bir hedef grup seçin.');
@@ -402,7 +493,7 @@ const RationCalculator: React.FC = () => {
                   const y = yemler.find(yem => yem && yem.id === r.yemId);
                   return y ? `${y.ad}: ${r.kgAsFed}kg` : '';
                 }).filter(Boolean).join(', ');
-                
+
                 const rasyonGuncellemesi = {
                   rasyonAdi: `${verimYonu} Rasyonu`,
                   rasyonOzet: summary,
