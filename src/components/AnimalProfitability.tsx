@@ -25,6 +25,7 @@ const AnimalProfitability: React.FC<Props> = ({ hayvan }) => {
   const tumSutKayitlari = useLiveFarmQuery(() => db.sutKayitlari.toArray()) || [];
   const tumSaglikOlaylari = useLiveFarmQuery(() => db.saglikOlaylari.toArray()) || [];
   const tumUremeKayitlari = useLiveFarmQuery(() => db.uremeKayitlari.toArray()) || [];
+  const hayvanGunlukYemMaliyetleri = useLiveFarmQuery(() => db.hayvanGunlukYemMaliyetleri.toArray()) || [];
 
   const profitData = calculateAnimalProfitability(
     hayvan,
@@ -34,7 +35,8 @@ const AnimalProfitability: React.FC<Props> = ({ hayvan }) => {
     yemler,
     gruplar,
     sutLitreFiyati,
-    buzagiFiyati
+    buzagiFiyati,
+    hayvanGunlukYemMaliyetleri
   );
 
   const formatMoney = (val: number) => {
@@ -63,7 +65,8 @@ const AnimalProfitability: React.FC<Props> = ({ hayvan }) => {
         yemler,
         gruplar,
         sutLitreFiyati,
-        buzagiFiyati
+        buzagiFiyati,
+        hayvanGunlukYemMaliyetleri
       );
       totalRev += p.totalRevenue;
       totalCost += p.totalCost;
@@ -99,16 +102,16 @@ const AnimalProfitability: React.FC<Props> = ({ hayvan }) => {
       <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 p-6 rounded-2xl border border-emerald-100 dark:border-emerald-800">
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="text-emerald-800 dark:text-emerald-300 font-bold text-lg mb-1 flex items-center">
-              <Trophy className="w-5 h-5 mr-2" />
-              Son 12 Aylık Karlılık Analizi
+            <h3 className="text-xl font-bold text-emerald-900 dark:text-emerald-100 flex items-center gap-2">
+              <Trophy className="w-6 h-6 text-emerald-500" />
+              Genel Karlılık Analizi
             </h3>
-            <p className="text-emerald-600 dark:text-emerald-400 text-sm">
-              Bu hayvanın işletmenize son 1 yıl içinde sağladığı tahmini net katkı.
+            <p className="text-sm text-emerald-700/80 dark:text-emerald-300/80 mt-1">
+              Bu hayvanın işletmenize sağladığı genel tahmini net katkı.
             </p>
           </div>
-          <div className="text-right">
-            <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Net Kar (12 Ay)</div>
+          <div className="text-right bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-emerald-100 dark:border-emerald-800">
+            <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-1 uppercase tracking-wider">NET KÂR</div>
             <div className={`text-3xl font-black ${isProfitable ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
               {profitData.netProfit > 0 ? '+' : ''}{formatMoney(profitData.netProfit)}
             </div>

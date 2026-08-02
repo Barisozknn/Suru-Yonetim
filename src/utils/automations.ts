@@ -1,5 +1,6 @@
 import { db } from '../lib/db';
 import { notifyOverdueVaccines, notifyUpcomingBirths } from './notifications';
+import { syncDailyAnimalFeedCosts } from './dailyFeedCostSync';
 
 
 export const runDailyAutomations = async () => {
@@ -65,6 +66,10 @@ export const runDailyAutomations = async () => {
         await db.syncQueue.add({ table: 'gunlukYemMaliyetleri', action: 'INSERT', payload, created_at: Date.now() });
       }
     }
+    // ---------------------------------------------
+
+    // --- İNEKLER İÇİN GÜNLÜK BİREYSEL YEM MALİYETİ KAYDI ---
+    await syncDailyAnimalFeedCosts();
     // ---------------------------------------------
 
     // --- HAYVAN YAŞ / KATEGORİ GÜNCELLEMESI (WEB WORKER ile) ---

@@ -1,4 +1,4 @@
-import type { Hayvan, SutKaydi, SaglikOlayi, UremeKaydi, Yem, Grup } from '../types';
+import type { Hayvan, SutKaydi, SaglikOlayi, UremeKaydi, Yem, Grup, HayvanGunlukYemMaliyeti } from '../types';
 import { parseRasyonCost } from './dashboardCalculations';
 
 export interface ProfitabilityResult {
@@ -24,7 +24,8 @@ export function calculateAnimalProfitability(
   yemler: Yem[],
   gruplar: Grup[],
   sutFiyati: number,
-  buzagiFiyati: number
+  buzagiFiyati: number,
+  hayvanGunlukYemMaliyetleri: HayvanGunlukYemMaliyeti[] = []
 ): ProfitabilityResult {
   const now = new Date();
   const twelveMonthsAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
@@ -55,26 +56,35 @@ export function calculateAnimalProfitability(
   );
   const reproCost = animalReproRecords.reduce((sum, k) => sum + (k.maliyet || 0), 0);
 
-  // 4. Son 12 Ayın Yem Maliyeti (Yaklaşık hesaplama)
-  // Hayvanın şu anki grubunun günlük maliyetini baz alıp, 12 ay (365 gün) veya hayvanın çiftlikte geçirdiği gün ile çarpıyoruz.
-  let dailyFeedCost = 0;
-  if (hayvan.grupId) {
-    const grup = gruplar.find(g => g.id === hayvan.grupId);
-    if (grup && grup.rasyonOzet) {
-      dailyFeedCost = parseRasyonCost(grup.rasyonOzet, yemler);
-    }
-  }
+  // 4. Son 12 Ayın Yem Maliyeti
+  let feedCost = 0;
 
-  // Hayvan 12 aydan daha kısa süredir çiftlikteyse (doğum tarihi 12 aydan yeniyse)
-  let daysInFarm = 365;
-  if (hayvan.dogumTarihi) {
-    const birthDate = new Date(hayvan.dogumTarihi);
-    if (birthDate > twelveMonthsAgo) {
-      const diffTime = Math.abs(now.getTime() - birthDate.getTime());
-      daysInFarm = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  if (hayvan.tur === 'İnek') {
+    // İnekler için veritabanındaki günlük maliyet kayıtlarını topla
+    const animalFeedRecords = hayvanGunlukYemMaliyetleri.filter(
+      k => k.hayvanId === hayvan.id && new Date(k.tarih) >= twelveMonthsAgo
+    );
+    feedCost = animalFeedRecords.reduce((sum, k) => sum + (k.maliyet || 0), 0);
+  } else {
+    // İnek olmayanlar için (veya kayıt bulunamadıysa fallback olarak) mevcut rasyon * gün hesabı yap
+    let dailyFeedCost = 0;
+    if (hayvan.grupId) {
+      const grup = gruplar.find(g => g.id === hayvan.grupId);
+      if (grup && grup.rasyonOzet) {
+        dailyFeedCost = parseRasyonCost(grup.rasyonOzet, yemler);
+      }
     }
+
+    let daysInFarm = 365;
+    if (hayvan.dogumTarihi) {
+      const birthDate = new Date(hayvan.dogumTarihi);
+      if (birthDate > twelveMonthsAgo) {
+        const diffTime = Math.abs(now.getTime() - birthDate.getTime());
+        daysInFarm = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      }
+    }
+    feedCost = dailyFeedCost * daysInFarm;
   }
-  const feedCost = dailyFeedCost * daysInFarm;
 
   const totalCost = feedCost + healthCost + reproCost;
   const netProfit = totalRevenue - totalCost;

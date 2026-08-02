@@ -185,6 +185,14 @@ export interface EkFinansalIslem {
   aciklama?: string;
 }
 
+export interface HayvanGunlukYemMaliyeti {
+  ciftlikId?: string;
+  id: string;
+  hayvanId: string;
+  tarih: string; // YYYY-MM-DD
+  maliyet: number;
+}
+
 export interface GunlukYemMaliyeti {
   ciftlikId?: string;
   id: string;
