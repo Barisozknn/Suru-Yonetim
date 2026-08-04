@@ -44,6 +44,16 @@ tam kapsamlı, çevrimdışı-öncelikli yönetim platformu.**
 
 ## ✨ Özellikler
 
+### 🔔 Akıllı Görev Listesi & Bildirimler
+- Uygulama kapalıyken bile arka planda çalışan zamanlanmış görevler (`pg_cron`)
+- Yaklaşan aşılar, gebelik kontrolleri ve tohumlama tarihlerini bildiren **Web Push Bildirimleri**
+- Otomatik önem derecelendirmesi (Kritik / Önemli) yapan akıllı Dashboard
+- Edge Functions destekli sunucu mimarisi
+
+### 📊 Akıllı Analiz (SürüMetri Skoru & Projeksiyon)
+- Süt verimi, üreme, sağlık ve yem verimliliği metriklerini harmanlayan **SürüMetri Skoru** (100 üzerinden işletme puanı)
+- Gelecek 30 günlük süreçte beklenen yem, sağlık giderleri ve süt gelirlerini hesaplayan **30 Günlük Projeksiyon**
+
 ### 🐮 Hayvan & Sürü Yönetimi
 - Küpe numarası, ırk, cinsiyet, doğum tarihi ve ebeveyn bilgileri ile tam hayvan kaydı
 - Grup bazlı sürü organizasyonu ve filtreleme
@@ -61,6 +71,7 @@ tam kapsamlı, çevrimdışı-öncelikli yönetim platformu.**
 ### 🌾 Yem Deposu & Rasyon Hesaplama
 - Yem stoğu yönetimi, giriş/çıkış hareketleri ve minimum stok uyarısı
 - Grup bazlı otomatik rasyon hesaplama (KM, ME, HP bazlı)
+- Gebeliğin son 21 günü için otomatik **Close-up (Doğum Öncesi)** besleme uyarıları
 - Günlük sürü yem maliyeti ve süt başına maliyet hesabı
 
 ### 💉 Sağlık Yönetimi
@@ -117,10 +128,10 @@ SürüMetri
 | **Grafikler** | Recharts |
 | **Durum Yönetimi** | Zustand |
 | **Yerel Veritabanı** | Dexie.js (IndexedDB) |
-| **Backend & Auth** | Supabase (PostgreSQL + Auth) |
+| **Backend & Auth** | Supabase (PostgreSQL + Auth + Edge Functions) |
 | **AI** | DeepSeek API |
 | **PDF & Excel** | jsPDF, xlsx |
-| **PWA & Deploy** | Vite PWA Plugin, Vercel |
+| **PWA & Bildirimler** | Vite PWA Plugin, Web Push, Vercel |
 
 ---
 
@@ -151,7 +162,8 @@ cp .env.example .env.local
 ```env
 VITE_SUPABASE_URL=https://xxxxx.supabase.co
 VITE_SUPABASE_ANON_KEY=your_anon_key
-VITE_DEEPSEEK_API_KEY=your_deepseek_key   # Opsiyonel - AI özelliği için
+VITE_DEEPSEEK_API_KEY=your_deepseek_key         # Opsiyonel - AI özelliği için
+VITE_VAPID_PUBLIC_KEY=your_public_vapid_key     # Opsiyonel - Push bildirimleri için
 ```
 
 ### 4. Supabase Veritabanını Kurun
