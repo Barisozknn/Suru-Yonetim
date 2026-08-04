@@ -35,6 +35,7 @@ export default defineConfig({
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 5000000, // 5 MB
+        importScripts: ['push-sw.js'],
         // Tüm JS/CSS/HTML/SVG/PNG dosyalarını önbelleğe al
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
         // ÖNEMLİ: Supabase API çağrıları ve auth asla cache'lenmemeli

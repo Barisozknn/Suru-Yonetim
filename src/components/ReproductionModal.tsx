@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { X, Save, Heart, Info, CalendarCheck, ShieldAlert, GitMerge, Droplet, Activity, Droplets } from 'lucide-react';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
-import type { UremeKaydi, UremeKaydiTur, Hayvan, BuzagiKaydi } from '../types';
+import type { UremeKaydi, UremeKaydiTur, Hayvan, BuzagiKaydi, Todo } from '../types';
 import { v4 as uuidv4 } from 'uuid';
+import { useStore } from '../store/useStore';
+import { getUremeAyarForIrk } from '../utils/reproductionSettings';
 
 interface Props {
   hayvanId: string;
@@ -55,6 +57,9 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
   const [yeniBuzagiKupeNo, setYeniBuzagiKupeNo] = useState('');
   const [yeniBuzagiCinsiyet, setYeniBuzagiCinsiyet] = useState<'Erkek' | 'Dişi'>('Dişi');
   const [yeniBuzagiDogumAgirligi, setYeniBuzagiDogumAgirligi] = useState('');
+  
+  const { uremeAyarlari: globalAyarlari } = useStore();
+  const uremeAyarlari = getUremeAyarForIrk(disiHayvan?.irk, globalAyarlari);
   
   const [erkekSearchTerm, setErkekSearchTerm] = useState('');
   const [isErkekDropdownOpen, setIsErkekDropdownOpen] = useState(false);
@@ -124,6 +129,90 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
         };
         await db.buzagiKayitlari.add(yeniBuzagiKaydi);
         await db.syncQueue.add({ table: 'buzagiKayitlari', action: 'INSERT', payload: yeniBuzagiKaydi, created_at: Date.now() });
+      }
+    }
+
+    if (!existing) {
+      const todosToAdd: Todo[] = [];
+      const addDays = (dStr: string, days: number) => {
+        const d = new Date(dStr);
+        d.setDate(d.getDate() + days);
+        return d.toISOString().split('T')[0];
+      };
+
+      if (tur === 'Kızgınlık') {
+        todosToAdd.push({
+          id: uuidv4(),
+          metin: `${disiHayvan?.kupeNo || ''} için tekrar kızgınlık kontrolü`,
+          yapildiMi: false,
+          olusturulmaTarihi: Date.now(),
+          isSystem: true,
+          hedefTarih: addDays(tarih, uremeAyarlari.kizginlikDongusu || 21),
+          ilgiliHayvanId: hayvanId,
+          priority: 'Önemli',
+          kategori: 'Üreme'
+        });
+      } else if (tur === 'Tohumlama/Aşım') {
+        todosToAdd.push({
+          id: uuidv4(),
+          metin: `${disiHayvan?.kupeNo || ''} için gebelik muayenesi`,
+          yapildiMi: false,
+          olusturulmaTarihi: Date.now(),
+          isSystem: true,
+          hedefTarih: addDays(tarih, 35), // Default 35 days for pregnancy check
+          ilgiliHayvanId: hayvanId,
+          priority: 'Kritik',
+          kategori: 'Üreme'
+        });
+      } else if (tur === 'Gebelik Kontrolü' && durum === 'Gebe') {
+        const tumOlaylar = await db.uremeKayitlari.where('hayvanId').equals(hayvanId).toArray();
+        const sonTohumlama = tumOlaylar.sort((a, b) => new Date(b.tarih).getTime() - new Date(a.tarih).getTime())
+           .find(o => o.tur === 'Tohumlama/Aşım' || o.tur === 'Doğal Aşım');
+           
+        const baslangicTarihi = sonTohumlama ? sonTohumlama.tarih : tarih;
+        const gebelikSuresi = uremeAyarlari.gebelikSuresi || 270;
+        const kuruyaCikarmaGunu = uremeAyarlari.kuruyaCikarma || 60;
+        
+        todosToAdd.push({
+          id: uuidv4(),
+          metin: `${disiHayvan?.kupeNo || ''} kuruya çıkarma zamanı`,
+          yapildiMi: false,
+          olusturulmaTarihi: Date.now(),
+          isSystem: true,
+          hedefTarih: addDays(baslangicTarihi, gebelikSuresi - kuruyaCikarmaGunu),
+          ilgiliHayvanId: hayvanId,
+          priority: 'Kritik',
+          kategori: 'Üreme'
+        });
+        
+        todosToAdd.push({
+          id: uuidv4(),
+          metin: `${disiHayvan?.kupeNo || ''} için Close-up (Doğum Öncesi) beslemesine geçiş`,
+          yapildiMi: false,
+          olusturulmaTarihi: Date.now(),
+          isSystem: true,
+          hedefTarih: addDays(baslangicTarihi, gebelikSuresi - 21),
+          ilgiliHayvanId: hayvanId,
+          priority: 'Önemli',
+          kategori: 'Besleme'
+        });
+        
+        todosToAdd.push({
+          id: uuidv4(),
+          metin: `${disiHayvan?.kupeNo || ''} için beklenen doğum zamanı`,
+          yapildiMi: false,
+          olusturulmaTarihi: Date.now(),
+          isSystem: true,
+          hedefTarih: addDays(baslangicTarihi, gebelikSuresi),
+          ilgiliHayvanId: hayvanId,
+          priority: 'Kritik',
+          kategori: 'Üreme'
+        });
+      }
+
+      for (const todo of todosToAdd) {
+        await db.todos.add(todo);
+        await db.syncQueue.add({ table: 'todos', action: 'INSERT', payload: todo, created_at: Date.now() });
       }
     }
 

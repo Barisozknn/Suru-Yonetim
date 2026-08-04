@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { 
   Users, Activity, AlertTriangle, TrendingDown, Heart,
-  CalendarCheck, Syringe, Droplets, Plus, Trash2, CheckCircle2, Circle, Info
+  CalendarCheck, Syringe, Droplets, Plus, Trash2, CheckCircle2, Circle, Info, Bell
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { CalfIcon } from '../components/icons/CalfIcon';
@@ -29,6 +29,7 @@ import { useAnomalyDetection } from '../hooks/useAnomalyDetection';
 import { calculate30DayProjection } from '../utils/financialProjection';
 import { calculateHerdScore } from '../utils/herdScore';
 import { Target, TrendingUp, BadgeDollarSign, HeartPulse } from 'lucide-react';
+import { subscribeToPushNotifications } from '../utils/pushUtils';
 
 const Dashboard: React.FC = () => {
   const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
@@ -40,10 +41,65 @@ const Dashboard: React.FC = () => {
   const saglikOlaylari = useLiveFarmQuery(() => db.saglikOlaylari.toArray()) || [];
   const { uremeAyarlari, activeCiftlikId, sutLitreFiyati } = useStore();
   const anomalyUyarilar = useAnomalyDetection();
+  const [pushStatus, setPushStatus] = useState<string>('');
 
-  const todos = useLiveFarmQuery(() => db.todos.orderBy('olusturulmaTarihi').reverse().toArray()) || [];
+  useEffect(() => {
+    if ('Notification' in window) {
+      setPushStatus(Notification.permission);
+    }
+  }, []);
+
+  const handleSubscribe = async () => {
+    try {
+      await subscribeToPushNotifications();
+      setPushStatus('granted');
+      alert('Bildirim izni başarıyla verildi!');
+    } catch (err: any) {
+      alert('Hata: ' + err.message);
+    }
+  };
+
+  const rawTodos = useLiveFarmQuery(() => db.todos.orderBy('olusturulmaTarihi').reverse().toArray()) || [];
+  
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  
+  const todos = rawTodos.filter(todo => {
+    if (!todo.yapildiMi) return true; // Tamamlanmamışları her zaman göster
+    
+    // Eğer bugün tamamlanmışsa göster
+    if (todo.tamamlanmaTarihi && todo.tamamlanmaTarihi >= todayStart.getTime()) {
+      return true;
+    }
+    
+    // Eski tamamlanma tarihi olmayan ama bugün oluşturulup tamamlananları da göster (geriye dönük uyumluluk)
+    if (!todo.tamamlanmaTarihi && todo.olusturulmaTarihi >= todayStart.getTime()) {
+      return true;
+    }
+    
+    // Önceki günlerde tamamlananları gizle
+    return false;
+  });
+
+  todos.sort((a, b) => {
+    if (a.yapildiMi !== b.yapildiMi) return a.yapildiMi ? 1 : -1; // Yapılanları alta at
+    
+    const priorityWeight = { 'Kritik': 3, 'Önemli': 2, 'Rutin': 1 };
+    const wA = a.priority ? priorityWeight[a.priority as keyof typeof priorityWeight] || 0 : (a.isSystem ? 1 : 0);
+    const wB = b.priority ? priorityWeight[b.priority as keyof typeof priorityWeight] || 0 : (b.isSystem ? 1 : 0);
+    
+    if (wA !== wB) return wB - wA; // Yüksek öncelikli üste
+    
+    // İkisi de aynıysa, eğer hedefTarih varsa hedefe yakın olan üste
+    if (a.hedefTarih && b.hedefTarih) {
+      return new Date(a.hedefTarih).getTime() - new Date(b.hedefTarih).getTime();
+    }
+    
+    return b.olusturulmaTarihi - a.olusturulmaTarihi;
+  });
   const [newTodo, setNewTodo] = useState('');
   const [showScoreInfo, setShowScoreInfo] = useState(false);
+  const [showProjInfo, setShowProjInfo] = useState(false);
 
   const handleAddTodo = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +117,10 @@ const Dashboard: React.FC = () => {
   };
 
   const toggleTodo = async (id: string, currentStatus: boolean) => {
-    await db.todos.update(id, { yapildiMi: !currentStatus });
+    await db.todos.update(id, { 
+      yapildiMi: !currentStatus,
+      tamamlanmaTarihi: !currentStatus ? Date.now() : undefined
+    });
   };
 
   const deleteTodo = async (id: string) => {
@@ -222,6 +281,13 @@ const Dashboard: React.FC = () => {
                 <BadgeDollarSign className="w-6 h-6" />
                 30 Günlük Projeksiyon
               </h3>
+              <button 
+                onClick={() => setShowProjInfo(true)} 
+                className="text-emerald-300 hover:text-white transition"
+                title="30 Günlük Projeksiyon Nedir?"
+              >
+                <Info className="w-5 h-5" />
+              </button>
             </div>
             <p className="text-sm text-emerald-200 mb-6">Mevcut verilere göre önümüzdeki 30 günün mali tahmini</p>
           </div>
@@ -372,20 +438,40 @@ const Dashboard: React.FC = () => {
                </button>
              </form>
 
-             {/* Manuel Görevler Listesi */}
+             {/* Görevler Listesi */}
              {todos.length > 0 && (
                <div className="space-y-2 mb-6">
-                 {todos.map(todo => (
-                   <div key={todo.id} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${todo.yapildiMi ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-700 opacity-60' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 shadow-sm'}`}>
-                     <div className="flex items-center gap-3 flex-1 cursor-pointer" onClick={() => toggleTodo(todo.id, todo.yapildiMi)}>
-                       {todo.yapildiMi ? <CheckCircle2 className="w-5 h-5 text-nature-500" /> : <Circle className="w-5 h-5 text-gray-400" />}
-                       <span className={`text-sm font-medium ${todo.yapildiMi ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-700 dark:text-gray-200'}`}>{parseTodoText(todo.metin)}</span>
+                 {todos.map(todo => {
+                   const bgClass = todo.yapildiMi 
+                     ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-700 opacity-60' 
+                     : (todo.priority === 'Kritik' 
+                         ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50 shadow-sm' 
+                         : todo.priority === 'Önemli' 
+                           ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800/50 shadow-sm' 
+                           : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 shadow-sm');
+                   
+                   return (
+                   <div key={todo.id} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${bgClass}`}>
+                     <div className="flex items-start gap-3 flex-1 cursor-pointer" onClick={() => toggleTodo(todo.id, todo.yapildiMi)}>
+                       <div className="mt-0.5">
+                         {todo.yapildiMi ? <CheckCircle2 className="w-5 h-5 text-nature-500" /> : <Circle className="w-5 h-5 text-gray-400" />}
+                       </div>
+                       <div className="flex flex-col flex-1">
+                         <span className={`text-sm font-medium ${todo.yapildiMi ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-700 dark:text-gray-200'}`}>{parseTodoText(todo.metin)}</span>
+                         {todo.isSystem && !todo.yapildiMi && (
+                           <div className="flex flex-wrap gap-2 mt-1.5">
+                              {todo.priority && <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${todo.priority === 'Kritik' ? 'bg-red-200 dark:bg-red-900/40 text-red-800 dark:text-red-300' : todo.priority === 'Önemli' ? 'bg-yellow-200 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300'}`}>{todo.priority}</span>}
+                              {todo.kategori && <span className="text-[10px] font-bold bg-earth-100 dark:bg-gray-700 text-earth-700 dark:text-gray-300 px-2 py-0.5 rounded-full">{todo.kategori}</span>}
+                              {todo.hedefTarih && <span className="text-[10px] font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">Hedef: {new Date(todo.hedefTarih).toLocaleDateString('tr-TR')}</span>}
+                           </div>
+                         )}
+                       </div>
                      </div>
-                     <button onClick={() => deleteTodo(todo.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                     <button onClick={() => deleteTodo(todo.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors self-start">
                        <Trash2 className="w-4 h-4" />
                      </button>
                    </div>
-                 ))}
+                 )})}
                </div>
              )}
 
@@ -512,6 +598,32 @@ const Dashboard: React.FC = () => {
                 )}
               </>
             )}
+
+            {/* Bildirim İzni Durumu */}
+            <div className="mt-4 p-4 bg-nature-50 dark:bg-nature-900/20 border border-nature-200 dark:border-nature-800 rounded-xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-white dark:bg-gray-800 p-2 rounded-lg">
+                  <Bell className="w-5 h-5 text-nature-600 dark:text-nature-400" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-nature-900 dark:text-gray-100">Uygulama Kapalıyken Bildirim Alın</h4>
+                  <p className="text-xs text-nature-700 dark:text-nature-400">
+                    {pushStatus === 'granted' ? 'Bildirimlere izin verildi. Arka planda bildirim alacaksınız.' : 
+                     pushStatus === 'denied' ? 'Bildirimler tarayıcınız tarafından engellendi. Ayarlardan açabilirsiniz.' : 
+                     'Kritik görevler için bildirim almak ister misiniz?'}
+                  </p>
+                </div>
+              </div>
+              {pushStatus === 'default' && (
+                <button onClick={handleSubscribe} className="bg-nature-600 hover:bg-nature-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm">
+                  İzin Ver
+                </button>
+              )}
+              {pushStatus === 'granted' && (
+                <span className="text-xs font-bold text-nature-600 bg-nature-100 px-3 py-1 rounded-full">Aktif</span>
+              )}
+            </div>
+            
           </div>
         </div>
 
@@ -553,6 +665,40 @@ const Dashboard: React.FC = () => {
             <button 
               onClick={() => setShowScoreInfo(false)} 
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-3 font-bold transition shadow-sm"
+            >
+              Anladım, Kapat
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showProjInfo && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-md w-full shadow-2xl relative">
+            <h3 className="text-xl font-black text-earth-900 dark:text-gray-100 mb-3 flex items-center gap-2">
+              <BadgeDollarSign className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              30 Günlük Projeksiyon Nedir?
+            </h3>
+            <p className="text-sm text-earth-600 dark:text-gray-400 mb-4">
+              Mevcut verilerinize dayanarak önümüzdeki 30 gün içinde elde edilmesi beklenen net karı ve temel gider/gelir kalemlerini tahmin eder.
+            </p>
+            <ul className="text-sm text-earth-700 dark:text-gray-300 space-y-3 mb-6">
+              <li className="flex items-start gap-2">
+                <strong className="text-emerald-600 dark:text-emerald-400 min-w-[125px]">Beklenen Süt Geliri</strong>
+                <span>Mevcut sağmal ineklerinizin son süt verimleri ve güncel süt litre fiyatı üzerinden hesaplanır.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <strong className="text-emerald-600 dark:text-emerald-400 min-w-[125px]">Beklenen Yem Gideri</strong>
+                <span>Hayvanlarınızın bulunduğu gruplara atanan rasyon maliyetleri üzerinden günlük tüketim hesabı yapılarak belirlenir.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <strong className="text-emerald-600 dark:text-emerald-400 min-w-[125px]">Beklenen Sağlık Gideri</strong>
+                <span>Sürünüzdeki son sağlık olaylarının maliyetlerine dayanarak önümüzdeki 30 gün için öngörülen tahmini sağlık gideridir.</span>
+              </li>
+            </ul>
+            <button 
+              onClick={() => setShowProjInfo(false)} 
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-3 font-bold transition shadow-sm"
             >
               Anladım, Kapat
             </button>

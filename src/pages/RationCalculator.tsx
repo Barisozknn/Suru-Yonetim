@@ -173,12 +173,12 @@ const RationCalculator: React.FC = () => {
     if (!yemId) return;
     const list = Array.isArray(rasyonListesi) ? rasyonListesi : EMPTY_ARRAY;
     if (list.some(r => r && r.yemId === yemId)) return;
-    setRasyonListesi([...list, { id: uuidv4(), yemId, kgAsFed: 1 }]);
+    setRasyonListesi([...list, { id: uuidv4(), yemId, kgAsFed: 1, minKg: undefined, maxKg: undefined }]);
   };
 
-  const updateYemKg = (id: string, kg: number) => {
+  const updateYemProp = (id: string, prop: 'kgAsFed' | 'minKg' | 'maxKg', value: number | undefined) => {
     const list = Array.isArray(rasyonListesi) ? rasyonListesi : EMPTY_ARRAY;
-    setRasyonListesi(list.map(r => r && r.id === id ? { ...r, kgAsFed: kg } : r));
+    setRasyonListesi(list.map(r => r && r.id === id ? { ...r, [prop]: value } : r));
   };
 
   const removeYem = (id: string) => {
@@ -212,7 +212,12 @@ const RationCalculator: React.FC = () => {
         return { dmi, me, hp_g, cost };
       };
 
-      let bestRation = safeRasyonListesi.map(r => ({ ...r }));
+      let bestRation = safeRasyonListesi.map(r => {
+        let kg = r.kgAsFed;
+        if (r.minKg !== undefined && kg < r.minKg) kg = r.minKg;
+        if (r.maxKg !== undefined && kg > r.maxKg) kg = r.maxKg;
+        return { ...r, kgAsFed: kg };
+      });
 
       const getScore = (metrics: { dmi: number, me: number, hp_g: number, cost: number }) => {
         // Yüzdesel oranlar (1 = %100 tam karşılama)
@@ -251,7 +256,15 @@ const RationCalculator: React.FC = () => {
         const candidate = bestRation.map(r => ({ ...r }));
         const idx = Math.floor(Math.random() * candidate.length);
         const change = (Math.random() - 0.5) * 1.5; // -0.75 to +0.75 kg
-        candidate[idx].kgAsFed = Math.max(0.1, candidate[idx].kgAsFed + change); // En az 0.1 kg
+        
+        let newKg = candidate[idx].kgAsFed + change;
+        
+        // Uygula: Min ve Max kısıtları
+        const minLimit = candidate[idx].minKg !== undefined ? candidate[idx].minKg! : 0.1;
+        const maxLimit = candidate[idx].maxKg !== undefined ? candidate[idx].maxKg! : Infinity;
+        
+        newKg = Math.max(minLimit, Math.min(newKg, maxLimit));
+        candidate[idx].kgAsFed = newKg;
 
         const metrics = calculateMetrics(candidate);
         const score = getScore(metrics);
@@ -389,16 +402,42 @@ const RationCalculator: React.FC = () => {
                       <X className="w-4 h-4" />
                     </button>
                     <div className="font-bold text-earth-800 dark:text-gray-200 text-sm">{y.ad}</div>
-                    <div className="flex items-center space-x-2 mt-2">
-                      <input
-                        type="number"
-                        step="0.1"
-                        min="0"
-                        value={r.kgAsFed}
-                        onChange={(e) => updateYemKg(r.id, Number(e.target.value))}
-                        className="w-20 p-1 border border-earth-300 dark:border-gray-600 rounded text-center font-bold outline-none bg-white dark:bg-gray-800"
-                      />
-                      <span className="text-xs text-earth-500 dark:text-gray-400">Taze Kg / Hayvan</span>
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                      <div className="flex items-center space-x-1">
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          value={r.kgAsFed}
+                          onChange={(e) => updateYemProp(r.id, 'kgAsFed', Number(e.target.value))}
+                          className="w-20 p-1 border border-earth-300 dark:border-gray-600 rounded text-center font-bold outline-none bg-white dark:bg-gray-800"
+                        />
+                        <span className="text-xs text-earth-500 dark:text-gray-400">Taze Kg</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          placeholder="Min"
+                          value={r.minKg !== undefined ? r.minKg : ''}
+                          onChange={(e) => updateYemProp(r.id, 'minKg', e.target.value ? Number(e.target.value) : undefined)}
+                          className="w-16 p-1 border border-earth-300 dark:border-gray-600 rounded text-center text-xs outline-none bg-white dark:bg-gray-800 placeholder-gray-400"
+                          title="Minimum kullanım kısıtı (opsiyonel)"
+                        />
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          placeholder="Max"
+                          value={r.maxKg !== undefined ? r.maxKg : ''}
+                          onChange={(e) => updateYemProp(r.id, 'maxKg', e.target.value ? Number(e.target.value) : undefined)}
+                          className="w-16 p-1 border border-earth-300 dark:border-gray-600 rounded text-center text-xs outline-none bg-white dark:bg-gray-800 placeholder-gray-400"
+                          title="Maksimum kullanım kısıtı (opsiyonel)"
+                        />
+                      </div>
                     </div>
                   </div>
                 )

@@ -243,6 +243,14 @@ export interface Todo {
   metin: string;
   yapildiMi: boolean;
   olusturulmaTarihi: number;
+  tamamlanmaTarihi?: number;
+  
+  // Otomasyon ve Akıllı Görev Listesi (Faz 5) eklentileri:
+  isSystem?: boolean; // Sistem tarafından otomatik mi oluşturuldu?
+  hedefTarih?: string; // YYYY-MM-DD (Görevin yapılacağı gün)
+  ilgiliHayvanId?: string; // Eğer bir hayvanla bağlantılıysa (Tıklayınca o hayvana gitmek için)
+  priority?: 'Kritik' | 'Önemli' | 'Rutin'; 
+  kategori?: 'Üreme' | 'Sağlık' | 'Genel' | 'Besleme';
 }
 
 export interface GunlukNotu {

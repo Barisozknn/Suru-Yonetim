@@ -1,4 +1,4 @@
--- =============================================================
+﻿-- =============================================================
 -- SürüMetri - Veritabanı Şeması
 -- Supabase SQL Editor > New Query'ye yapıştırın ve Run'a basın
 -- Bu script tüm tabloları, RLS politikalarını ve ilişkileri oluşturur.
@@ -439,3 +439,33 @@ CREATE POLICY "Users can view their farm notes" ON public."gunlukNotlari" FOR SE
 CREATE POLICY "Users can insert notes" ON public."gunlukNotlari" FOR INSERT WITH CHECK ("user_id" = auth.uid());
 CREATE POLICY "Users can update notes" ON public."gunlukNotlari" FOR UPDATE USING ("user_id" = auth.uid());
 CREATE POLICY "Users can delete notes" ON public."gunlukNotlari" FOR DELETE USING ("user_id" = auth.uid());
+
+
+-- =============================================================
+-- Faz 5: Web Push Bildirimleri ve Akıllı Görev Listesi
+-- =============================================================
+
+-- Todos tablosuna Faz 5 için yeni sütunlar
+ALTER TABLE public."todos"
+ADD COLUMN IF NOT EXISTS "tamamlanmaTarihi" BIGINT,
+ADD COLUMN IF NOT EXISTS "isSystem" BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS "hedefTarih" TEXT,
+ADD COLUMN IF NOT EXISTS "ilgiliHayvanId" TEXT,
+ADD COLUMN IF NOT EXISTS "priority" TEXT,
+ADD COLUMN IF NOT EXISTS "kategori" TEXT;
+
+-- Push Subscriptions Tablosu
+CREATE TABLE IF NOT EXISTS public."push_subscriptions" (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    endpoint TEXT NOT NULL,
+    auth TEXT NOT NULL,
+    p256dh TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public."push_subscriptions" ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage their push subscriptions" 
+ON public."push_subscriptions" 
+FOR ALL USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());

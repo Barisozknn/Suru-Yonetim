@@ -63,6 +63,28 @@ const HealthEventModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => {
       await db.saglikOlaylari.put(payload);
     } else {
       await db.saglikOlaylari.add(payload);
+      
+      // Otomasyon: Arınma süresi (Withdrawal period) takibi
+      if (arinmaSuresiGun > 0) {
+        const addDaysHelper = (dStr: string, days: number) => {
+          const d = new Date(dStr);
+          d.setDate(d.getDate() + days);
+          return d.toISOString().split('T')[0];
+        };
+        const arinmaTodo: import('../types').Todo = {
+          id: uuidv4(),
+          metin: `${hayvan?.kupeNo || ''} için ${tur} (Arınma Süresi) kısıtı bitti.`,
+          yapildiMi: false,
+          olusturulmaTarihi: Date.now(),
+          isSystem: true,
+          hedefTarih: addDaysHelper(tarih, arinmaSuresiGun),
+          ilgiliHayvanId: hayvanId,
+          priority: 'Önemli',
+          kategori: 'Sağlık'
+        };
+        await db.todos.add(arinmaTodo);
+        await db.syncQueue.add({ table: 'todos', action: 'INSERT', payload: arinmaTodo, created_at: Date.now() });
+      }
     }
     await db.syncQueue.add({ table: 'saglikOlaylari', action, payload, created_at: Date.now() });
 

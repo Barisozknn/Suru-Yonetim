@@ -48,14 +48,14 @@ interface StoreState {
   rationAvgWeight: number;
   rationMilkYield: number;
   rationAdg: number;
-  rationListesi: { id: string; yemId: string; kgAsFed: number }[];
+  rationListesi: { id: string; yemId: string; kgAsFed: number; minKg?: number; maxKg?: number }[];
   
   setRationSelectedGrupId: (id: string) => void;
   setRationVerimYonu: (yon: 'Sütçü' | 'Etçi') => void;
   setRationAvgWeight: (weight: number) => void;
   setRationMilkYield: (yields: number) => void;
   setRationAdg: (adg: number) => void;
-  setRationListesi: (liste: { id: string; yemId: string; kgAsFed: number }[]) => void;
+  setRationListesi: (liste: { id: string; yemId: string; kgAsFed: number; minKg?: number; maxKg?: number }[]) => void;
 
   // Üreme ve Uyarı Ayarları
   uremeAyarlari: UremeAyarlari;
