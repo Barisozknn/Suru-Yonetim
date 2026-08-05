@@ -13,6 +13,8 @@ const KATEGORILER = [
   { id: 'soyAgaci', label: 'Soy Ağacı', importable: false, requireAnimal: true },
   { id: 'verimGecmisi', label: 'Verim Geçmişi (Süt/Ağırlık)', importable: false, requireAnimal: true },
   { id: 'gelirGider', label: 'Gelir Gider Analizi', importable: false, requireDates: true },
+  { id: 'suruOzeti', label: 'Sürü Özeti Raporu', importable: false },
+  { id: 'veterinerRaporu', label: 'Veteriner Raporu (Son 30 Gün)', importable: false },
 ];
 
 const DataManagement: React.FC = () => {

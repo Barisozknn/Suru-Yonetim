@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { db } from '../lib/db';
@@ -247,6 +247,59 @@ export const exportData = async (
       title = 'Gelir Gider Analizi';
       break;
     }
+    case 'suruOzeti': {
+      const hayvanlar = await db.hayvanlar.toArray();
+      const gruplar = await db.gruplar.toArray();
+      const sutKayitlari = await db.sutKayitlari.toArray();
+      const agirlikKayitlari = await db.agirlikKayitlari.toArray();
+
+      const aktifHayvanlar = hayvanlar.filter(h => h.durum === 'Aktif');
+      const inekler = aktifHayvanlar.filter(h => h.tur === 'İnek');
+      const duveler = aktifHayvanlar.filter(h => h.tur === 'Düve');
+      const danalar = aktifHayvanlar.filter(h => h.tur === 'Dana');
+      const buzagilar = aktifHayvanlar.filter(h => h.tur === 'Buzağı');
+      const bogalar = aktifHayvanlar.filter(h => h.tur === 'Boğa');
+
+      headers = ['Metrik', 'Değer'];
+      data = [
+        ['Toplam Aktif Hayvan', aktifHayvanlar.length.toString()],
+        ['İnek Sayısı', inekler.length.toString()],
+        ['Düve Sayısı', duveler.length.toString()],
+        ['Dana Sayısı', danalar.length.toString()],
+        ['Buzağı Sayısı', buzagilar.length.toString()],
+        ['Boğa Sayısı', bogalar.length.toString()],
+        ['Kayıtlı Grup Sayısı', gruplar.length.toString()],
+        ['Toplam Süt Kaydı', sutKayitlari.length.toString()],
+        ['Toplam Ağırlık Kaydı', agirlikKayitlari.length.toString()],
+      ];
+      title = 'Sürü Özeti Raporu';
+      break;
+    }
+    case 'veterinerRaporu': {
+      const simdi = new Date();
+      const otuzGunOnce = new Date(simdi.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const saglikOlaylari = await db.saglikOlaylari.toArray();
+      const hayvanlar = await db.hayvanlar.toArray();
+      const hayvanMap = new Map(hayvanlar.map(h => [h.id, h.kupeNo]));
+
+      const son30GunOlaylari = saglikOlaylari.filter(o => new Date(o.tarih) >= otuzGunOnce);
+
+      headers = ['Tarih', 'Küpe No', 'İşlem Türü', 'Teşhis/Açıklama', 'Uygulayan', 'Maliyet (TL)'];
+      data = son30GunOlaylari.map(o => [
+        o.tarih,
+        hayvanMap.get(o.hayvanId) || 'Bilinmiyor',
+        o.tur,
+        o.aciklama,
+        o.detaylar?.veterinerHekim || '-',
+        o.maliyet ? o.maliyet.toString() : '-'
+      ]);
+
+      title = 'Veteriner Raporu (Son 30 Gün)';
+      if (data.length === 0) {
+         data.push(['-', '-', 'Son 30 günde sağlık kaydı bulunamadı', '-', '-', '-']);
+      }
+      break;
+    }
     default:
       throw new Error("Geçersiz kategori");
   }
@@ -256,10 +309,40 @@ export const exportData = async (
   }
 
   if (format === 'excel') {
-    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Veri');
-    XLSX.writeFile(workbook, `${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`);
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Veri');
+
+    worksheet.addRow(headers);
+    data.forEach(row => {
+      worksheet.addRow(row);
+    });
+
+    const headerRow = worksheet.getRow(1);
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    headerRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF4F46E5' } // Indigo color
+    };
+    headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+
+    worksheet.columns.forEach(column => {
+      let maxLen = 10;
+      column.eachCell!({ includeEmpty: true }, cell => {
+        const valLen = cell.value ? cell.value.toString().length : 0;
+        if (valLen > maxLen) maxLen = valLen;
+      });
+      column.width = maxLen + 2;
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    anchor.click();
+    window.URL.revokeObjectURL(url);
   } else if (format === 'pdf') {
     const doc = new jsPDF();
     
@@ -312,8 +395,31 @@ export const downloadTemplate = (kategori: string) => {
       throw new Error("Bu kategori için şablon bulunamadı.");
   }
 
-  const worksheet = XLSX.utils.aoa_to_sheet([headers]);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Şablon');
-  XLSX.writeFile(workbook, `${title.replace(/\s+/g, '_')}.xlsx`);
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Şablon');
+  
+  worksheet.addRow(headers);
+  const headerRow = worksheet.getRow(1);
+  headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  headerRow.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FF10B981' } // Green color
+  };
+  headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+  
+  worksheet.columns.forEach(column => {
+    let maxLen = 15;
+    column.width = maxLen;
+  });
+
+  workbook.xlsx.writeBuffer().then(buffer => {
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${title.replace(/\s+/g, '_')}.xlsx`;
+    anchor.click();
+    window.URL.revokeObjectURL(url);
+  });
 };
