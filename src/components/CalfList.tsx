@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { calculateGrowthStatus, calculateAgeInDays } from '../utils/calfCalculations';
-import { X, Droplet, Droplets, AlertCircle, Activity, ClipboardEdit } from 'lucide-react';
+import { X, Droplet, AlertCircle, Activity, ClipboardEdit } from 'lucide-react';
+import { PiCow } from 'react-icons/pi';
 import { useNavigate } from 'react-router-dom';
 import CalfFormModal from './CalfFormModal';
 
@@ -32,7 +33,7 @@ const CalfList: React.FC<Props> = ({ onClose, onSelectCalf }) => {
         
         <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex justify-between items-center bg-blue-50 dark:bg-blue-900/20 rounded-t-2xl flex-shrink-0">
           <div className="flex items-center space-x-2 text-blue-800">
-            <Droplets className="w-6 h-6" />
+            <PiCow className="w-6 h-6" />
             <div>
               <h2 className="text-xl font-black">Buzağı Listesi</h2>
               <p className="text-xs text-blue-600/70 opacity-80">Gelişim takibi ve hedefler</p>
@@ -48,8 +49,8 @@ const CalfList: React.FC<Props> = ({ onClose, onSelectCalf }) => {
         <div className="flex-1 overflow-y-auto p-4 bg-earth-50 dark:bg-gray-900">
           {buzagilar.length === 0 ? (
             <div className="text-center py-12 text-earth-400">
-              <Droplets className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p>Sürüde şu an kayıtlı buzağı bulunmuyor.</p>
+              <PiCow className="w-12 h-12 mx-auto mb-3 opacity-30" />
+              <p>Aktif bir buzağı kaydı bulunmuyor.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

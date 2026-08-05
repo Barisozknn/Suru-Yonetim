@@ -3,7 +3,7 @@ import { db } from '../lib/db';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { useStore } from '../store/useStore';
 import { v4 as uuidv4 } from 'uuid';
-import { Mic, MicOff, Save, Trash2, Calendar, FileText, CheckCircle2, Edit2, X, Paperclip, Sparkles, Hash, Loader2, Download, Camera } from 'lucide-react';
+import { Mic, MicOff, Save, Trash2, Calendar, FileText, CheckCircle2, Edit2, X, Paperclip, Sparkles, Hash, Loader2, Download, Camera, NotebookPen } from 'lucide-react';
 import { analyzeDiaryNotes } from '../services/aiService';
 import ReactMarkdown from 'react-markdown';
 
@@ -231,7 +231,7 @@ const FarmDiary: React.FC = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-black text-earth-900 dark:text-gray-100 flex items-center gap-3">
-            <Mic className="w-8 h-8 text-nature-600" />
+            <NotebookPen className="w-8 h-8 text-nature-600" />
             Çiftlik Günlüğü
           </h1>
           <p className="text-earth-500 dark:text-gray-400 mt-1">

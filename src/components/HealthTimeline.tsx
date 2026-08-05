@@ -29,13 +29,34 @@ const kalanArinmaGun = (olay: SaglikOlayi): number => {
   return Math.max(0, Math.ceil((bitisDate.getTime() - today.getTime()) / 86400000));
 };
 
+type TimelineEvent = SaglikOlayi & { isProtocol?: boolean };
+
 interface Props {
   hayvanId: string;
 }
 
 const HealthTimeline: React.FC<Props> = ({ hayvanId }) => {
   const olaylar = useLiveFarmQuery(
-    () => db.saglikOlaylari.where('hayvanId').equals(hayvanId).reverse().sortBy('tarih'),
+    async () => {
+      const saglik = await db.saglikOlaylari.where('hayvanId').equals(hayvanId).toArray();
+      const asilar = await db.planlananAsilar.where('hayvanId').equals(hayvanId).toArray();
+      
+      const yapilanAsilar = asilar.filter(a => a.yapildiMi).map(a => ({
+        id: a.id,
+        hayvanId: a.hayvanId,
+        tur: 'Aşı' as const,
+        tarih: a.yapilmaTarihi || a.planlanaTarih,
+        aciklama: `${a.asiAd} (Protokol Aşısı)`,
+        maliyet: a.maliyet || 0,
+        ciftlikId: a.ciftlikId || '',
+        arinmaSuresiGun: 0,
+        createdAt: 0,
+        isProtocol: true
+      } as TimelineEvent));
+
+      const combined: TimelineEvent[] = [...saglik, ...yapilanAsilar];
+      return combined.sort((a, b) => new Date(b.tarih).getTime() - new Date(a.tarih).getTime());
+    },
     [hayvanId]
   ) || [];
 
@@ -75,7 +96,7 @@ const HealthTimeline: React.FC<Props> = ({ hayvanId }) => {
         )}
 
         <div className="space-y-4">
-          {olaylar.map((olay) => {
+          {olaylar.map((olay: TimelineEvent) => {
             const config = TUR_CONFIG[olay.tur];
             const kalan = kalanArinmaGun(olay);
             return (
@@ -102,12 +123,14 @@ const HealthTimeline: React.FC<Props> = ({ hayvanId }) => {
                       </div>
                       <p className="text-xs text-earth-500 dark:text-gray-400 mt-0.5">{new Date(olay.tarih).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                     </div>
-                    <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition">
-                      <button onClick={() => { setEditTarget(olay); setModalOpen(true); }} className="p-1 text-earth-400 hover:text-earth-700 transition text-xs">✏️</button>
-                      <button onClick={() => handleSil(olay.id)} className="p-1 text-earth-400 hover:text-red-500 transition">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                    {!olay.isProtocol && (
+                      <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition">
+                        <button onClick={() => { setEditTarget(olay); setModalOpen(true); }} className="p-1 text-earth-400 hover:text-earth-700 transition text-xs">✏️</button>
+                        <button onClick={() => handleSil(olay.id)} className="p-1 text-earth-400 hover:text-red-500 transition">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <div className="flex justify-between items-end mt-1.5 gap-2">
                     <p className="text-sm text-earth-700 dark:text-gray-300 flex-1">{olay.aciklama}</p>

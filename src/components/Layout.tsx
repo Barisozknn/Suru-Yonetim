@@ -1,27 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { 
-  Menu, X, Home, Users, Layers, Wheat, Activity, Network, Calculator,
-  Syringe, CalendarDays, Settings, Sparkles, Wifi, WifiOff, RefreshCw,
-  Droplets, Wallet, User, Sun, Moon, Mic
+import {
+  Menu, X, Home, Wheat, Activity, Network, Calculator,
+  Syringe, CalendarDays, Settings, Sparkles, Wifi, WifiOff, RefreshCw, Wallet, User, Sun, Moon, NotebookPen
 } from 'lucide-react';
 import { processSyncQueue, pullInitialData, subscribeToRealtimeChanges } from '../services/syncService';
 import { useStore } from '../store/useStore';
+import { GiCow, GiWoodenFence } from 'react-icons/gi';
+import { PiCow } from 'react-icons/pi';
 
 const NAV_ITEMS = [
   { path: '/', label: 'Ana Sayfa', icon: <Home className="w-[22px] h-[22px]" /> },
-  { path: '/hayvanlar', label: 'Hayvan Listesi', icon: <Users className="w-[22px] h-[22px]" /> },
-  { path: '/gruplar', label: 'Grup Yönetimi', icon: <Layers className="w-[22px] h-[22px]" /> },
+  { path: '/hayvanlar', label: 'Hayvan Listesi', icon: <GiCow className="w-[22px] h-[22px]" /> },
+  { path: '/gruplar', label: 'Grup Yönetimi', icon: <GiWoodenFence className="w-[22px] h-[22px]" /> },
   { path: '/yem', label: 'Yem Deposu', icon: <Wheat className="w-[22px] h-[22px]" /> },
   { path: '/saglik', label: 'Sağlık Yönetimi', icon: <Syringe className="w-[22px] h-[22px]" /> },
   { path: '/ureme', label: 'Üreme Yönetimi', icon: <CalendarDays className="w-[22px] h-[22px]" /> },
-  { path: '/buzagi', label: 'Buzağı Büyütme', icon: <Droplets className="w-[22px] h-[22px]" /> },
+  { path: '/buzagi', label: 'Buzağı Büyütme', icon: <PiCow className="w-[22px] h-[22px]" /> },
   { path: '/soy-agaci', label: 'Soy Ağacı', icon: <Network className="w-[22px] h-[22px]" /> },
   { path: '/sut-agirlik', label: 'Süt & Ağırlık Özet', icon: <Activity className="w-[22px] h-[22px]" /> },
   { path: '/rasyon', label: 'Rasyon Hesaplama', icon: <Calculator className="w-[22px] h-[22px]" /> },
   { path: '/finans', label: 'Gelir Gider Analizi', icon: <Wallet className="w-[22px] h-[22px]" /> },
   { path: '/asistan', label: 'AI Asistan', icon: <Sparkles className="w-[22px] h-[22px]" /> },
-  { path: '/gunluk', label: 'Çiftlik Günlüğü', icon: <Mic className="w-[22px] h-[22px]" /> },
+  { path: '/gunluk', label: 'Çiftlik Günlüğü', icon: <NotebookPen className="w-[22px] h-[22px]" /> },
   { path: '/ayarlar', label: 'Ayarlar', icon: <Settings className="w-[22px] h-[22px]" /> },
 ];
 
@@ -31,7 +32,7 @@ const Layout: React.FC = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [isRealtimeActive, setIsRealtimeActive] = useState(false);
   const { isGuest, theme, setTheme } = useStore();
-  
+
   const location = useLocation();
 
   useEffect(() => {
@@ -51,16 +52,16 @@ const Layout: React.FC = () => {
       setIsSyncing(true);
       processSyncQueue()
         .then(async () => {
-           // Her zaman buluttan veri çek (syncQueue dolu olsa bile)
-           // syncQueue itemları hata verip takılı kalsa veri hiç çekilmez
-           await pullInitialData();
-           // pullInitialData sonrası activeCiftlikId doğru set edildiyse migrasyon doğru çalışır
-           const { migrateOrphanDataToDefaultFarm } = await import('../utils/migrateData');
-           await migrateOrphanDataToDefaultFarm();
+          // Her zaman buluttan veri çek (syncQueue dolu olsa bile)
+          // syncQueue itemları hata verip takılı kalsa veri hiç çekilmez
+          await pullInitialData();
+          // pullInitialData sonrası activeCiftlikId doğru set edildiyse migrasyon doğru çalışır
+          const { migrateOrphanDataToDefaultFarm } = await import('../utils/migrateData');
+          await migrateOrphanDataToDefaultFarm();
 
-           // Realtime senkronizasyonu başlat (yalnızca ilk bağlanmada)
-           realtimeChannel = await subscribeToRealtimeChanges();
-           if (realtimeChannel) setIsRealtimeActive(true);
+          // Realtime senkronizasyonu başlat (yalnızca ilk bağlanmada)
+          realtimeChannel = await subscribeToRealtimeChanges();
+          if (realtimeChannel) setIsRealtimeActive(true);
         })
         .finally(() => setIsSyncing(false));
 
@@ -90,13 +91,12 @@ const Layout: React.FC = () => {
   };
 
   const ThemeToggle = ({ isMobile }: { isMobile?: boolean }) => (
-    <button 
+    <button
       onClick={toggleTheme}
-      className={`flex items-center justify-center p-2 rounded-lg transition-colors ${
-        isMobile 
-          ? 'text-white hover:bg-nature-600 dark:hover:bg-gray-700' 
-          : 'text-earth-500 dark:text-gray-400 hover:bg-earth-100 dark:hover:bg-gray-700'
-      }`}
+      className={`flex items-center justify-center p-2 rounded-lg transition-colors ${isMobile
+        ? 'text-white hover:bg-nature-600 dark:hover:bg-gray-700'
+        : 'text-earth-500 dark:text-gray-400 hover:bg-earth-100 dark:hover:bg-gray-700'
+        }`}
       title={theme === 'light' ? 'Karanlık Moda Geç' : 'Aydınlık Moda Geç'}
     >
       {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
@@ -113,8 +113,8 @@ const Layout: React.FC = () => {
           className={({ isActive }) => `
             flex items-center space-x-3.5 rounded-xl font-bold transition w-full
             ${isMobile ? 'px-3.5 py-2 text-[14px]' : 'px-4 py-2 text-[14.5px]'}
-            ${isActive 
-              ? 'bg-nature-600 dark:bg-nature-500 text-white shadow-md' 
+            ${isActive
+              ? 'bg-nature-600 dark:bg-nature-500 text-white shadow-md'
               : 'text-earth-600 dark:text-gray-300 hover:bg-nature-50 dark:hover:bg-gray-700 hover:text-nature-700 dark:hover:text-white'
             }
           `}
@@ -128,7 +128,7 @@ const Layout: React.FC = () => {
 
   return (
     <div className="h-screen bg-earth-50 dark:bg-gray-900 flex font-sans overflow-hidden transition-colors duration-200">
-      
+
       {/* Masaüstü Sidebar (≥768px) */}
       <aside className="hidden md:flex w-64 flex-shrink-0 bg-white dark:bg-gray-800 border-r border-earth-200 dark:border-gray-700 flex-col shadow-sm relative z-20 h-full overflow-hidden transition-colors duration-200">
         <div className="p-4 border-b border-earth-100 dark:border-gray-700 flex items-center justify-between shrink-0">
@@ -191,19 +191,17 @@ const Layout: React.FC = () => {
       </header>
 
       {/* Mobil Menü (Drawer) */}
-      <div 
-        className={`md:hidden fixed inset-0 z-40 flex transition-opacity duration-300 ${
-          isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
+      <div
+        className={`md:hidden fixed inset-0 z-40 flex transition-opacity duration-300 ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          }`}
       >
-        <div 
-          className="fixed inset-0 bg-earth-900/60 dark:bg-black/60" 
+        <div
+          className="fixed inset-0 bg-earth-900/60 dark:bg-black/60"
           onClick={() => setIsMobileMenuOpen(false)}
         ></div>
-        <div 
-          className={`relative flex-1 flex flex-col h-full w-80 max-w-[85vw] bg-white dark:bg-gray-800 shadow-2xl transition-transform duration-300 ease-in-out ${
-            isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
+        <div
+          className={`relative flex-1 flex flex-col h-full w-80 max-w-[85vw] bg-white dark:bg-gray-800 shadow-2xl transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}
         >
           {/* Üst Çizgi & Başlık */}
           <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex items-center justify-between shrink-0 bg-white dark:bg-gray-800 transition-colors">
@@ -212,10 +210,10 @@ const Layout: React.FC = () => {
               <X className="w-6 h-6" />
             </button>
           </div>
-          
+
           {/* 2 Çizgi Arasında Ortalanmış Sekme Butonları */}
           <NavContent isMobile />
-          
+
           {/* Alt Çizgi & Menü Etiketi */}
           <div className="p-3.5 border-t border-earth-200 dark:border-gray-700 shrink-0 bg-earth-50/80 dark:bg-gray-800/80 transition-colors">
             <span className="text-xs font-bold text-earth-500 dark:text-gray-400 uppercase tracking-widest block text-center">Menü</span>

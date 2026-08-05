@@ -6,6 +6,7 @@ import {
   ChevronLeft, ChevronRight, Droplet, Scale, Syringe, 
   Heart, Wheat, AlertTriangle, Info, Calendar as CalendarIcon, CalendarCheck
 } from 'lucide-react';
+import { PiCow } from 'react-icons/pi';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 
@@ -239,7 +240,7 @@ export const SmartCalendar: React.FC = () => {
           type: 'Doğum',
           title: `${k.kupeNo} Doğdu`,
           dateStr: k.dogumTarihi.split('T')[0],
-          icon: <Droplet className="w-4 h-4" />,
+          icon: <PiCow className="w-4 h-4" />,
           color: 'text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/40 border-purple-200 dark:border-purple-800/50',
           link: `/hayvanlar?id=${k.id}&tab=ozet`
         });
@@ -256,7 +257,7 @@ export const SmartCalendar: React.FC = () => {
           type: 'Sütten Kesim',
           title: `${hayvan.kupeNo}: Sütten Kesim (Gerçekleşti)`,
           dateStr: kayit.gerceklesenSuttenKesimTarihi.split('T')[0],
-          icon: <Droplet className="w-4 h-4" />,
+          icon: <PiCow className="w-4 h-4" />,
           color: 'text-teal-600 bg-teal-100 border-teal-200',
           link: `/hayvanlar?id=${hayvan.id}&tab=ozet`
         });
@@ -266,7 +267,7 @@ export const SmartCalendar: React.FC = () => {
           type: 'Sütten Kesim',
           title: `${hayvan.kupeNo}: Sütten Kesim (Hedef)`,
           dateStr: kayit.hedefSuttenKesimTarihi.split('T')[0],
-          icon: <Droplet className="w-4 h-4" />,
+          icon: <PiCow className="w-4 h-4" />,
           color: 'text-teal-600 bg-teal-100 border-teal-200',
           link: `/hayvanlar?id=${hayvan.id}&tab=ozet`
         });

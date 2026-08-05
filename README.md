@@ -124,13 +124,13 @@ SürüMetri
 | Katman | Teknoloji |
 |--------|-----------|
 | **Frontend** | React 18, TypeScript, Vite |
-| **Stil & UI** | Tailwind CSS, Lucide React |
+| **Stil & UI** | Tailwind CSS, Lucide React, React Icons |
 | **Grafikler** | Recharts |
 | **Durum Yönetimi** | Zustand |
 | **Yerel Veritabanı** | Dexie.js (IndexedDB) |
 | **Backend & Auth** | Supabase (PostgreSQL + Auth + Edge Functions) |
 | **AI** | DeepSeek API |
-| **PDF & Excel** | jsPDF, xlsx |
+| **PDF & Excel** | jsPDF, exceljs |
 | **PWA & Bildirimler** | Vite PWA Plugin, Web Push, Vercel |
 
 ---

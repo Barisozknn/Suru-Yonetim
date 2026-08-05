@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Plus, Trash2, Users } from 'lucide-react';
+import { GiWoodenFence } from 'react-icons/gi';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { v4 as uuidv4 } from 'uuid';
@@ -168,7 +169,7 @@ const GroupManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex flex-col h-full">
         <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex justify-between items-center bg-nature-50 dark:bg-nature-900/30 rounded-t-2xl">
           <div className="flex items-center space-x-2">
-            <Users className="text-nature-700 dark:text-nature-300 w-6 h-6" />
+            <GiWoodenFence className="text-nature-700 dark:text-nature-300 w-6 h-6" />
             <h2 className="text-xl font-bold text-earth-900 dark:text-gray-100">Grup Yönetimi</h2>
           </div>
           {onClose && (

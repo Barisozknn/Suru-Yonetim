@@ -14,6 +14,7 @@ import AnimalProfitability from './AnimalProfitability';
 import { calculateAgeInDays, calculateGrowthStatus } from '../utils/calfCalculations';
 import { calculateFemalePerformance, calculateMalePerformance, formatDaysToText } from '../utils/performanceCalculations';
 import { CalendarDays, Droplets, Trophy, Banknote } from 'lucide-react';
+import { PiCow } from 'react-icons/pi';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface AnimalDetailProps {
@@ -276,7 +277,7 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
               <div className="sm:col-span-2 bg-blue-50 dark:bg-blue-900/20 p-5 rounded-2xl border border-blue-200 dark:border-blue-800/50 mt-4">
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center space-x-2 text-blue-800">
-                    <Droplets className="w-6 h-6" />
+                    <PiCow className="w-6 h-6" />
                     <h3 className="text-lg font-black">Buzağı Büyütme Takibi</h3>
                   </div>
                   <button onClick={() => setIsCalfFormOpen(true)} className="px-4 py-1.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition">

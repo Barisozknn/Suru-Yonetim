@@ -43,7 +43,7 @@ const schema = z.object({
   fotografUrl: z.string().optional(),
   notlar: z.string().optional(),
   kisirlastirildiMi: z.boolean().optional(),
-  satisFiyati: z.number().optional(),
+  satisFiyati: z.number().or(z.nan()).optional(),
   satisTarihi: z.string().optional(),
 });
 
@@ -155,6 +155,18 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
         data.grupId = null as any; // Clear group if dead or sold
       } else if (!data.grupId) {
         data.grupId = null as any;
+      }
+
+      if (data.durum === 'Satıldı') {
+        if (!data.satisTarihi) {
+          data.satisTarihi = new Date().toISOString().split('T')[0];
+        }
+        if (isNaN(data.satisFiyati as any) || !data.satisFiyati) {
+          data.satisFiyati = 0;
+        }
+      } else {
+        data.satisTarihi = undefined;
+        data.satisFiyati = undefined;
       }
 
       const payload = {

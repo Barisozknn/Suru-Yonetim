@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Droplet } from 'lucide-react';
+import { X, Save } from 'lucide-react';
+import { PiCow } from 'react-icons/pi';
 import { db } from '../lib/db';
 import type { BuzagiKaydi } from '../types';
 import { v4 as uuidv4 } from 'uuid';
@@ -67,14 +68,14 @@ const CalfFormModal: React.FC<Props> = ({ hayvanId, onClose }) => {
     } else {
       await db.buzagiKayitlari.add(payload);
     }
-    
+
     await db.syncQueue.add({ table: 'buzagiKayitlari', action, payload, created_at: Date.now() });
 
     // NOTLARA OTOMATİK EKLEME
     const hayvan = await db.hayvanlar.get(hayvanId);
     if (hayvan) {
       const noteHeader = `--- BUZAĞI BÜYÜTME ÖZETİ ---`;
-const ozet = `
+      const ozet = `
 ${noteHeader}
 Kolostrum (Ağız Sütü): ${agizSutuVerildi ? `Verildi (${agizSutuMiktarLt || '-'} Lt, Doğumdan ${agizSutuSaatSonra || '-'} Saat Sonra)` : 'Verilmedi'}
 Sütten Kesim Hedefi: ${hedefSuttenKesimTarihi ? new Date(hedefSuttenKesimTarihi).toLocaleDateString('tr-TR') : '-'} | ${hedefSuttenKesimAgirligiKg || '-'} Kg
@@ -108,7 +109,7 @@ Gerçekleşen Sütten Kesim: ${gerceklesenSuttenKesimTarihi ? new Date(gercekles
       <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex justify-between items-center bg-blue-50 dark:bg-blue-900/20 rounded-t-2xl flex-shrink-0">
           <div className="flex items-center space-x-2 text-blue-800">
-            <Droplet className="w-6 h-6" />
+            <PiCow className="w-6 h-6" />
             <div>
               <h2 className="text-xl font-black">Buzağı Büyütme Kaydı</h2>
               <p className="text-xs text-blue-600/70 opacity-80">Ağız sütü ve sütten kesim hedefleri</p>

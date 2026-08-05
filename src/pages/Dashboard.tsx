@@ -5,6 +5,8 @@ import {
   Users, Activity, AlertTriangle, TrendingDown, Heart,
   CalendarCheck, Syringe, Droplets, Plus, Trash2, CheckCircle2, Circle, Info, Bell
 } from 'lucide-react';
+import { PiCow } from 'react-icons/pi';
+import { GiCow } from 'react-icons/gi';
 import { v4 as uuidv4 } from 'uuid';
 import { CalfIcon } from '../components/icons/CalfIcon';
 import { 
@@ -181,7 +183,7 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex items-center space-x-4">
           <div className="p-4 bg-earth-100 dark:bg-gray-800 text-earth-600 dark:text-gray-400 rounded-xl">
-            <Users className="w-8 h-8" />
+            <GiCow className="w-8 h-8" />
           </div>
           <div>
             <p className="text-sm font-bold text-earth-500 dark:text-gray-400 uppercase">Toplam Hayvan</p>
@@ -211,7 +213,7 @@ const Dashboard: React.FC = () => {
 
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex items-center space-x-4">
           <div className="p-4 bg-pink-100 text-pink-600 rounded-xl">
-            <Droplets className="w-8 h-8" />
+            <PiCow className="w-8 h-8" />
           </div>
           <div>
             <p className="text-sm font-bold text-earth-500 dark:text-gray-400 uppercase">Yaklaşan Doğumlar</p>

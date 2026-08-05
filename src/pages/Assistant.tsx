@@ -1375,7 +1375,7 @@ const Assistant: React.FC = () => {
     <div className="h-[calc(100vh-6rem)] md:h-[calc(100vh-4rem)] flex flex-col md:flex-row bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 overflow-hidden relative">
         
         {/* Desktop Sidebar */}
-        <div className="hidden md:flex w-64 border-r border-earth-200 dark:border-gray-700 bg-nature-50 dark:bg-nature-900/30 flex-col flex-shrink-0">
+        <div className="hidden md:flex w-64 border-r border-earth-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex-col flex-shrink-0">
            <div className="p-4 border-b border-earth-200 dark:border-gray-700">
                <button onClick={handleCreateNewChat} className="w-full flex items-center justify-center space-x-2 bg-[#1b5235] text-white py-3 px-4 rounded-xl font-bold hover:bg-[#143e28] transition shadow-sm">
                   <Plus className="w-5 h-5" />
