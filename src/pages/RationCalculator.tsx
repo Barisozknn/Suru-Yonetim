@@ -135,7 +135,8 @@ const RationCalculator: React.FC = () => {
     list.forEach(item => {
       if (!item) return;
       const yem = yemler.find(y => y && y.id === item.yemId);
-      if (yem && yem.kmYuzde) {
+      // #14 DÜZELTME: kmYuzde === 0 falsy olarak değerlendirilirdi; şimdi açık kontrol yapılıyor
+      if (yem && yem.kmYuzde != null && yem.kmYuzde > 0) {
         const kg = Number(item.kgAsFed) || 0;
         const kuruMaddeKg = kg * ((Number(yem.kmYuzde) || 0) / 100);
         dmi += kuruMaddeKg;
@@ -200,7 +201,8 @@ const RationCalculator: React.FC = () => {
         let dmi = 0, me = 0, hp_g = 0, cost = 0;
         ration.forEach(r => {
           const y = yemler.find(yem => yem && yem.id === r.yemId);
-          if (y && y.kmYuzde) {
+          // #14 DÜZELTME: kmYuzde === 0 falsy olarak değerlendirilirdi; şimdi açık kontrol yapılıyor
+          if (y && y.kmYuzde != null && y.kmYuzde > 0) {
             const kg = r.kgAsFed;
             const kuruMaddeKg = kg * (y.kmYuzde / 100);
             dmi += kuruMaddeKg;

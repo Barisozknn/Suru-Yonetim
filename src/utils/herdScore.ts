@@ -1,5 +1,5 @@
 import type { Hayvan, SutKaydi, UremeKaydi, Yem, Grup, SaglikOlayi } from '../types';
-import { calculateTotalDailyFeedCost, calculateAverageMilkYield7Days, calculateHerdAveragePerformance } from './dashboardCalculations';
+import { calculateTotalDailyFeedCost, calculateHerdAveragePerformance } from './dashboardCalculations';
 
 export interface HerdScoreResult {
   totalScore: number; // 0-100
@@ -39,7 +39,16 @@ export function calculateHerdScore(
 
   // 1. Süt Verimi Skoru (Max 40 Puan)
   // Hedef: İnek başı ortalama 30 Lt/Gün (Siyah Alaca ortalaması baz alınarak, esnek yapılabilir)
-  const avgMilk = calculateAverageMilkYield7Days(sutKayitlari);
+  // #12 DÜZELTME: Son 7 günün TOPLAM sürü sütü — günlük ortalama
+  // avgMilk (inek-gün ortalaması) × inek sayısı yerine gerçek toplam kullanılır.
+  // Kaydsız hay vanların hesabı şişirmesini önler.
+  const now7 = new Date();
+  const sevenDaysAgo7 = new Date(now7.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const son7GunSutKayitlari = sutKayitlari.filter(k => new Date(k.tarih) >= sevenDaysAgo7);
+  const toplamSut7Gun = son7GunSutKayitlari.reduce((sum, k) => sum + k.litre, 0);
+  const gunlukToplamSuruSutu = toplamSut7Gun / 7; // tüm sürünün günlük üretimi
+
+  const avgMilk = inekSayisi > 0 ? gunlukToplamSuruSutu / inekSayisi : 0; // Skor gösterimi için inek başına
   const targetMilk = 28; // Türkiye şartlarında kabul edilebilir iyi bir hedef
   
   if (avgMilk >= targetMilk) {
@@ -104,8 +113,10 @@ export function calculateHerdScore(
   // 4. Yem Verimliliği Skoru (Max 10 Puan)
   // IOFC (Income Over Feed Cost) / Yemden Yararlanma Oranı
   // Hedef: Günlük süt geliri / Günlük yem maliyeti > 1.8
+  // #12 DÜZELTME: Günlük süt geliri = toplam sürü üretimi × süt fiyatı
+  // (avgMilk × inekSayisi yerine gerçek toplam kullanılıyor)
   const dailyFeedCost = calculateTotalDailyFeedCost(yemler, gruplar, hayvanlar);
-  const dailyMilkRevenue = avgMilk * inekSayisi * sutFiyati;
+  const dailyMilkRevenue = gunlukToplamSuruSutu * sutFiyati;
   
   if (dailyFeedCost === 0 || dailyMilkRevenue === 0) {
     feedScore = 5; // Veri yok

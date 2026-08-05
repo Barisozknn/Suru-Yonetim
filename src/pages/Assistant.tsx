@@ -791,7 +791,12 @@ const Assistant: React.FC = () => {
     const userMessage: Mesaj = { role: 'user', content: text, createdAt: Date.now() };
     
     let currentChatId = activeChatId;
-    let currentMessages = [...displayMessages, userMessage];
+    // G4 GÜVENLİK: Mesaj sayısı sınırı — sohbetin DB'yi şişirmesini önler
+    const MAX_MESSAGES = 200;
+    const rawMessages = [...displayMessages, userMessage];
+    let currentMessages = rawMessages.length > MAX_MESSAGES
+      ? rawMessages.slice(-MAX_MESSAGES) // En eski mesajları at, en yenileri koru
+      : rawMessages;
 
     if (!currentChatId) {
       const newChat: Sohbet = {

@@ -3,6 +3,7 @@ import type {
   SutKaydi,
   AgirlikKaydi,
   UremeKaydi,
+  BuzagiKaydi,
   UyariItem,
   UyariTipi,
   UyariSiddeti,
@@ -117,6 +118,7 @@ export function detectMilkDropAnomalies(
 export function detectWeightGrowthAnomalies(
   hayvanlar: Hayvan[],
   agirlikKayitlari: AgirlikKaydi[],
+  buzagiKayitlari: BuzagiKaydi[] = [],
 ): UyariItem[] {
   const uyarilar: UyariItem[] = [];
   const now = new Date();
@@ -155,7 +157,12 @@ export function detectWeightGrowthAnomalies(
         ? hayvanAgirliklar[0].kg
         : hayvan.guncelAgirlikKg;
 
-    const dogumAgirligiKg = 40;
+    // Buzağı kaydından gerçek doğum ağırlığını al; yoksa irka özgü varsayılanı kullan
+    const buzagiKaydi = buzagiKayitlari.find(b => b.hayvanId === hayvan.id);
+    const irkDefaultDogumAgirligi = irkLower.includes('jersey') ? 25
+      : (irkLower.includes('simmental') || irkLower.includes('charolais')) ? 48
+      : 40; // Holstein / genel
+    const dogumAgirligiKg = buzagiKaydi?.dogumAgirligiKg || irkDefaultDogumAgirligi;
     const beklenenAgirlik = dogumAgirligiKg + yasGun * beklenenAdgKg;
 
     const sapma = (beklenenAgirlik - sonAgirlik) / beklenenAgirlik;
@@ -210,10 +217,19 @@ export function detectReproductionDelays(
 
     if (kayitlar.length === 0) continue;
 
-    const sonKayit = kayitlar[0];
-    if (sonKayit.tur !== 'Doğum') continue;
+    // DÜZELTME #2: Son kayıt değil, en son DOĞUM kaydını bul.
+    // Doğumdan sonra başka kayıt (kızgınlık gözlemi vb.) girilmiş olsa bile uyarı tetiklenebilmeli.
+    const sonDogum = kayitlar.find(k => k.tur === 'Doğum');
+    if (!sonDogum) continue;
 
-    const dogumDate = new Date(sonKayit.tarih);
+    const dogumDate = new Date(sonDogum.tarih);
+
+    // Doğumdan SONRA başarılı bir tohumlama yapılmış mı?
+    const tohumlamaVarMi = kayitlar.some(
+      k => k.tur === 'Tohumlama/Aşım' && new Date(k.tarih) > dogumDate
+    );
+    if (tohumlamaVarMi) continue; // Tohumlama yapılmış, uyarı verme
+
     const gecenGun = getDiffDays(dogumDate, now);
 
     const esik = uremeAyarlari.yenidenTohumlamaUyarisi;
@@ -256,8 +272,11 @@ export function detectOverdueLactations(
     (h) => h.tur === 'İnek' && h.durum === 'Aktif',
   );
 
-  const maxLaktasyon =
-    uremeAyarlari.gebelikSuresi + uremeAyarlari.kuruyaCikarma;
+  // DÜZELTME #3: Doğru laktasyon eşiği
+  // Zooteknik standart: 305 gün laktasyon + tolerans. Hedef buzağılama aralığı (380 gün) - kuru dönem (60 gün) = 320 gün.
+  // Eski formül (gebelikSuresi + kuruyaCikarma = 343) mantıksal çelişki yaratıyordu.
+  const HEDEF_BUZAGILAMA_ARALIGI = 380; // gün — Türkiye koşulları için kabul edilebilir
+  const maxLaktasyon = HEDEF_BUZAGILAMA_ARALIGI - uremeAyarlari.kuruyaCikarma; // Varsayılan: 380 - 60 = 320 gün
 
   for (const inek of inekler) {
     const kayitlar = uremeKayitlari
@@ -375,6 +394,7 @@ export interface AnomalyDetectionInput {
   sutKayitlari: SutKaydi[];
   agirlikKayitlari: AgirlikKaydi[];
   uremeKayitlari: UremeKaydi[];
+  buzagiKayitlari: BuzagiKaydi[]; // #7: Gerçek doğum ağırlığı için
   uremeAyarlari: UremeAyarlari;
 }
 
@@ -389,11 +409,11 @@ const SIDDET_SIRA: Record<UyariSiddeti, number> = {
  * Ayni hayvan + tip icin tekrar yoktur (id ile tekillestirilir).
  */
 export function detectAllAnomalies(input: AnomalyDetectionInput): UyariItem[] {
-  const { hayvanlar, sutKayitlari, agirlikKayitlari, uremeKayitlari, uremeAyarlari } = input;
+  const { hayvanlar, sutKayitlari, agirlikKayitlari, uremeKayitlari, buzagiKayitlari, uremeAyarlari } = input;
 
   const tum: UyariItem[] = [
     ...detectMilkDropAnomalies(hayvanlar, sutKayitlari),
-    ...detectWeightGrowthAnomalies(hayvanlar, agirlikKayitlari),
+    ...detectWeightGrowthAnomalies(hayvanlar, agirlikKayitlari, buzagiKayitlari),
     ...detectReproductionDelays(hayvanlar, uremeKayitlari, uremeAyarlari),
     ...detectOverdueLactations(hayvanlar, uremeKayitlari, uremeAyarlari),
     ...detectDryOffDelays(hayvanlar, uremeKayitlari, uremeAyarlari),

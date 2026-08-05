@@ -58,9 +58,16 @@ export function calculate30DayProjection(
   let extraMilkFromBirths = 0;
 
   upcomingBirths.forEach(birth => {
-    const daysActiveInNext30Days = 30 - Math.floor((birth.dogumTarihi.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const daysUntilBirth = Math.floor((birth.dogumTarihi.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const daysActiveInNext30Days = 30 - daysUntilBirth;
     if (daysActiveInNext30Days > 0) {
-      extraMilkFromBirths += (daysActiveInNext30Days * 25); // Varsayılan 25 Lt/gün laktasyon başlangıcı
+      // #9 DÜZELTME: Kolostrum dönemi (ilk 5 gün) süt satılamaz
+      // Laktasyon başlangıcında verim düşük başlar ve kademeli yükselir
+      // 30 günlük dönem için ağırlıklı ortalama: ~18 Lt/gün (konservatif tahmin)
+      const KOLOSTRUM_SURESI_GUN = 5;
+      const SATIABILIR_GUN = Math.max(0, daysActiveInNext30Days - KOLOSTRUM_SURESI_GUN);
+      const BASLANGIC_VERIMI_LT = 18; // Lt/gün — gerçekçi laktasyon başlangıcı ortalaması
+      extraMilkFromBirths += SATIABILIR_GUN * BASLANGIC_VERIMI_LT;
     }
   });
 

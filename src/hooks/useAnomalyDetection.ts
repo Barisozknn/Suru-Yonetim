@@ -19,6 +19,8 @@ export function useAnomalyDetection(): UyariItem[] {
   const sutKayitlari     = useLiveFarmQuery(() => db.sutKayitlari.toArray());
   const agirlikKayitlari = useLiveFarmQuery(() => db.agirlikKayitlari.toArray());
   const uremeKayitlari   = useLiveFarmQuery(() => db.uremeKayitlari.toArray());
+  // #7: Gerçek doğum ağırlığını ağırlık sapma tespitinde kullanmak için
+  const buzagiKayitlari  = useLiveFarmQuery(() => db.buzagiKayitlari.toArray());
 
   const uyarilar = useMemo(() => {
     // Dexie'den tüm veriler asenkron olarak gelene kadar (undefined iken)
@@ -27,7 +29,8 @@ export function useAnomalyDetection(): UyariItem[] {
       hayvanlar === undefined ||
       sutKayitlari === undefined ||
       agirlikKayitlari === undefined ||
-      uremeKayitlari === undefined
+      uremeKayitlari === undefined ||
+      buzagiKayitlari === undefined
     ) {
       return [];
     }
@@ -37,9 +40,10 @@ export function useAnomalyDetection(): UyariItem[] {
       sutKayitlari,
       agirlikKayitlari,
       uremeKayitlari,
+      buzagiKayitlari,
       uremeAyarlari,
     });
-  }, [hayvanlar, sutKayitlari, agirlikKayitlari, uremeKayitlari, uremeAyarlari]);
+  }, [hayvanlar, sutKayitlari, agirlikKayitlari, uremeKayitlari, buzagiKayitlari, uremeAyarlari]);
 
   return uyarilar;
 }

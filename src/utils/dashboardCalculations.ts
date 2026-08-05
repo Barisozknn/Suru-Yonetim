@@ -91,11 +91,19 @@ export const getUpcomingBirths = (uremeKayitlari: UremeKaydi[], hayvanlar: Hayva
     let tahminiDogum: Date | null = null;
 
     if (sonOlay.tur === 'Kuruya Çıkarma') {
-      const sonTohumlama = olaylar.find(o => o.tur === 'Tohumlama/Aşım');
+      // Kuruya çıkarmadan ÖNCE yapılan en son tohumlama (#8 düzeltme)
+      const sonOlayTarihi = new Date(sonOlay.tarih);
+      const sonTohumlama = olaylar.find(
+        o => o.tur === 'Tohumlama/Aşım' && new Date(o.tarih) <= sonOlayTarihi
+      );
       tahminiDogum = new Date(sonTohumlama ? sonTohumlama.tarih : sonOlay.tarih);
       tahminiDogum.setDate(tahminiDogum.getDate() + (sonTohumlama ? irkAyari.gebelikSuresi : irkAyari.kuruyaCikarma));
     } else if (sonOlay.tur === 'Gebelik Kontrolü' && sonOlay.durum === 'Gebe') {
-      const sonTohumlama = olaylar.find(o => o.tur === 'Tohumlama/Aşım');
+      // Gebelik kontrolünden ÖNCE yapılan en son tohumlama (#8 düzeltme)
+      const gbkTarihi = new Date(sonOlay.tarih);
+      const sonTohumlama = olaylar.find(
+        o => o.tur === 'Tohumlama/Aşım' && new Date(o.tarih) <= gbkTarihi
+      );
       if (sonTohumlama) {
         tahminiDogum = new Date(sonTohumlama.tarih);
         tahminiDogum.setDate(tahminiDogum.getDate() + irkAyari.gebelikSuresi);

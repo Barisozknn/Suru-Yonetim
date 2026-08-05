@@ -149,6 +149,7 @@ const Dashboard: React.FC = () => {
   const expectedBirths = getExpectedBirths30DaysCount(uremeKayitlari, hayvanlar);
   const heatChecks = getUpcomingHeatChecks(uremeKayitlari, hayvanlar);
   const reInseminations = getUpcomingReInseminations(uremeKayitlari, hayvanlar);
+
   const feedCost = calculateEstimatedFeedCostPerLiter(yemler, gruplar, sutKayitlari, hayvanlar);
   const totalFeedCost = calculateTotalDailyFeedCost(yemler, gruplar, hayvanlar);
   const herdPerformance = calculateHerdAveragePerformance(hayvanlar, uremeKayitlari);

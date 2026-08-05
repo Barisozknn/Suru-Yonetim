@@ -53,11 +53,15 @@ export const runDailyAutomations = async () => {
           const d = new Date(lastDate);
           d.setDate(d.getDate() + i);
           const dStr = d.toISOString().split('T')[0];
+          const isToday = dStr === todayStr;
           
           const existing = await db.gunlukYemMaliyetleri.where('tarih').equals(dStr).first();
           if (!existing) {
             const newId = crypto.randomUUID();
-            const payload = { id: newId, tarih: dStr, toplamMaliyet: todayCost };
+            // #15 DÜZELTME: Geçmiş günler için 0 yaz (o günün maliyeti bilinmiyor).
+            // Sadece bugün için gerçek maliyet kullanılır.
+            // Eski davranış: tüm geçmiş günlere bugünkü maliyet yazılırdı — yanıltıcıydı.
+            const payload = { id: newId, tarih: dStr, toplamMaliyet: isToday ? todayCost : 0 };
             await db.gunlukYemMaliyetleri.put(payload as any);
             await db.syncQueue.add({ table: 'gunlukYemMaliyetleri', action: 'INSERT', payload, created_at: Date.now() });
           }

@@ -53,13 +53,18 @@ const YieldAnalysis: React.FC = () => {
   
   filteredSutKayitlari.forEach(k => {
     toplamSut += k.litre;
-    const d = new Date(k.tarih).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' });
+    // ISO YYYY-MM-DD formatında sakla — sıralanabilir ve new Date() ile güvenli parse edilir
+    const d = k.tarih.split('T')[0];
     gunlukSut[d] = (gunlukSut[d] || 0) + k.litre;
   });
 
   const sutGrafikVerisi = Object.keys(gunlukSut)
-    .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
-    .map(tarih => ({ tarih, toplam: gunlukSut[tarih] }));
+    .sort((a, b) => new Date(a).getTime() - new Date(b).getTime()) // ISO string ile güvenli sıralama
+    .map(isoTarih => ({
+      // Görüntüleme için Türkçe formatına çevir
+      tarih: new Date(isoTarih + 'T00:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' }),
+      toplam: gunlukSut[isoTarih]
+    }));
 
   // Günlük Ortalama (Sadece kayıt olan günler)
   const gunSayisi = sutGrafikVerisi.length > 0 ? sutGrafikVerisi.length : 1;

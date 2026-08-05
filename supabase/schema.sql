@@ -1,4 +1,4 @@
-﻿-- =============================================================
+-- =============================================================
 -- SürüMetri - Veritabanı Şeması
 -- Supabase SQL Editor > New Query'ye yapıştırın ve Run'a basın
 -- Bu script tüm tabloları, RLS politikalarını ve ilişkileri oluşturur.
@@ -469,3 +469,17 @@ ALTER TABLE public."push_subscriptions" ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can manage their push subscriptions" 
 ON public."push_subscriptions" 
 FOR ALL USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+-- =============================================================
+-- Güvenlik İyileştirmesi G1: Küpe Numarası UNIQUE Kısıtı
+-- =============================================================
+-- Her kullanıcı kendi çiftliğinde AKTIF hayvanlar için benzersiz küpe no'ya sahip olmalı.
+-- Partial index (WHERE durum = 'Aktif') sayesinde:
+--   - Satılan veya ölen hayvanların küpe numarası yeni hayvanlara atanabilir (zooteknik doğru)
+--   - Aynı kullanıcının farklı aktif hayvanları aynı küpe no'ya sahip olamaz
+-- Not: Farklı kullanıcılar aynı küpe numarasını kullanabilir (user_id ile scope'lanmış)
+CREATE UNIQUE INDEX IF NOT EXISTS hayvanlar_kupe_no_user_aktif_unique 
+ON public.hayvanlar (user_id, kupe_no) 
+WHERE durum = 'Aktif';
+
+
