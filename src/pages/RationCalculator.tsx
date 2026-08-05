@@ -247,9 +247,12 @@ const RationCalculator: React.FC = () => {
         constraints: {
           me: { min: hedefIhtiyac.me, max: hedefIhtiyac.me * 1.20 },
           hp: { min: hedefIhtiyac.hp_g, max: hedefIhtiyac.hp_g * 1.20 },
+          ca: { min: hedefIhtiyac.ca * 0.80, max: hedefIhtiyac.ca * 2.00 },
+          p: { min: hedefIhtiyac.p * 0.80, max: hedefIhtiyac.p * 2.00 },
           dmi: { min: hedefIhtiyac.dmi * 0.95, max: hedefIhtiyac.dmi * 1.05 },
           roughage_min: { min: 0 },
-          roughage_max: { max: 0 }
+          roughage_max: { max: 0 },
+          vit_min_max: { max: hedefIhtiyac.dmi * 0.05 } // Katkılar KMT'nin maks %5'i olabilir
         },
         variables: {},
         ints: {}
@@ -270,6 +273,7 @@ const RationCalculator: React.FC = () => {
           const price = Number(y.birimFiyat) || 0.001; // fiyat yoksa 0.001 ver
 
           const isKaba = y.tur === 'Kaba Yem';
+          const isVitMin = y.tur === 'Mineral/Vitamin' || y.tur === 'Sıvı Takviye';
           const rMinVal = minKabaOran / 100;
           const rMaxVal = maxKabaOran / 100;
 
@@ -280,6 +284,7 @@ const RationCalculator: React.FC = () => {
             dmi: kuruMaddeKg,
             roughage_min: isKaba ? (1 - rMinVal) * kuruMaddeKg : -rMinVal * kuruMaddeKg,
             roughage_max: isKaba ? (1 - rMaxVal) * kuruMaddeKg : -rMaxVal * kuruMaddeKg,
+            vit_min_max: isVitMin ? kuruMaddeKg : 0,
             ca: caGr,
             p: pGr
           };
@@ -295,8 +300,20 @@ const RationCalculator: React.FC = () => {
       });
 
       let result: any;
+      let usedFallback = false;
       try {
         result = solver.Solve(model);
+        if (result.feasible === false) {
+          // Çözüm bulunamazsa katı sınırları kaldırıp (fallback) tekrar dene
+          delete model.constraints.me.max;
+          delete model.constraints.hp.max;
+          delete model.constraints.ca;
+          delete model.constraints.p;
+          result = solver.Solve(model);
+          if (result.feasible !== false) {
+            usedFallback = true;
+          }
+        }
       } catch (e) {
         console.error("Solver Error", e);
         result = { feasible: false };
@@ -305,6 +322,9 @@ const RationCalculator: React.FC = () => {
       if (result.feasible === false) {
         alert("Optimum bir rasyon bulunamadı. Lütfen hedef ihtiyaçları ve kısıtlamaları (min/max) kontrol edin veya farklı yemler ekleyin.");
       } else {
+        if (usedFallback) {
+          alert("Katı kısıtlarla (maksimum %20 fazlalık sınırı) rasyon bulunamadı. Kısıtlar esnetilerek (sınırlar kaldırılarak) bir çözüm bulundu. Lütfen sonuçlardaki fazla kullanım uyarılarını dikkate alın.");
+        }
         const newRasyon = safeRasyonListesi.map(r => {
           if (!r) return r;
           const varName = `yem_${r.id}`;

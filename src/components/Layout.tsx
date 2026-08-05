@@ -127,7 +127,7 @@ const Layout: React.FC = () => {
   );
 
   return (
-    <div className="h-screen bg-earth-50 dark:bg-gray-900 flex font-sans overflow-hidden transition-colors duration-200">
+    <div className="h-[100dvh] bg-earth-50 dark:bg-gray-900 flex font-sans overflow-hidden transition-colors duration-200">
 
       {/* Masaüstü Sidebar (≥768px) */}
       <aside className="hidden md:flex w-64 flex-shrink-0 bg-white dark:bg-gray-800 border-r border-earth-200 dark:border-gray-700 flex-col shadow-sm relative z-20 h-full overflow-hidden transition-colors duration-200">

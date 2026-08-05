@@ -1401,7 +1401,7 @@ const Assistant: React.FC = () => {
   };
   
   return (
-    <div className="h-[calc(100vh-6rem)] md:h-[calc(100vh-4rem)] flex flex-col md:flex-row bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 overflow-hidden relative">
+    <div className="h-[calc(100dvh-6rem)] md:h-[calc(100vh-4rem)] flex flex-col md:flex-row bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 overflow-hidden relative">
         
         {/* Desktop Sidebar */}
         <div className="hidden md:flex w-64 border-r border-earth-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex-col flex-shrink-0">
@@ -1503,7 +1503,7 @@ const Assistant: React.FC = () => {
         )}
 
         {/* Chat Main Area */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-h-0 min-w-0">
           
           {/* Header Bar */}
           <div className="px-4 py-3 border-b border-earth-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-between shrink-0">
