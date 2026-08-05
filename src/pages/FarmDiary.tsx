@@ -61,19 +61,22 @@ const FarmDiary: React.FC = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = true;
+      recognitionRef.current.continuous = false;   // false: mobilde tekrar sorununu önler
       recognitionRef.current.interimResults = true;
       recognitionRef.current.lang = 'tr-TR';
+
+      const processedIndices = new Set<number>();
 
       recognitionRef.current.onresult = (event: any) => {
         let finalTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
+          if (event.results[i].isFinal && !processedIndices.has(i)) {
+            processedIndices.add(i);
             finalTranscript += event.results[i][0].transcript + ' ';
           }
         }
         if (finalTranscript) {
-          setNoteText(prev => prev + (prev.endsWith(' ') ? '' : ' ') + finalTranscript);
+          setNoteText(prev => (prev + (prev.endsWith(' ') || prev === '' ? '' : ' ') + finalTranscript).trimEnd() + ' ');
         }
       };
 
@@ -83,6 +86,7 @@ const FarmDiary: React.FC = () => {
       };
 
       recognitionRef.current.onend = () => {
+        processedIndices.clear();
         setIsRecording(false);
       };
     }

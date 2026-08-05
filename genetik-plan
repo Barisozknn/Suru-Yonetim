@@ -1,0 +1,252 @@
+# Genetik Analiz Modülü — Güncellenmiş Uygulama Planı
+
+---
+
+## Zooteknik Doğruluk Hakkında Açık Değerlendirme
+
+> [!IMPORTANT]
+> **Sorduğunuz soru çok kritik.** Sadece fenotipe (gözlemlenen performansa) bakarak "genetik değer" demek zooteknik açıdan **yanlıştır**.
+>
+> Zooteknikte temel denklem şudur:
+> ```
+> P = G + E
+> Fenotip = Genotip + Çevre
+> ```
+> Bir ineğin günde 30 litre süt vermesi; hem genlerinin, hem mevsimin, hem yaşının, hem laktasyon döneminin, hem de beslenme kalitesinin birlikte sonucudur. Bu etkenler ayrıştırılmadan yapılan "genetik" sıralama **yanıltıcı** olur.
+
+Ancak büyük sürü kayıt sistemleri (BLUP/GEBV) için gereken yüz binlik popülasyon verimiz yok. Bu yüzden **bilimsel sınırlamalarını açıkça belirterek**, pratik ve uygulama dahilinde mümkün olan en doğru yaklaşımı benimseyeceğiz.
+
+---
+
+## Benimsediğimiz Yaklaşım: Çevre Düzeltmeli Fenotipik İndeks
+
+### Neden "Gerçek EBV" Değil?
+
+| Yöntem | Gereksinim | Bizim Durumumuz |
+|---|---|---|
+| Gerçek EBV (BLUP) | Popülasyon genelinde binlerce kayıt, ilişki matrisi | Tek işletme verisi — yetersiz |
+| GEBV (Genomik) | DNA çip analizi verileri | Sistemde yok |
+| **Çevre Düzeltmeli Fenotipik İndeks** | İşletme içi kayıtlar + h² katsayıları | **Bu sisteme uygun ✅** |
+
+### Ne Yapacağız?
+
+Hesapladığımız değerin adı **"Tahmini Damızlık İndeksi (TDİ)"** olacak — EBV değil. Şeffaf biçimde "bu bir tahmindir, çevresel etkiler kısmen düzeltilmiştir" notu ile gösterilecek.
+
+---
+
+## Kalıtım Derecesi (h²) ve Çevresel Düzeltme Sistemi
+
+Literatürden alınan **sabit h² katsayıları** her skoru ölçeklendirmek için kullanılacak. Bu, saf fenotipik ölçümden çok daha anlamlı bir tahmin üretir.
+
+| Özellik | h² Katsayısı | Düzeltme Faktörleri |
+|---|---|---|
+| Süt verimi | **0.30** | Laktasyon no (1/2/3+), mevsim, laktasyon günü |
+| Süt yağ % | **0.50** | Laktasyon dönemi |
+| Günlük canlı ağırlık artışı (ADG) | **0.40** | Doğum ağırlığı, yaş grubu |
+| Fertilite (gebe kalma oranı) | **0.05** | Mevsim, tohumlama yöntemi |
+| Sağlık / Hastalık direnci | **0.10** | Yaş, barınak koşulları |
+| Doğum kolaylığı | **0.15** | Laktasyon no |
+| Uzun ömürlülük (longevity) | **0.08** | Yaşa göre normalize |
+
+> [!NOTE]
+> **h² = 0.30 ne anlama gelir?** Süt verimindeki farklılığın %30'u genetik kökene bağlıdır. Yani ham süt ölçümünü direkt "genetik" saymak yerine, skoru h² ile ağırlıklandırarak daha gerçekçi bir tahmin elde ederiz.
+
+### Çevresel Düzeltme Formülü
+
+```
+Düzeltilmiş_Değer = Ham_Fenotip - Çevre_Etkisi
+Genetik_Tahmin = Düzeltilmiş_Değer × h²
+TDİ = Normalize(Genetik_Tahmin, sürü_ortalaması)
+```
+
+**Uygulanacak çevresel düzeltmeler:**
+- **Mevsim**: Yaz/kış süt verimi farkı (±%10-15 düzeltme)
+- **Laktasyon numarası**: 1. laktasyon düşük, 3. laktasyon zirve (yaş faktörü)  
+- **Laktasyon günü**: Standart 305 güne normalize (lactatyon eğrisi düzeltmesi)
+- **Yaş grubu**: Dana/buzağı için büyüme referans eğrisi
+
+---
+
+## İşletme Tipine Göre Uyarlanabilir Ağırlık Sistemi
+
+Kullanıcı Ayarlar'dan işletme tipini seçer; ağırlıklar otomatik değişir.
+
+| Özellik | 🥛 Süt İşletmesi | 🥩 Besi İşletmesi | ⚖️ Karma İşletme |
+|---|---|---|---|
+| Süt Verimi | **%40** | %5 | %20 |
+| Büyüme (ADG) | %15 | **%45** | %25 |
+| Fertilite | **%25** | %20 | %22 |
+| Sağlık | %15 | %20 | %25 |
+| Doğum Kolaylığı | %5 | %10 | %8 |
+
+> Kullanıcı isterse slider ile ağırlıkları manuel de ayarlayabilecek.
+
+---
+
+## Tüm Hayvan Türleri İçin Kapsam
+
+| Hayvan Türü | Hesaplanan Skorlar |
+|---|---|
+| **İnek** | Süt + Büyüme + Fertilite + Sağlık + Doğum Kolaylığı |
+| **Düve** | Büyüme + Sağlık + (Fertilite — kayıt varsa) |
+| **Tosun / Boğa** | Büyüme + Sağlık + Sperma Kalitesi (kayıt varsa) |
+| **Dana** | Büyüme + Sağlık |
+| **Buzağı** | Büyüme + Sağlık (erken dönem tahmini — güvenilirlik düşük, uyarı gösterilir) |
+| **Öküz** | Büyüme + Sağlık (damızlık dışı, analiz amaçlı) |
+
+> [!WARNING]
+> Genç hayvanlar (buzağı, dana) için hesaplanan TDİ'nin **güvenilirliği düşüktür** — yeterli veri yoktur. Arayüzde "Veri yetersizliği nedeniyle tahminin güvenilirliği düşük (%30)" gibi bir uyarı gösterilecek.
+
+---
+
+## 4 Sekmeli Arayüz Mimarisi
+
+### Sekme 1 — 🌳 Soy Ağacı
+Mevcut `PedigreeTree` korunur. Ek olarak: her ata kutucuğunda mini TDİ rozeti.
+
+### Sekme 2 — 📊 Tahmini Damızlık İndeksi (TDİ)
+- Hayvan seçilir → radar chart'ta tüm alt-skorlar görünür
+- Her skorda: ham değer, çevre düzeltmesi, h² etkisi, final skor
+- Sürü içi sıralama: "Bu hayvan süt veriminde sürünün **%85'lik dilimine** giriyor"
+- Güvenilirlik göstergesi (veri sayısına göre: az veri → düşük güvenilirlik)
+
+### Sekme 3 — 🎯 Damızlık Sıralama & Öneriler
+- Tüm aktif hayvanlar TDİ'ye göre sıralanır (işletme tipine göre ağırlıklı)
+- Cinsiyet + türe göre filtreleme
+- "Damızlık Adayı" / "Islah Gerektirir" / "Reforma Alınabilir" etiketleri
+- **Akrabalık Matrisi**: Sürü içindeki akrabalık ilişkileri ısı haritası
+
+### Sekme 4 — 🔗 Çiftleştirme Planlama
+- Dişi seç → önerilen erkekler (en yüksek TDİ + en düşük akrabalık katsayısı)
+- Inbreeding katsayısı (F) hesabı ve "risk" uyarısı (F > 0.0625 kritik)
+- Planlanan çiftleştirmeleri kaydet (yeni tablo)
+- Doğum tahmini tarihi ve hedef yavru özellikleri
+
+---
+
+## Değiştirilecek / Oluşturulacak Dosyalar
+
+### Yeni Dosyalar
+
+#### [NEW] `src/utils/geneticScoring.ts`
+```typescript
+// Temel fonksiyonlar:
+correctForSeason(value, date): number          // Mevsim düzeltmesi
+correctForLactation(milkLitre, lactNo, lactDay): number  // Laktasyon düzeltmesi
+correctForAge(weight, birthDate): number        // Yaş/büyüme düzeltmesi
+applyHeritability(correctedValue, h2): number   // h² uygulaması
+calculateReliability(dataPointCount): number    // Güvenilirlik skoru
+calculateMilkTDI(hayvan, sutKayitlari, herdStats): SkorDetay
+calculateGrowthTDI(hayvan, agirlikKayitlari): SkorDetay
+calculateHealthTDI(hayvan, saglikOlaylari): SkorDetay
+calculateFertilityTDI(hayvan, uremeKayitlari, buzagiKayitlari): SkorDetay
+calculateOverallTDI(scores, farmType, customWeights?): number
+findAncestors(hayvanId, hayvanlar, depth): string[]
+findCommonAncestors(sire, dam, hayvanlar): string[]
+calculateInbreedingCoeff(sire, dam, hayvanlar): number  // Wright formülü
+```
+
+#### [NEW] `src/components/genetics/GeneticScoreCard.tsx`
+Radar chart (Recharts ile) + alt-skor detayları + güvenilirlik göstergesi.
+
+#### [NEW] `src/components/genetics/BreedingRankingTable.tsx`
+Filtrelenebilir/sıralanabilir damızlık sıralama tablosu.
+
+#### [NEW] `src/components/genetics/MatingSuggestion.tsx`
+Çiftleştirme planlama formu + inbreeding hesabı.
+
+#### [NEW] `src/components/genetics/InbreedingWarning.tsx`
+Akrabalık uyarı bileşeni.
+
+#### [NEW] `src/components/genetics/GeneticMethodologyNote.tsx`
+"Bu değerler nasıl hesaplanıyor?" açıklama paneli — şeffaflık için kritik.
+
+---
+
+### Değiştirilecek Dosyalar
+
+#### [MODIFY] [PedigreePage.tsx](file:///c:/Users/acer/OneDrive/Belgeler/GitHub/Sürü-Yönetim/src/pages/PedigreePage.tsx)
+4 sekmeli yapıya dönüştürülecek.
+
+#### [MODIFY] [index.ts (types)](file:///c:/Users/acer/OneDrive/Belgeler/GitHub/Sürü-Yönetim/src/types/index.ts)
+```typescript
+export interface SkorDetay {
+  hamDeger: number;
+  cevreselDuzeltme: number;
+  duzeltilmisDeger: number;
+  h2Katsayisi: number;
+  genetikTahmin: number;
+  normalizedSkor: number; // 0-100
+  guvenilirlik: number;   // 0-100 (veri yeterliliği)
+  veriSayisi: number;
+}
+
+export interface TDI {
+  hayvanId: string;
+  sutSkoru?: SkorDetay;
+  buyumeSkoru: SkorDetay;
+  saglikSkoru: SkorDetay;
+  fertiliteSkor?: SkorDetay;
+  dogumKolayligi?: SkorDetay;
+  genelIndeks: number;
+  genelGuvenilirlik: number;
+  hesaplamaTarihi: string;
+  isletmeTipi: 'sut' | 'besi' | 'karma';
+}
+
+export interface PlanlananCiftlesme {
+  id: string;
+  ciftlikId?: string;
+  disiHayvanId: string;
+  erkekHayvanId: string;
+  planlanaTarih: string;
+  hedefOzellikler?: string;
+  akrabalikKatsayisi: number;
+  tahminDoğumTarihi?: string;
+  durum: 'Planlandı' | 'Gerçekleşti' | 'İptal';
+  notlar?: string;
+}
+```
+
+#### [MODIFY] [schema.sql](file:///c:/Users/acer/OneDrive/Belgeler/GitHub/Sürü-Yönetim/supabase/schema.sql)
+```sql
+-- Planlanan Çiftleşmeler
+CREATE TABLE IF NOT EXISTS public.planlanan_ciftlesmeler (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    ciftlik_id UUID REFERENCES public.ciftlikler(id) ON DELETE CASCADE,
+    disi_hayvan_id UUID REFERENCES public.hayvanlar(id) ON DELETE CASCADE,
+    erkek_hayvan_id UUID REFERENCES public.hayvanlar(id) ON DELETE SET NULL,
+    planlana_tarih TEXT NOT NULL,
+    hedef_ozellikler TEXT,
+    akrabalik_katsayisi NUMERIC,
+    tahmin_dogum_tarihi TEXT,
+    durum TEXT NOT NULL DEFAULT 'Planlandı',
+    notlar TEXT,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+---
+
+## Şeffaflık İlkesi (UX)
+
+Arayüzde her TDİ skorunun yanında bir `ℹ️` ikonu olacak:
+- "Bu değer, ham ölçüm üzerine mevsim ve laktasyon düzeltmesi uygulandıktan sonra kalıtım derecesi (h²=0.30) ile ölçeklendirilmiş bir **tahmindir**."
+- "Güvenilirlik %45 — Yalnızca 3 ölçüm mevcut. Daha fazla kayıt eklendikçe bu değer iyileşir."
+
+---
+
+## Doğrulama Planı
+
+### Otomatik
+```bash
+npx tsc --noEmit
+```
+
+### Manuel Test Senaryoları
+1. Süt kayıtları farklı mevsimlere dağılmış bir inek için mevsim düzeltmesinin çalıştığını doğrula
+2. 1. ve 3. laktasyondaki iki ineği karşılaştır — laktasyon düzeltmesi sonucu fark azalmalı
+3. Anne/baba kayıtlı olan iki hayvanda akrabalık katsayısının F > 0 döndürdüğünü test et
+4. Veri sayısı az hayvanlarda güvenilirlik uyarısının çıktığını doğrula
+5. Çiftleştirme planının veritabanına kaydedildiğini kontrol et

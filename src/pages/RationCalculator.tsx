@@ -245,8 +245,8 @@ const RationCalculator: React.FC = () => {
         optimize: "cost",
         opType: "min",
         constraints: {
-          me: { min: hedefIhtiyac.me },
-          hp: { min: hedefIhtiyac.hp_g },
+          me: { min: hedefIhtiyac.me, max: hedefIhtiyac.me * 1.20 },
+          hp: { min: hedefIhtiyac.hp_g, max: hedefIhtiyac.hp_g * 1.20 },
           dmi: { min: hedefIhtiyac.dmi * 0.95, max: hedefIhtiyac.dmi * 1.05 },
           roughage_min: { min: 0 },
           roughage_max: { max: 0 }
@@ -369,7 +369,7 @@ const RationCalculator: React.FC = () => {
 
           <div>
             <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Ort. Canlı Ağırlık (Kg)</label>
-            <input type="number" value={avgWeight} onChange={e => setAvgWeight(Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 font-bold" />
+            <input type="number" min="1" value={avgWeight} onChange={e => setAvgWeight(Math.max(1, Number(e.target.value)))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 font-bold" />
           </div>
 
           {verimYonu === 'Sütçü' && (
@@ -393,11 +393,12 @@ const RationCalculator: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Süt (Litre/Gün)</label>
-                <input type="number" value={milkYield} onChange={e => setMilkYield(Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 font-bold" />
+                <input type="number" min="0" value={milkYield} onChange={e => setMilkYield(Math.max(0, Number(e.target.value)))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 font-bold" />
               </div>
               <div>
                 <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Sağım Günü (DIM)</label>
-                <input type="number" value={dim} onChange={e => setDim(Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 font-bold" />
+                <input type="number" min="1" max="320" value={dim} onChange={e => setDim(Math.min(320, Math.max(1, Number(e.target.value))))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 font-bold" />
+                <span className="text-xs text-earth-400 dark:text-gray-500 mt-0.5 block">1 – 320 gün</span>
               </div>
             </div>
           ) : verimYonu === 'Etçi' ? (
@@ -521,6 +522,21 @@ const RationCalculator: React.FC = () => {
             <ProgressBar current={toplamSaglanan.ca} target={hedefIhtiyac.ca} label="Kalsiyum (Ca)" unit="gr" />
             <ProgressBar current={toplamSaglanan.p} target={hedefIhtiyac.p} label="Fosfor (P)" unit="gr" />
           </div>
+
+          {/* Fazla Kullanım Uyarıları */}
+          {hedefIhtiyac.dmi > 0 && (() => {
+            const uyarilar: string[] = [];
+            if (toplamSaglanan.hp_g > hedefIhtiyac.hp_g * 1.10) uyarilar.push(`HP fazla: ${toplamSaglanan.hp_g.toFixed(0)}gr / Hedef ${hedefIhtiyac.hp_g.toFixed(0)}gr`);
+            if (toplamSaglanan.me > hedefIhtiyac.me * 1.10) uyarilar.push(`ME fazla: ${toplamSaglanan.me.toFixed(1)} / Hedef ${hedefIhtiyac.me.toFixed(1)} Mcal`);
+            if (toplamSaglanan.dmi > hedefIhtiyac.dmi * 1.10) uyarilar.push(`KMT fazla: ${toplamSaglanan.dmi.toFixed(1)} / Hedef ${hedefIhtiyac.dmi.toFixed(1)} kg`);
+            if (uyarilar.length === 0) return null;
+            return (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-xl p-3 mt-2">
+                <p className="text-xs font-bold text-red-700 dark:text-red-400 mb-1">⚠️ Fazla Kullanım Uyarısı</p>
+                {uyarilar.map((u, i) => <p key={i} className="text-xs text-red-600 dark:text-red-300">{u}</p>)}
+              </div>
+            );
+          })()}
 
           <div className="bg-nature-50 dark:bg-nature-900/30 p-4 rounded-xl border border-nature-200 dark:border-nature-800 mt-6">
             <h3 className="font-bold text-nature-800 dark:text-nature-200 text-sm mb-3">Rasyon Kompozisyonu</h3>

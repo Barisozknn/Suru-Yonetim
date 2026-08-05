@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
-import { CalendarDays, Heart, CalendarCheck, Droplets } from 'lucide-react';
+import { CalendarDays, Heart, CalendarCheck } from 'lucide-react';
+import { PiCow } from 'react-icons/pi';
 import { useStore } from '../store/useStore';
 import { getUremeAyarForIrk } from '../utils/reproductionSettings';
 
@@ -24,7 +25,7 @@ const addDays = (dateStr: string, days: number) => {
 
 const EVENT_CONFIG: Record<EventType, { icon: React.ReactNode; color: string; bg: string }> = {
   'Kızgınlık Beklentisi': { icon: <Heart className="w-4 h-4" />, color: 'text-pink-600', bg: 'bg-pink-50 dark:bg-pink-900/20 border-pink-200' },
-  'Tahmini Doğum': { icon: <Droplets className="w-4 h-4" />, color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-900/20 border-green-200' },
+  'Tahmini Doğum': { icon: <PiCow className="w-4 h-4" />, color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-900/20 border-green-200' },
   'Kuruya Çıkarma Önerisi': { icon: <CalendarCheck className="w-4 h-4" />, color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-900/20 border-orange-200' },
 };
 

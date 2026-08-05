@@ -35,6 +35,7 @@ Süt ve besi sığırcılığı yönetimi, rasyon, süt verimi, üreme, gelir/gi
 - Formatlamak için Markdown kullan.
 - Maksimum 3-4 maddelik kısa listeler tercih et. Sayısal verilerde birim belirt.
 - Sana iletilen gelir, gider, hayvan sayısı gibi metrikleri net bir şekilde kullanıcıya sun.
+5. **KAYIT ZORUNLULUĞU:** Kullanıcı bir yem, hayvan, sağlık kaydı, üreme olayı veya herhangi bir kayıt eklenmesini isterse araç MUTLAKA çağrılmalıdır. Yem eklerken besin değerlerini bilmesen bile hayvancılık literatüründeki ortalama değerleri kullanarak tüm besin alanlarını (kmYuzde, meMcalKg, hpYuzde, caYuzde, pYuzde) doldur ve gönder. Asla eksik bırakma. İşlem başarısız olursa kullanıcıya hatayı açıkça bildir.
 `.trim();
 
 const parseDateString = (dateStr: string | undefined): string => {
@@ -393,7 +394,12 @@ const ASSISTANT_TOOLS = [
           tur: { type: "string", enum: ["Kaba Yem", "Kesif Yem", "Mineral/Vitamin"], description: "Yemin türü" },
           birimFiyat: { type: "number", description: "KG başına birim fiyatı (TL)" },
           stokKg: { type: "number", description: "Mevcut/Başlangıç stok miktarı (kg)" },
-          minStokUyariKg: { type: "number", description: "Uyarı verilecek minimum stok seviyesi (kg)" }
+          minStokUyariKg: { type: "number", description: "Uyarı verilecek minimum stok seviyesi (kg)" },
+          kmYuzde: { type: "number", description: "Kuru Madde (KM %). Literatür değerini kullan." },
+          meMcalKg: { type: "number", description: "Metabolik Enerji (ME Mcal/kg KM). Literatür değerini kullan." },
+          hpYuzde: { type: "number", description: "Ham Protein (HP %). Literatür değerini kullan." },
+          caYuzde: { type: "number", description: "Kalsiyum (Ca %). Literatür değerini kullan." },
+          pYuzde: { type: "number", description: "Fosfor (P %). Literatür değerini kullan." }
         },
         required: ["yemAdi", "tur", "birimFiyat", "stokKg", "minStokUyariKg"]
       }
@@ -743,9 +749,10 @@ const Assistant: React.FC = () => {
     recognitionRef.current = recognition;
     recognition.lang = 'tr-TR';
     recognition.interimResults = true;
-    recognition.continuous = true;
+    recognition.continuous = false;  // false: mobilde tekrar sorununu önler
     
     let finalTranscript = input;
+    const processedIndices = new Set<number>();
     let silenceTimer: any = null;
 
     recognition.onstart = () => setIsListening(true);
@@ -757,9 +764,10 @@ const Assistant: React.FC = () => {
       let currentFinal = '';
       
       for (let i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) {
+        if (event.results[i].isFinal && !processedIndices.has(i)) {
+          processedIndices.add(i);
           currentFinal += event.results[i][0].transcript;
-        } else {
+        } else if (!event.results[i].isFinal) {
           interimTranscript += event.results[i][0].transcript;
         }
       }
@@ -791,6 +799,7 @@ const Assistant: React.FC = () => {
   const handleSend = async (text: string = input) => {
     if (!text.trim()) return;
 
+    const activeCiftlikId = useStore.getState().activeCiftlikId || 'default';
     const userMessage: Mesaj = { role: 'user', content: text, createdAt: Date.now() };
     
     let currentChatId = activeChatId;
@@ -885,6 +894,7 @@ const Assistant: React.FC = () => {
                if (!hayvan) throw new Error("Belirtilen küpe numarasına sahip hayvan bulunamadı.");
                const payload = {
                  id: uuidv4(),
+                 ciftlikId: activeCiftlikId,
                  hayvanId: hayvan.id,
                  tarih: parseDateString(functionArgs.tarih),
                  litre: functionArgs.litre
@@ -898,6 +908,7 @@ const Assistant: React.FC = () => {
                if (!hayvan) throw new Error("Belirtilen küpe numarasına sahip hayvan bulunamadı.");
                const payload = {
                   id: uuidv4(),
+                  ciftlikId: activeCiftlikId,
                   hayvanId: hayvan.id,
                   tarih: parseDateString(functionArgs.tarih),
                   tur: functionArgs.tur,
@@ -969,6 +980,7 @@ const Assistant: React.FC = () => {
                
                const payload = {
                  id: uuidv4(),
+                 ciftlikId: activeCiftlikId,
                  ad: functionArgs.yemAdi,
                  tur: functionArgs.tur,
                  stokKg: baslangicStok,
@@ -1041,6 +1053,7 @@ const Assistant: React.FC = () => {
             } else if (functionName === "addFinancialTransaction") {
                const payload = {
                  id: uuidv4(),
+                 ciftlikId: activeCiftlikId,
                  tarih: parseDateString(functionArgs.tarih),
                  tip: functionArgs.tip,
                  kategori: functionArgs.kategori,
@@ -1063,6 +1076,7 @@ const Assistant: React.FC = () => {
                
                const payload = {
                  id: uuidv4(),
+                 ciftlikId: activeCiftlikId,
                  hayvanId,
                  tarih: parseDateString(functionArgs.tarih),
                  tur: 'Diğer',
@@ -1089,6 +1103,7 @@ const Assistant: React.FC = () => {
                for (const hayvan of gruptakiHayvanlar) {
                  const payload = {
                    id: uuidv4(),
+                   ciftlikId: activeCiftlikId,
                    hayvanId: hayvan.id,
                    tarih: islemTarihi,
                    tur: functionArgs.tur,
@@ -1105,6 +1120,7 @@ const Assistant: React.FC = () => {
             } else if (functionName === "addAnimal") {
                const payload = {
                  id: uuidv4(),
+                 ciftlikId: activeCiftlikId,
                  kupeNo: functionArgs.kupeNo,
                  tur: functionArgs.tur,
                  cinsiyet: functionArgs.cinsiyet,
@@ -1161,6 +1177,7 @@ const Assistant: React.FC = () => {
                
                const payload = {
                  id: uuidv4(),
+                 ciftlikId: activeCiftlikId,
                  hayvanId: hayvan.id,
                  tarih: parseDateString(functionArgs.tarih),
                  kg: functionArgs.kg
@@ -1179,6 +1196,7 @@ const Assistant: React.FC = () => {
                
                const payload = {
                  id: uuidv4(),
+                 ciftlikId: activeCiftlikId,
                  hayvanId: hayvan.id,
                  tarih: parseDateString(functionArgs.tarih),
                  tur: functionArgs.tur,
@@ -1208,11 +1226,18 @@ const Assistant: React.FC = () => {
             } else if (functionName === "addNewFeedType") {
                const payload = {
                  id: uuidv4(),
+                 ciftlikId: activeCiftlikId,
                  ad: functionArgs.yemAdi,
                  tur: functionArgs.tur,
-                 birimFiyat: functionArgs.birimFiyat,
-                 stokKg: functionArgs.stokKg,
-                 minStokUyariKg: functionArgs.minStokUyariKg
+                 birimFiyat: functionArgs.birimFiyat || 0,
+                 stokKg: functionArgs.stokKg || 0,
+                 minStokUyariKg: functionArgs.minStokUyariKg || 500,
+                 kmYuzde: functionArgs.kmYuzde !== undefined ? functionArgs.kmYuzde : 88,
+                 meMcalKg: functionArgs.meMcalKg !== undefined ? functionArgs.meMcalKg : 2.2,
+                 hpYuzde: functionArgs.hpYuzde !== undefined ? functionArgs.hpYuzde : 12,
+                 caYuzde: functionArgs.caYuzde !== undefined ? functionArgs.caYuzde : 0.5,
+                 pYuzde: functionArgs.pYuzde !== undefined ? functionArgs.pYuzde : 0.3,
+                 eklenmeTarihi: Date.now()
                };
                await db.yemler.add(payload as any);
                await db.syncQueue.add({ table: 'yemler', action: 'INSERT', payload, created_at: Date.now() });
@@ -1221,6 +1246,7 @@ const Assistant: React.FC = () => {
             } else if (functionName === "createNewGroup") {
                const payload = {
                  id: uuidv4(),
+                 ciftlikId: activeCiftlikId,
                  ad: functionArgs.grupAdi,
                  tur: functionArgs.tur,
                  aciklama: functionArgs.aciklama || ""
@@ -1505,7 +1531,7 @@ const Assistant: React.FC = () => {
           </div>
 
           {/* Messages & Context Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-earth-50 dark:bg-gray-900">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-4 bg-earth-50 dark:bg-gray-900">
             
             {/* Empty State when no messages */}
             {displayMessages.length === 0 && (
