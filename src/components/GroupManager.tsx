@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { X, Plus, Trash2, Users } from 'lucide-react';
+import { X, Plus, Trash2, Users, Droplet, Scale } from 'lucide-react';
 import { GiWoodenFence } from 'react-icons/gi';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import GroupMilkModal from './GroupMilkModal';
+import GroupWeightModal from './GroupWeightModal';
 import GroupAnimalManagerModal from './GroupAnimalManagerModal';
 import { parseRasyonCost } from '../utils/dashboardCalculations';
 
@@ -16,6 +17,7 @@ const GroupManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupTur, setNewGroupTur] = useState('Karma');
   const [selectedGroupForMilk, setSelectedGroupForMilk] = useState<any>(null);
+  const [selectedGroupForWeight, setSelectedGroupForWeight] = useState<any>(null);
   const [selectedGroupForAnimals, setSelectedGroupForAnimals] = useState<any>(null);
   
   const handleAddGroup = async (e: React.FormEvent) => {
@@ -237,10 +239,15 @@ const GroupManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
                             Hayvan Ekle/Çıkar
                           </button>
                           {!['Tosun', 'Boğa', 'Öküz', 'Buzağı', 'Dana'].includes(grup.tur) && (
-                            <button onClick={() => setSelectedGroupForMilk(grup)} className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-full border border-blue-200 dark:border-blue-800/50 transition">
+                            <button onClick={() => setSelectedGroupForMilk(grup)} className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-full border border-blue-200 dark:border-blue-800/50 transition flex items-center">
+                              <Droplet className="w-3.5 h-3.5 mr-1" />
                               Toplu Süt Girişi
                             </button>
                           )}
+                          <button onClick={() => setSelectedGroupForWeight(grup)} className="text-xs font-bold text-green-600 dark:text-green-400 hover:text-green-800 bg-green-50 dark:bg-green-900/20 px-3 py-1.5 rounded-full border border-green-200 dark:border-green-800/50 transition flex items-center">
+                            <Scale className="w-3.5 h-3.5 mr-1" />
+                            Toplu Tartım
+                          </button>
                           <button onClick={() => handleDelete(grup.id)} className="text-red-400 hover:text-red-600 p-1.5 hover:bg-red-50 rounded-full transition ml-auto sm:ml-0" title="Grubu Sil">
                             <Trash2 className="w-5 h-5" />
                           </button>
@@ -261,6 +268,13 @@ const GroupManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
         <GroupMilkModal 
           grup={selectedGroupForMilk} 
           onClose={() => setSelectedGroupForMilk(null)} 
+        />
+      )}
+
+      {selectedGroupForWeight && (
+        <GroupWeightModal 
+          grup={selectedGroupForWeight} 
+          onClose={() => setSelectedGroupForWeight(null)} 
         />
       )}
 

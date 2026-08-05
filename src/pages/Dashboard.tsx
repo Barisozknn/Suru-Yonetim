@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
-import { 
+import {
   Users, Activity, AlertTriangle, TrendingDown, Heart,
-  CalendarCheck, Syringe, Droplets, Plus, Trash2, CheckCircle2, Circle, Info, Bell
+  CalendarCheck, Syringe, Droplets, Plus, Trash2, CheckCircle2, Circle, Info,
 } from 'lucide-react';
 import { PiCow } from 'react-icons/pi';
 import { GiCow } from 'react-icons/gi';
 import { v4 as uuidv4 } from 'uuid';
 import { CalfIcon } from '../components/icons/CalfIcon';
-import { 
-  calculateTotalAnimals, 
-  calculateSpeciesDistribution, 
-  calculateAverageMilkYield7Days, 
-  getActiveHealthAlertsCount, 
+import {
+  calculateTotalAnimals,
+  calculateSpeciesDistribution,
+  calculateAverageMilkYield7Days,
+  getActiveHealthAlertsCount,
   getExpectedBirths30DaysCount,
   getUpcomingBirths,
   calculateEstimatedFeedCostPerLiter,
@@ -31,7 +31,7 @@ import { useAnomalyDetection } from '../hooks/useAnomalyDetection';
 import { calculate30DayProjection } from '../utils/financialProjection';
 import { calculateHerdScore } from '../utils/herdScore';
 import { Target, TrendingUp, BadgeDollarSign, HeartPulse } from 'lucide-react';
-import { subscribeToPushNotifications } from '../utils/pushUtils';
+import WeatherWidget from '../components/WeatherWidget';
 
 const Dashboard: React.FC = () => {
   const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
@@ -43,60 +43,43 @@ const Dashboard: React.FC = () => {
   const saglikOlaylari = useLiveFarmQuery(() => db.saglikOlaylari.toArray()) || [];
   const { uremeAyarlari, activeCiftlikId, sutLitreFiyati, isletmeTipi, canliKiloFiyati } = useStore();
   const anomalyUyarilar = useAnomalyDetection();
-  const [pushStatus, setPushStatus] = useState<string>('');
-
-  useEffect(() => {
-    if ('Notification' in window) {
-      setPushStatus(Notification.permission);
-    }
-  }, []);
-
-  const handleSubscribe = async () => {
-    try {
-      await subscribeToPushNotifications();
-      setPushStatus('granted');
-      alert('Bildirim izni başarıyla verildi!');
-    } catch (err: any) {
-      alert('Hata: ' + err.message);
-    }
-  };
 
   const rawTodos = useLiveFarmQuery(() => db.todos.orderBy('olusturulmaTarihi').reverse().toArray()) || [];
-  
+
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
-  
+
   const todos = rawTodos.filter(todo => {
     if (!todo.yapildiMi) return true; // Tamamlanmamışları her zaman göster
-    
+
     // Eğer bugün tamamlanmışsa göster
     if (todo.tamamlanmaTarihi && todo.tamamlanmaTarihi >= todayStart.getTime()) {
       return true;
     }
-    
+
     // Eski tamamlanma tarihi olmayan ama bugün oluşturulup tamamlananları da göster (geriye dönük uyumluluk)
     if (!todo.tamamlanmaTarihi && todo.olusturulmaTarihi >= todayStart.getTime()) {
       return true;
     }
-    
+
     // Önceki günlerde tamamlananları gizle
     return false;
   });
 
   todos.sort((a, b) => {
     if (a.yapildiMi !== b.yapildiMi) return a.yapildiMi ? 1 : -1; // Yapılanları alta at
-    
+
     const priorityWeight = { 'Kritik': 3, 'Önemli': 2, 'Rutin': 1 };
     const wA = a.priority ? priorityWeight[a.priority as keyof typeof priorityWeight] || 0 : (a.isSystem ? 1 : 0);
     const wB = b.priority ? priorityWeight[b.priority as keyof typeof priorityWeight] || 0 : (b.isSystem ? 1 : 0);
-    
+
     if (wA !== wB) return wB - wA; // Yüksek öncelikli üste
-    
+
     // İkisi de aynıysa, eğer hedefTarih varsa hedefe yakın olan üste
     if (a.hedefTarih && b.hedefTarih) {
       return new Date(a.hedefTarih).getTime() - new Date(b.hedefTarih).getTime();
     }
-    
+
     return b.olusturulmaTarihi - a.olusturulmaTarihi;
   });
   const [newTodo, setNewTodo] = useState('');
@@ -119,7 +102,7 @@ const Dashboard: React.FC = () => {
   };
 
   const toggleTodo = async (id: string, currentStatus: boolean) => {
-    await db.todos.update(id, { 
+    await db.todos.update(id, {
       yapildiMi: !currentStatus,
       tamamlanmaTarihi: !currentStatus ? Date.now() : undefined
     });
@@ -157,12 +140,12 @@ const Dashboard: React.FC = () => {
   const herdPerformance = calculateHerdAveragePerformance(hayvanlar, uremeKayitlari);
 
   const today = new Date();
-  today.setHours(0,0,0,0);
+  today.setHours(0, 0, 0, 0);
   const in30Days = new Date(today);
   in30Days.setDate(in30Days.getDate() + 30);
 
   const gecikmisAsilar = asilar.filter(a => !a.yapildiMi && new Date(a.planlanaTarih) < today).slice(0, 3);
-  
+
   const yaklasanDogumlar = getUpcomingBirths(uremeKayitlari, hayvanlar, 30).slice(0, 3);
 
   const finProj = calculate30DayProjection(hayvanlar, sutKayitlari, uremeKayitlari, yemler, gruplar, saglikOlaylari, sutLitreFiyati, isletmeTipi, canliKiloFiyati);
@@ -178,6 +161,9 @@ const Dashboard: React.FC = () => {
         </div>
         <FarmSwitcher />
       </div>
+
+      {/* Hava Durumu */}
+      <WeatherWidget />
 
       {/* KPI Kartları */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -227,7 +213,7 @@ const Dashboard: React.FC = () => {
 
       {/* SürüMetri Skoru & Finansal Projeksiyon */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
+
         {/* SürüMetri Skoru */}
         <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 p-6 rounded-2xl shadow-md text-white relative overflow-hidden flex flex-col justify-between">
           <Target className="absolute right-[-20px] bottom-[-20px] w-40 h-40 opacity-10" />
@@ -237,8 +223,8 @@ const Dashboard: React.FC = () => {
                 <Target className="w-6 h-6" />
                 SürüMetri Skoru
               </h3>
-              <button 
-                onClick={() => setShowScoreInfo(true)} 
+              <button
+                onClick={() => setShowScoreInfo(true)}
                 className="text-indigo-300 hover:text-white transition"
                 title="SürüMetri Skoru Nedir?"
               >
@@ -246,19 +232,19 @@ const Dashboard: React.FC = () => {
               </button>
             </div>
             <p className="text-sm text-indigo-200 mb-6">
-              {isletmeTipi === 'Etçi' 
-                ? 'İşletmenizin genel sağlık, büyüme ve yem verimliliği performansı' 
+              {isletmeTipi === 'Etçi'
+                ? 'İşletmenizin genel sağlık, büyüme ve yem verimliliği performansı'
                 : 'İşletmenizin genel sağlık, üreme ve verim performansı'}
             </p>
           </div>
-          
+
           <div className="flex items-end justify-between">
             <div className="flex items-baseline space-x-2">
               <span className="text-6xl font-black">{herdScoreData.totalScore}</span>
               <span className="text-xl font-medium text-indigo-300">/ 100</span>
             </div>
           </div>
-          
+
           <div className={`grid ${isletmeTipi === 'Etçi' ? 'grid-cols-3' : 'grid-cols-4'} gap-2 mt-6`}>
             <div className="bg-indigo-900/30 p-2 rounded-lg text-center">
               <p className="text-[10px] text-indigo-300 uppercase font-bold mb-1">{isletmeTipi === 'Etçi' ? 'Büyüme' : 'Süt'}</p>
@@ -290,8 +276,8 @@ const Dashboard: React.FC = () => {
                 <BadgeDollarSign className="w-6 h-6" />
                 30 Günlük Projeksiyon
               </h3>
-              <button 
-                onClick={() => setShowProjInfo(true)} 
+              <button
+                onClick={() => setShowProjInfo(true)}
                 className="text-emerald-300 hover:text-white transition"
                 title="30 Günlük Projeksiyon Nedir?"
               >
@@ -299,36 +285,36 @@ const Dashboard: React.FC = () => {
               </button>
             </div>
             <p className="text-sm text-emerald-200 mb-6">
-              {isletmeTipi === 'Etçi' 
-                ? 'Mevcut verilere göre önümüzdeki 30 günün et geliri ve maliyet tahmini' 
+              {isletmeTipi === 'Etçi'
+                ? 'Mevcut verilere göre önümüzdeki 30 günün et geliri ve maliyet tahmini'
                 : 'Mevcut verilere göre önümüzdeki 30 günün süt geliri ve maliyet tahmini'}
             </p>
           </div>
-          
+
           <div className="flex items-end justify-between mb-4">
             <div>
               <p className="text-xs text-emerald-200 uppercase font-bold tracking-wider mb-1">Tahmini Net Kar</p>
               <div className="flex items-baseline space-x-2">
-                <span className="text-4xl font-black">{finProj.netProfit.toLocaleString('tr-TR', {style:'currency', currency:'TRY', maximumFractionDigits: 0})}</span>
+                <span className="text-4xl font-black">{finProj.netProfit.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })}</span>
               </div>
             </div>
           </div>
-          
+
           <div className="space-y-2 text-sm bg-emerald-900/30 p-3 rounded-xl border border-emerald-500/30">
             <div className="flex justify-between items-center">
               <span className="text-emerald-200 flex items-center gap-1">
-                {isletmeTipi === 'Etçi' ? <TrendingUp className="w-4 h-4"/> : <Droplets className="w-4 h-4"/>} 
+                {isletmeTipi === 'Etçi' ? <TrendingUp className="w-4 h-4" /> : <Droplets className="w-4 h-4" />}
                 {isletmeTipi === 'Etçi' ? ' Beklenen Et Değer Artışı:' : ' Beklenen Süt Geliri:'}
               </span>
-              <span className="font-bold">{finProj.expectedMilkRevenue.toLocaleString('tr-TR', {style:'currency', currency:'TRY', maximumFractionDigits: 0})}</span>
+              <span className="font-bold">{finProj.expectedMilkRevenue.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-emerald-300 flex items-center gap-1"><TrendingDown className="w-4 h-4 text-red-300"/> Beklenen Yem Gideri:</span>
-              <span className="font-bold text-red-200">-{finProj.expectedFeedCost.toLocaleString('tr-TR', {style:'currency', currency:'TRY', maximumFractionDigits: 0})}</span>
+              <span className="text-emerald-300 flex items-center gap-1"><TrendingDown className="w-4 h-4 text-red-300" /> Beklenen Yem Gideri:</span>
+              <span className="font-bold text-red-200">-{finProj.expectedFeedCost.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-emerald-300 flex items-center gap-1"><HeartPulse className="w-4 h-4 text-red-300"/> Beklenen Sağlık Gideri:</span>
-              <span className="font-bold text-red-200">-{finProj.expectedHealthCost.toLocaleString('tr-TR', {style:'currency', currency:'TRY', maximumFractionDigits: 0})}</span>
+              <span className="text-emerald-300 flex items-center gap-1"><HeartPulse className="w-4 h-4 text-red-300" /> Beklenen Sağlık Gideri:</span>
+              <span className="font-bold text-red-200">-{finProj.expectedHealthCost.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })}</span>
             </div>
           </div>
         </div>
@@ -370,17 +356,17 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Sol Kolon: Maliyet ve Tür Dağılımı */}
         <div className="space-y-6">
           <div className="bg-gradient-to-br from-nature-600 to-nature-800 p-6 rounded-2xl shadow-md text-white relative overflow-hidden">
             <TrendingDown className="absolute right-[-20px] bottom-[-20px] w-40 h-40 opacity-10" />
             <h3 className="text-lg font-bold text-nature-100 mb-1">Süt Yem Maliyeti</h3>
             <p className="text-sm text-nature-200 mb-4">Sütçü Rasyonu (Litre Başına)</p>
-            
+
             {feedCost.isValid ? (
               <div className="flex items-end space-x-2">
-                <span className="text-5xl font-black">{feedCost.cost.toLocaleString('tr-TR', {style:'currency', currency:'TRY'})}</span>
+                <span className="text-5xl font-black">{feedCost.cost.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}</span>
                 <span className="text-lg font-medium text-nature-200 mb-1">/ Lt</span>
               </div>
             ) : (
@@ -392,10 +378,10 @@ const Dashboard: React.FC = () => {
             <TrendingDown className="absolute right-[-20px] bottom-[-20px] w-40 h-40 opacity-10" />
             <h3 className="text-lg font-bold text-orange-100 mb-1">Sürü Günlük Yem Gideri</h3>
             <p className="text-sm text-orange-200 mb-4">Tüm Rasyonların Toplamı</p>
-            
+
             {totalFeedCost > 0 ? (
               <div className="flex items-end space-x-2">
-                <span className="text-5xl font-black">{totalFeedCost.toLocaleString('tr-TR', {style:'currency', currency:'TRY'})}</span>
+                <span className="text-5xl font-black">{totalFeedCost.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}</span>
                 <span className="text-lg font-medium text-orange-200 mb-1">/ Gün</span>
               </div>
             ) : (
@@ -440,56 +426,57 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="flex-1 space-y-4">
-             {/* Manuel To-Do Formu */}
-             <form onSubmit={handleAddTodo} className="flex gap-2 mb-4">
-               <input 
-                 type="text" 
-                 value={newTodo}
-                 onChange={(e) => setNewTodo(e.target.value)}
-                 placeholder="Bugün ne yapacaksınız? (Görev ekleyin...)"
-                 className="flex-1 px-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-nature-500 text-sm"
-               />
-               <button type="submit" disabled={!newTodo.trim()} className="bg-nature-600 hover:bg-nature-700 text-white p-2 rounded-xl disabled:opacity-50 transition-colors">
-                 <Plus className="w-5 h-5" />
-               </button>
-             </form>
+            {/* Manuel To-Do Formu */}
+            <form onSubmit={handleAddTodo} className="flex gap-2 mb-4">
+              <input
+                type="text"
+                value={newTodo}
+                onChange={(e) => setNewTodo(e.target.value)}
+                placeholder="Bugün ne yapacaksınız? (Görev ekleyin...)"
+                className="flex-1 px-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-nature-500 text-sm"
+              />
+              <button type="submit" disabled={!newTodo.trim()} className="bg-nature-600 hover:bg-nature-700 text-white p-2 rounded-xl disabled:opacity-50 transition-colors">
+                <Plus className="w-5 h-5" />
+              </button>
+            </form>
 
-             {/* Görevler Listesi */}
-             {todos.length > 0 && (
-               <div className="space-y-2 mb-6">
-                 {todos.map(todo => {
-                   const bgClass = todo.yapildiMi 
-                     ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-700 opacity-60' 
-                     : (todo.priority === 'Kritik' 
-                         ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50 shadow-sm' 
-                         : todo.priority === 'Önemli' 
-                           ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800/50 shadow-sm' 
-                           : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 shadow-sm');
-                   
-                   return (
-                   <div key={todo.id} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${bgClass}`}>
-                     <div className="flex items-start gap-3 flex-1 cursor-pointer" onClick={() => toggleTodo(todo.id, todo.yapildiMi)}>
-                       <div className="mt-0.5">
-                         {todo.yapildiMi ? <CheckCircle2 className="w-5 h-5 text-nature-500" /> : <Circle className="w-5 h-5 text-gray-400" />}
-                       </div>
-                       <div className="flex flex-col flex-1">
-                         <span className={`text-sm font-medium ${todo.yapildiMi ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-700 dark:text-gray-200'}`}>{parseTodoText(todo.metin)}</span>
-                         {todo.isSystem && !todo.yapildiMi && (
-                           <div className="flex flex-wrap gap-2 mt-1.5">
+            {/* Görevler Listesi */}
+            {todos.length > 0 && (
+              <div className="space-y-2 mb-6">
+                {todos.map(todo => {
+                  const bgClass = todo.yapildiMi
+                    ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-700 opacity-60'
+                    : (todo.priority === 'Kritik'
+                      ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50 shadow-sm'
+                      : todo.priority === 'Önemli'
+                        ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800/50 shadow-sm'
+                        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 shadow-sm');
+
+                  return (
+                    <div key={todo.id} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${bgClass}`}>
+                      <div className="flex items-start gap-3 flex-1 cursor-pointer" onClick={() => toggleTodo(todo.id, todo.yapildiMi)}>
+                        <div className="mt-0.5">
+                          {todo.yapildiMi ? <CheckCircle2 className="w-5 h-5 text-nature-500" /> : <Circle className="w-5 h-5 text-gray-400" />}
+                        </div>
+                        <div className="flex flex-col flex-1">
+                          <span className={`text-sm font-medium ${todo.yapildiMi ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-700 dark:text-gray-200'}`}>{parseTodoText(todo.metin)}</span>
+                          {todo.isSystem && !todo.yapildiMi && (
+                            <div className="flex flex-wrap gap-2 mt-1.5">
                               {todo.priority && <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${todo.priority === 'Kritik' ? 'bg-red-200 dark:bg-red-900/40 text-red-800 dark:text-red-300' : todo.priority === 'Önemli' ? 'bg-yellow-200 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300'}`}>{todo.priority}</span>}
                               {todo.kategori && <span className="text-[10px] font-bold bg-earth-100 dark:bg-gray-700 text-earth-700 dark:text-gray-300 px-2 py-0.5 rounded-full">{todo.kategori}</span>}
                               {todo.hedefTarih && <span className="text-[10px] font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">Hedef: {new Date(todo.hedefTarih).toLocaleDateString('tr-TR')}</span>}
-                           </div>
-                         )}
-                       </div>
-                     </div>
-                     <button onClick={() => deleteTodo(todo.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors self-start">
-                       <Trash2 className="w-4 h-4" />
-                     </button>
-                   </div>
-                 )})}
-               </div>
-             )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <button onClick={() => deleteTodo(todo.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors self-start">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
 
             {activeAlerts === 0 && expectedBirths === 0 && heatChecks.length === 0 && reInseminations.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-earth-400 space-y-3 py-8">
@@ -510,13 +497,13 @@ const Dashboard: React.FC = () => {
                     {gecikmisAsilar.length > 0 && (
                       <div className="space-y-2 mt-3 pl-12">
                         {gecikmisAsilar.map(asi => {
-                           const h = hayvanlar.find(x => x.id === asi.hayvanId);
-                           return (
-                             <div key={asi.id} className="text-sm flex justify-between bg-white/60 p-2 rounded-md border border-red-100">
-                               <span className="font-bold text-red-800">{h?.kupeNo || 'Bilinmeyen'}</span>
-                               <span className="text-red-600 dark:text-red-400 truncate ml-2">{asi.asiAd}</span>
-                             </div>
-                           )
+                          const h = hayvanlar.find(x => x.id === asi.hayvanId);
+                          return (
+                            <div key={asi.id} className="text-sm flex justify-between bg-white/60 p-2 rounded-md border border-red-100">
+                              <span className="font-bold text-red-800">{h?.kupeNo || 'Bilinmeyen'}</span>
+                              <span className="text-red-600 dark:text-red-400 truncate ml-2">{asi.asiAd}</span>
+                            </div>
+                          )
                         })}
                       </div>
                     )}
@@ -548,16 +535,16 @@ const Dashboard: React.FC = () => {
                     {yaklasanDogumlar.length > 0 && (
                       <div className="space-y-2 mt-3 pl-12">
                         {yaklasanDogumlar.map((dogum, idx) => {
-                           const h = hayvanlar.find(x => x.id === dogum.hayvanId);
-                           const isOverdue = dogum.dogumTarihi < new Date(new Date().setHours(0,0,0,0));
-                           return (
-                             <div key={idx} className={`text-sm flex justify-between p-2 rounded-md border ${isOverdue ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50 shadow-sm' : 'bg-white/60 border-pink-100'}`}>
-                               <span className={`font-bold ${isOverdue ? 'text-red-800' : 'text-pink-800'}`}>{h?.kupeNo || 'Bilinmeyen'}</span>
-                               <span className={isOverdue ? 'text-red-600 dark:text-red-400 font-bold' : 'text-pink-600'}>
-                                 {dogum.dogumTarihi.toLocaleDateString('tr-TR')} {isOverdue && '(Gecikti)'}
-                               </span>
-                             </div>
-                           )
+                          const h = hayvanlar.find(x => x.id === dogum.hayvanId);
+                          const isOverdue = dogum.dogumTarihi < new Date(new Date().setHours(0, 0, 0, 0));
+                          return (
+                            <div key={idx} className={`text-sm flex justify-between p-2 rounded-md border ${isOverdue ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50 shadow-sm' : 'bg-white/60 border-pink-100'}`}>
+                              <span className={`font-bold ${isOverdue ? 'text-red-800' : 'text-pink-800'}`}>{h?.kupeNo || 'Bilinmeyen'}</span>
+                              <span className={isOverdue ? 'text-red-600 dark:text-red-400 font-bold' : 'text-pink-600'}>
+                                {dogum.dogumTarihi.toLocaleDateString('tr-TR')} {isOverdue && '(Gecikti)'}
+                              </span>
+                            </div>
+                          )
                         })}
                       </div>
                     )}
@@ -576,13 +563,13 @@ const Dashboard: React.FC = () => {
                     </div>
                     <div className="space-y-2 mt-3 pl-12">
                       {heatChecks.slice(0, 3).map((item, idx) => {
-                         const h = hayvanlar.find(x => x.id === item.hayvanId);
-                         return (
-                           <div key={idx} className="text-sm flex justify-between bg-white/60 p-2 rounded-md border border-purple-100">
-                             <span className="font-bold text-purple-800">{h?.kupeNo || 'Bilinmeyen'}</span>
-                             <span className="text-purple-600 dark:text-purple-400 truncate ml-2">Yaklaşık: {item.date.toLocaleDateString('tr-TR')}</span>
-                           </div>
-                         )
+                        const h = hayvanlar.find(x => x.id === item.hayvanId);
+                        return (
+                          <div key={idx} className="text-sm flex justify-between bg-white/60 p-2 rounded-md border border-purple-100">
+                            <span className="font-bold text-purple-800">{h?.kupeNo || 'Bilinmeyen'}</span>
+                            <span className="text-purple-600 dark:text-purple-400 truncate ml-2">Yaklaşık: {item.date.toLocaleDateString('tr-TR')}</span>
+                          </div>
+                        )
                       })}
                     </div>
                     <Link to="/ureme" className="mt-3 ml-12 inline-block text-purple-600 dark:text-purple-400 font-bold text-sm hover:underline">Üreme Takvimine Git &rarr;</Link>
@@ -600,13 +587,13 @@ const Dashboard: React.FC = () => {
                     </div>
                     <div className="space-y-2 mt-3 pl-12">
                       {reInseminations.slice(0, 3).map((item, idx) => {
-                         const h = hayvanlar.find(x => x.id === item.hayvanId);
-                         return (
-                           <div key={idx} className="text-sm flex justify-between bg-white/60 p-2 rounded-md border border-orange-100">
-                             <span className="font-bold text-orange-800">{h?.kupeNo || 'Bilinmeyen'}</span>
-                             <span className="text-orange-600 truncate ml-2">Hazır: {item.date.toLocaleDateString('tr-TR')}</span>
-                           </div>
-                         )
+                        const h = hayvanlar.find(x => x.id === item.hayvanId);
+                        return (
+                          <div key={idx} className="text-sm flex justify-between bg-white/60 p-2 rounded-md border border-orange-100">
+                            <span className="font-bold text-orange-800">{h?.kupeNo || 'Bilinmeyen'}</span>
+                            <span className="text-orange-600 truncate ml-2">Hazır: {item.date.toLocaleDateString('tr-TR')}</span>
+                          </div>
+                        )
                       })}
                     </div>
                     <Link to="/ureme" className="mt-3 ml-12 inline-block text-orange-600 font-bold text-sm hover:underline">Üreme Takvimine Git &rarr;</Link>
@@ -615,31 +602,8 @@ const Dashboard: React.FC = () => {
               </>
             )}
 
-            {/* Bildirim İzni Durumu */}
-            <div className="mt-4 p-4 bg-nature-50 dark:bg-nature-900/20 border border-nature-200 dark:border-nature-800 rounded-xl flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="bg-white dark:bg-gray-800 p-2 rounded-lg">
-                  <Bell className="w-5 h-5 text-nature-600 dark:text-nature-400" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-sm text-nature-900 dark:text-gray-100">Uygulama Kapalıyken Bildirim Alın</h4>
-                  <p className="text-xs text-nature-700 dark:text-nature-400">
-                    {pushStatus === 'granted' ? 'Bildirimlere izin verildi. Arka planda bildirim alacaksınız.' : 
-                     pushStatus === 'denied' ? 'Bildirimler tarayıcınız tarafından engellendi. Ayarlardan açabilirsiniz.' : 
-                     'Kritik görevler için bildirim almak ister misiniz?'}
-                  </p>
-                </div>
-              </div>
-              {pushStatus === 'default' && (
-                <button onClick={handleSubscribe} className="bg-nature-600 hover:bg-nature-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm">
-                  İzin Ver
-                </button>
-              )}
-              {pushStatus === 'granted' && (
-                <span className="text-xs font-bold text-nature-600 bg-nature-100 px-3 py-1 rounded-full">Aktif</span>
-              )}
-            </div>
-            
+            {/* Removed Notification Block */}
+
           </div>
         </div>
 
@@ -698,8 +662,8 @@ const Dashboard: React.FC = () => {
                 </span>
               </li>
             </ul>
-            <button 
-              onClick={() => setShowScoreInfo(false)} 
+            <button
+              onClick={() => setShowScoreInfo(false)}
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-3 font-bold transition shadow-sm"
             >
               Anladım, Kapat
@@ -738,8 +702,8 @@ const Dashboard: React.FC = () => {
                 <span>Sürünüzdeki son sağlık olaylarının maliyetlerine dayanarak önümüzdeki 30 gün için öngörülen tahmini sağlık gideridir.</span>
               </li>
             </ul>
-            <button 
-              onClick={() => setShowProjInfo(false)} 
+            <button
+              onClick={() => setShowProjInfo(false)}
               className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-3 font-bold transition shadow-sm"
             >
               Anladım, Kapat

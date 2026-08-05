@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useStore } from '../store/useStore';
 import { calculateTotalDailyFeedCost } from '../utils/dashboardCalculations';
 import { calculateAnimalProfitability } from '../utils/profitability';
+import { useAnomalyDetection } from '../hooks/useAnomalyDetection';
 
 const SAMPLE_QUESTIONS = [
   "Son gelir giderlerim nelerdir?",
@@ -503,7 +504,7 @@ const ASSISTANT_TOOLS = [
   }
 ];
 
-const gatherFarmContext = async () => {
+const gatherFarmContext = async (akilliUyarilar: any[] = []) => {
   const [
     hayvanlar,
     yemler,
@@ -609,6 +610,7 @@ const gatherFarmContext = async () => {
   return {
     veriler: {
       hayvanOzeti,
+      akilliUyarilar,
       finansalOzet_BuAy: {
         toplamGelir_TL: toplamGelir,
         toplamGider_TL: toplamGider,
@@ -683,6 +685,7 @@ Yukarıdaki veriler dışında hiçbir sayısal değer varsayma. Sadece bu veril
 
 const Assistant: React.FC = () => {
   const sohbetler = useLiveFarmQuery(() => db.sohbetler.orderBy('guncellenmeTarihi').reverse().toArray()) || [];
+  const akilliUyarilar = useAnomalyDetection();
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [isMobileHistoryOpen, setIsMobileHistoryOpen] = useState(false);
 
@@ -829,7 +832,7 @@ const Assistant: React.FC = () => {
       }
 
       // Veritabanından tüm farm verisini (gelir/gider dahil) özet olarak topla
-      const contextData = await gatherFarmContext();
+      const contextData = await gatherFarmContext(akilliUyarilar);
       
       const systemPrompt = {
         role: 'system',

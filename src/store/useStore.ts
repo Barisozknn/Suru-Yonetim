@@ -73,6 +73,10 @@ interface StoreState {
   uremeAyarlari: UremeAyarlari;
   setUremeAyarlari: (ayarlar: Partial<UremeAyarlari>) => void;
 
+  // Konum (Hava Durumu için)
+  konum: { lat: number; lon: number; sehir: string } | null;
+  setKonum: (konum: { lat: number; lon: number; sehir: string } | null) => void;
+
   // Görünüm / Tema
   theme: 'light' | 'dark';
   setTheme: (theme: 'light' | 'dark') => void;
@@ -144,6 +148,10 @@ export const useStore = create<StoreState>()(
         uremeAyarlari: { ...state.uremeAyarlari, ...ayarlar } 
       })),
 
+      // Konum
+      konum: null,
+      setKonum: (konum) => set({ konum }),
+
       // Tema
       theme: 'light',
       setTheme: (theme) => set({ theme }),
@@ -171,6 +179,7 @@ export const useStore = create<StoreState>()(
         rationMaxKabaOran: state.rationMaxKabaOran,
         rationListesi: state.rationListesi,
         uremeAyarlari: state.uremeAyarlari,
+        konum: state.konum,
         isGuest: state.isGuest,
         theme: state.theme,
       }),

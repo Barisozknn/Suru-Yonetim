@@ -1,14 +1,15 @@
 import React, { useState, useRef } from 'react';
 import DataManagement from '../components/DataManagement';
-import { Trash2, LogOut, CalendarClock, Save, CloudOff, UserX, LogIn, User, Download, Upload, Moon, Sun } from 'lucide-react';
+import { Trash2, LogOut, CalendarClock, Save, CloudOff, UserX, LogIn, User, Download, Upload, Moon, Sun, Bell, MapPin, LocateFixed, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { subscribeToPushNotifications, unsubscribeFromPushNotifications, checkPushSubscription } from '../utils/pushUtils';
 import { supabase } from '../lib/supabase';
 import { useStore } from '../store/useStore';
 import { STANDART_IRKLAR } from '../components/AnimalForm';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
-  const { user, uremeAyarlari, setUremeAyarlari, theme, setTheme, sutLitreFiyati, setSutLitreFiyati, buzagiFiyati, setBuzagiFiyati, canliKiloFiyati, setCanliKiloFiyati, isletmeTipi, setIsletmeTipi } = useStore();
+  const { user, uremeAyarlari, setUremeAyarlari, theme, setTheme, sutLitreFiyati, setSutLitreFiyati, buzagiFiyati, setBuzagiFiyati, canliKiloFiyati, setCanliKiloFiyati, isletmeTipi, setIsletmeTipi, konum, setKonum } = useStore();
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [localUremeAyarlari, setLocalUremeAyarlari] = useState(uremeAyarlari);
@@ -17,6 +18,33 @@ const Settings: React.FC = () => {
   const [localCanliKiloFiyati, setLocalCanliKiloFiyati] = useState(canliKiloFiyati?.toString() || '300');
   const [localIsletmeTipi, setLocalIsletmeTipi] = useState<'Sütçü' | 'Etçi'>(isletmeTipi || 'Sütçü');
   const [selectedIrk, setSelectedIrk] = useState<string>('Varsayılan');
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [pushLoading, setPushLoading] = useState(true);
+  const [konumLoading, setKonumLoading] = useState(false);
+  const [konumError, setKonumError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    checkPushSubscription().then(sub => {
+      setIsSubscribed(sub);
+      setPushLoading(false);
+    });
+  }, []);
+
+  const handlePushToggle = async () => {
+    setPushLoading(true);
+    if (isSubscribed) {
+      await unsubscribeFromPushNotifications();
+      setIsSubscribed(false);
+    } else {
+      try {
+        await subscribeToPushNotifications();
+        setIsSubscribed(true);
+      } catch (err: any) {
+        alert('Bildirim izni alınamadı: ' + err.message);
+      }
+    }
+    setPushLoading(false);
+  };
 
   const currentValues = selectedIrk === 'Varsayılan' 
     ? localUremeAyarlari 
@@ -133,6 +161,48 @@ const Settings: React.FC = () => {
   const handleSaveUremeAyarlari = async () => {
     setUremeAyarlari(localUremeAyarlari);
     alert('Üreme ve Uyarı ayarları başarıyla kaydedildi.');
+  };
+
+  const handleKonumBul = () => {
+    if (!navigator.geolocation) {
+      setKonumError('Tarayıcınız konum özelliğini desteklemiyor.');
+      return;
+    }
+    setKonumLoading(true);
+    setKonumError(null);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude: lat, longitude: lon } = pos.coords;
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=tr`,
+            { headers: { 'User-Agent': 'SuruYonetimApp/1.0' } }
+          );
+          const geo = await res.json();
+          const sehir =
+            geo.address?.city ||
+            geo.address?.town ||
+            geo.address?.village ||
+            geo.address?.county ||
+            'Bilinmeyen Konum';
+          setKonum({ lat, lon, sehir });
+        } catch {
+          setKonum({ lat, lon, sehir: 'Konumunuz' });
+        }
+        setKonumLoading(false);
+      },
+      (err) => {
+        const mesaj =
+          err.code === 1
+            ? 'Konum izni reddedildi. Lütfen tarayıcı ayarlarından izin verin.'
+            : err.code === 2
+            ? 'Konum bilgisi alınamadı. GPS sinyali zayıf olabilir.'
+            : 'Konum alınırken zaman aşımı oluştu.';
+        setKonumError(mesaj);
+        setKonumLoading(false);
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
   };
 
   const handleSaveEkonomikAyarlar = () => {
@@ -438,6 +508,76 @@ const Settings: React.FC = () => {
           </div>
         </div>
 
+        {/* Konum ve Hava Durumu */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 space-y-4 md:col-span-2 transition-colors">
+          <div className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400 rounded-lg">
+              <MapPin className="w-6 h-6" />
+            </div>
+            <h2 className="text-xl font-bold text-earth-900 dark:text-gray-100">Konum ve Hava Durumu</h2>
+          </div>
+
+          <p className="text-sm text-earth-600 dark:text-gray-400">
+            Anasayfada hava durumu gösterebilmek için konumunuzu bir kez belirlemeniz yeterli.
+            Konum bilgisi cihazınızda kalıcı olarak saklanır, tekrar izin istenmez.
+          </p>
+
+          {konum ? (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-sky-100 dark:bg-sky-900/40 rounded-xl text-sky-500">
+                  <LocateFixed className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-sky-800 dark:text-sky-200">{konum.sehir}</p>
+                  <p className="text-xs text-sky-600 dark:text-sky-400">
+                    {konum.lat.toFixed(4)}°, {konum.lon.toFixed(4)}°
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleKonumBul}
+                  disabled={konumLoading}
+                  className="flex items-center gap-2 text-sm font-bold bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg transition disabled:opacity-60"
+                >
+                  <LocateFixed className={`w-4 h-4 ${konumLoading ? 'animate-spin' : ''}`} />
+                  {konumLoading ? 'Bulunuyor…' : 'Güncelle'}
+                </button>
+                <button
+                  onClick={() => { setKonum(null); setKonumError(null); }}
+                  className="flex items-center gap-2 text-sm font-bold border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-4 py-2 rounded-lg transition"
+                >
+                  <X className="w-4 h-4" />
+                  Konumu Sil
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <button
+                onClick={handleKonumBul}
+                disabled={konumLoading}
+                className="flex items-center gap-2 font-bold bg-sky-500 hover:bg-sky-600 text-white px-6 py-3 rounded-xl transition shadow-sm disabled:opacity-60"
+              >
+                <LocateFixed className={`w-5 h-5 ${konumLoading ? 'animate-spin' : ''}`} />
+                {konumLoading ? 'Konum Bulunuyor…' : 'Konumumu Bul'}
+              </button>
+              {!konumLoading && (
+                <p className="text-xs text-earth-500 dark:text-gray-400">
+                  Tarayıcınız konum izni isteyecektir.
+                </p>
+              )}
+            </div>
+          )}
+
+          {konumError && (
+            <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-2">
+              {konumError}
+            </p>
+          )}
+        </div>
+
         {/* Görünüm Ayarları */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 space-y-6 md:col-span-2 transition-colors">
           <div className="flex items-center space-x-3 mb-2">
@@ -473,6 +613,37 @@ const Settings: React.FC = () => {
             >
               <Moon className="w-6 h-6" />
               <span className="font-bold">Karanlık Mod</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Bildirim Ayarları */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 space-y-6 md:col-span-2 transition-colors">
+          <div className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-yellow-100 dark:bg-yellow-900/50 text-yellow-600 dark:text-yellow-400 rounded-lg">
+              <Bell className="w-6 h-6" />
+            </div>
+            <h2 className="text-xl font-bold text-earth-900 dark:text-gray-100">Bildirim Ayarları</h2>
+          </div>
+          
+          <p className="text-sm text-earth-600 dark:text-gray-400">
+            Uygulama kapalıyken bile yaklaşan görevler ve acil uyarılar hakkında bildirim alabilirsiniz.
+          </p>
+
+          <div className="flex items-center justify-between p-4 border border-earth-200 dark:border-gray-700 rounded-xl">
+            <div>
+              <h4 className="font-bold text-earth-900 dark:text-gray-100">Anlık Bildirimler (Push)</h4>
+              <p className="text-xs text-earth-500 dark:text-gray-400 mt-1">Sistem uyarılarını cihazınıza gönderir.</p>
+              {useStore.getState().isGuest && (
+                <p className="text-xs font-bold text-orange-500 mt-2">Bu özelliği kullanmak için giriş yapmalısınız.</p>
+              )}
+            </div>
+            <button 
+              onClick={handlePushToggle}
+              disabled={pushLoading || useStore.getState().isGuest}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${isSubscribed ? 'bg-nature-500' : 'bg-gray-300 dark:bg-gray-600'} ${(pushLoading || useStore.getState().isGuest) ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isSubscribed ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>
           </div>
         </div>

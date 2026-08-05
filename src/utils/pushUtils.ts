@@ -32,6 +32,10 @@ export async function subscribeToPushNotifications() {
   }
 
   // 2. Wait for Service Worker to be ready
+  const reg = await navigator.serviceWorker.getRegistration();
+  if (!reg) {
+    throw new Error('Servis çalışanı (PWA) aktif değil. Lütfen sayfayı yenileyin veya uygulamayı yükleyin.');
+  }
   const registration = await navigator.serviceWorker.ready;
 
   // 3. Get Public Key from Environment Variables (Assuming you add it to .env)
@@ -65,4 +69,47 @@ export async function subscribeToPushNotifications() {
   }
 
   return true;
+}
+
+export async function checkPushSubscription() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    return false;
+  }
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (!reg) return false;
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+    return !!subscription;
+  } catch (e) {
+    return false;
+  }
+}
+
+export async function unsubscribeFromPushNotifications() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    return false;
+  }
+  
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (!reg) return false;
+    
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+    
+    if (subscription) {
+      const subData = JSON.parse(JSON.stringify(subscription));
+      await subscription.unsubscribe();
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from('push_subscriptions').delete().match({ endpoint: subData.endpoint, user_id: user.id });
+      }
+    }
+    return true;
+  } catch (e) {
+    console.error(e);
+    return false;
+  }
 }
