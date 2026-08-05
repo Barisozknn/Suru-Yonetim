@@ -22,7 +22,9 @@ export function calculateHerdScore(
   yemler: Yem[],
   gruplar: Grup[],
   saglikOlaylari: SaglikOlayi[],
-  sutFiyati: number
+  sutFiyati: number,
+  isletmeTipi: 'Sütçü' | 'Etçi' = 'Sütçü',
+  canliKiloFiyati: number = 300
 ): HerdScoreResult {
   let milkScore = 0;
   let reproductionScore = 0;
@@ -37,99 +39,138 @@ export function calculateHerdScore(
     return { totalScore: 0, breakdown: { milkScore: 0, reproductionScore: 0, healthScore: 0, feedScore: 0 }, details: ['Sürüde aktif inek bulunmuyor.'] };
   }
 
-  // 1. Süt Verimi Skoru (Max 40 Puan)
-  // Hedef: İnek başı ortalama 30 Lt/Gün (Siyah Alaca ortalaması baz alınarak, esnek yapılabilir)
-  // #12 DÜZELTME: Son 7 günün TOPLAM sürü sütü — günlük ortalama
-  // avgMilk (inek-gün ortalaması) × inek sayısı yerine gerçek toplam kullanılır.
-  // Kaydsız hay vanların hesabı şişirmesini önler.
-  const now7 = new Date();
-  const sevenDaysAgo7 = new Date(now7.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const son7GunSutKayitlari = sutKayitlari.filter(k => new Date(k.tarih) >= sevenDaysAgo7);
-  const toplamSut7Gun = son7GunSutKayitlari.reduce((sum, k) => sum + k.litre, 0);
-  const gunlukToplamSuruSutu = toplamSut7Gun / 7; // tüm sürünün günlük üretimi
+  // SÜTÇÜ İŞLETME MANTIĞI
+  if (isletmeTipi === 'Sütçü') {
+    // 1. Süt Verimi Skoru (Max 40 Puan)
+    const now7 = new Date();
+    const sevenDaysAgo7 = new Date(now7.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const son7GunSutKayitlari = sutKayitlari.filter(k => new Date(k.tarih) >= sevenDaysAgo7);
+    const toplamSut7Gun = son7GunSutKayitlari.reduce((sum, k) => sum + k.litre, 0);
+    const gunlukToplamSuruSutu = toplamSut7Gun / 7;
 
-  const avgMilk = inekSayisi > 0 ? gunlukToplamSuruSutu / inekSayisi : 0; // Skor gösterimi için inek başına
-  const targetMilk = 28; // Türkiye şartlarında kabul edilebilir iyi bir hedef
-  
-  if (avgMilk >= targetMilk) {
-    milkScore = 40;
-    details.push('Süt verimi hedef seviyenin üzerinde (Mükemmel).');
-  } else {
-    milkScore = (avgMilk / targetMilk) * 40;
-    details.push(`Süt verimi hedefi: ${targetMilk} Lt. Sizin ortalamanız: ${avgMilk.toFixed(1)} Lt.`);
-  }
-
-  // 2. Üreme Skoru (Max 30 Puan)
-  // Alt metrikler: Buzağılama Aralığı (15 Puan) ve Gebelik Başına Tohumlama (15 Puan)
-  const perf = calculateHerdAveragePerformance(hayvanlar, uremeKayitlari);
-  
-  let buzagilamaSkoru = 0;
-  if (perf.buzagilamaAraligiOrt !== null) {
-    // Hedef < 390 gün, Sınır 450 gün
-    if (perf.buzagilamaAraligiOrt <= 390) buzagilamaSkoru = 15;
-    else if (perf.buzagilamaAraligiOrt >= 450) buzagilamaSkoru = 0;
-    else buzagilamaSkoru = 15 - ((perf.buzagilamaAraligiOrt - 390) / 60) * 15;
-  } else {
-    buzagilamaSkoru = 10; // Yeterli veri yoksa ortalama bir puan
-    details.push('Buzağılama aralığı hesaplanamadı (veri eksik).');
-  }
-
-  let tohumlamaSkoru = 0;
-  if (perf.gebelikBasinaTohumlamaOrt !== null) {
-    // Hedef < 1.8, Sınır 3.0
-    if (perf.gebelikBasinaTohumlamaOrt <= 1.8) tohumlamaSkoru = 15;
-    else if (perf.gebelikBasinaTohumlamaOrt >= 3.0) tohumlamaSkoru = 0;
-    else tohumlamaSkoru = 15 - ((perf.gebelikBasinaTohumlamaOrt - 1.8) / 1.2) * 15;
-  } else {
-    tohumlamaSkoru = 10;
-    details.push('Tohumlama endeksi hesaplanamadı (veri eksik).');
-  }
-
-  reproductionScore = buzagilamaSkoru + tohumlamaSkoru;
-
-  // 3. Sağlık Skoru (Max 20 Puan)
-  // Hedef: Son 30 günde inek başına düşen sağlık maliyeti düşük olmalı. (Hedef < 100 TL / Hayvan / Ay)
-  const now = new Date();
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  
-  const recentHealthCost = saglikOlaylari
-    .filter(o => new Date(o.tarih) >= thirtyDaysAgo && o.maliyet && o.maliyet > 0)
-    .reduce((sum, o) => sum + (o.maliyet || 0), 0);
-  
-  const costPerCow = recentHealthCost / (hayvanlar.length || 1); // Tüm hayvanlar dahil
-  
-  const targetHealthCost = 100;
-  const maxHealthCost = 500;
-  
-  if (costPerCow <= targetHealthCost) {
-    healthScore = 20;
-  } else if (costPerCow >= maxHealthCost) {
-    healthScore = 0;
-    details.push('Sağlık maliyetleri kritik seviyenin üzerinde.');
-  } else {
-    healthScore = 20 - ((costPerCow - targetHealthCost) / (maxHealthCost - targetHealthCost)) * 20;
-  }
-
-  // 4. Yem Verimliliği Skoru (Max 10 Puan)
-  // IOFC (Income Over Feed Cost) / Yemden Yararlanma Oranı
-  // Hedef: Günlük süt geliri / Günlük yem maliyeti > 1.8
-  // #12 DÜZELTME: Günlük süt geliri = toplam sürü üretimi × süt fiyatı
-  // (avgMilk × inekSayisi yerine gerçek toplam kullanılıyor)
-  const dailyFeedCost = calculateTotalDailyFeedCost(yemler, gruplar, hayvanlar);
-  const dailyMilkRevenue = gunlukToplamSuruSutu * sutFiyati;
-  
-  if (dailyFeedCost === 0 || dailyMilkRevenue === 0) {
-    feedScore = 5; // Veri yok
-    details.push('Yem veya süt geliri verisi eksik olduğundan verimlilik nötr hesaplandı.');
-  } else {
-    const ratio = dailyMilkRevenue / dailyFeedCost;
-    if (ratio >= 2.0) {
-      feedScore = 10;
-    } else if (ratio <= 1.0) {
-      feedScore = 0; // Zarar
-      details.push('DİKKAT: Günlük yem maliyeti, süt gelirine eşit veya daha yüksek (Zarar).');
+    const avgMilk = inekSayisi > 0 ? gunlukToplamSuruSutu / inekSayisi : 0;
+    const targetMilk = 28;
+    
+    if (avgMilk >= targetMilk) {
+      milkScore = 40;
+      details.push('Süt verimi hedef seviyenin üzerinde (Mükemmel).');
     } else {
-      feedScore = ((ratio - 1.0) / 1.0) * 10;
+      milkScore = (avgMilk / targetMilk) * 40;
+      details.push(`Süt verimi hedefi: ${targetMilk} Lt. Sizin ortalamanız: ${avgMilk.toFixed(1)} Lt.`);
+    }
+
+    // 2. Üreme Skoru (Max 30 Puan)
+    const perf = calculateHerdAveragePerformance(hayvanlar, uremeKayitlari);
+    
+    let buzagilamaSkoru = 0;
+    if (perf.buzagilamaAraligiOrt !== null) {
+      if (perf.buzagilamaAraligiOrt <= 390) buzagilamaSkoru = 15;
+      else if (perf.buzagilamaAraligiOrt >= 450) buzagilamaSkoru = 0;
+      else buzagilamaSkoru = 15 - ((perf.buzagilamaAraligiOrt - 390) / 60) * 15;
+    } else {
+      buzagilamaSkoru = 10;
+      details.push('Buzağılama aralığı hesaplanamadı (veri eksik).');
+    }
+
+    let tohumlamaSkoru = 0;
+    if (perf.gebelikBasinaTohumlamaOrt !== null) {
+      if (perf.gebelikBasinaTohumlamaOrt <= 1.8) tohumlamaSkoru = 15;
+      else if (perf.gebelikBasinaTohumlamaOrt >= 3.0) tohumlamaSkoru = 0;
+      else tohumlamaSkoru = 15 - ((perf.gebelikBasinaTohumlamaOrt - 1.8) / 1.2) * 15;
+    } else {
+      tohumlamaSkoru = 10;
+      details.push('Tohumlama endeksi hesaplanamadı (veri eksik).');
+    }
+    reproductionScore = buzagilamaSkoru + tohumlamaSkoru;
+
+    // 3. Sağlık Skoru (Max 20 Puan)
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const recentHealthCost = saglikOlaylari
+      .filter(o => new Date(o.tarih) >= thirtyDaysAgo && o.maliyet && o.maliyet > 0)
+      .reduce((sum, o) => sum + (o.maliyet || 0), 0);
+    const costPerCow = recentHealthCost / (hayvanlar.length || 1);
+    
+    const targetHealthCost = 100;
+    const maxHealthCost = 500;
+    
+    if (costPerCow <= targetHealthCost) {
+      healthScore = 20;
+    } else if (costPerCow >= maxHealthCost) {
+      healthScore = 0;
+      details.push('Sağlık maliyetleri kritik seviyenin üzerinde.');
+    } else {
+      healthScore = 20 - ((costPerCow - targetHealthCost) / (maxHealthCost - targetHealthCost)) * 20;
+    }
+
+    // 4. Yem Verimliliği Skoru (Max 10 Puan)
+    const dailyFeedCost = calculateTotalDailyFeedCost(yemler, gruplar, hayvanlar);
+    const dailyMilkRevenue = gunlukToplamSuruSutu * sutFiyati;
+    
+    if (dailyFeedCost === 0 || dailyMilkRevenue === 0) {
+      feedScore = 5;
+      details.push('Yem veya süt geliri verisi eksik olduğundan verimlilik nötr hesaplandı.');
+    } else {
+      const ratio = dailyMilkRevenue / dailyFeedCost;
+      if (ratio >= 2.0) {
+        feedScore = 10;
+      } else if (ratio <= 1.0) {
+        feedScore = 0;
+        details.push('DİKKAT: Günlük yem maliyeti, süt gelirine eşit veya daha yüksek (Zarar).');
+      } else {
+        feedScore = ((ratio - 1.0) / 1.0) * 10;
+      }
+    }
+  } 
+  // ETÇİ İŞLETME MANTIĞI
+  else {
+    // 1. ADG / Büyüme Skoru (Max 40 Puan)
+    milkScore = 30; // Şimdilik varsayılan iyi bir skor. (Gerçek ADG hesabı ağırlık kayıtlarından yapılabilir)
+    details.push('Büyüme performansı (ADG) varsayılan olarak değerlendirildi (Tartım verisi gerekli).');
+
+    // 2. Üreme Skoru (Max 0 Puan)
+    reproductionScore = 0;
+
+    // 3. Sağlık Skoru (Max 30 Puan)
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const recentHealthCost = saglikOlaylari
+      .filter(o => new Date(o.tarih) >= thirtyDaysAgo && o.maliyet && o.maliyet > 0)
+      .reduce((sum, o) => sum + (o.maliyet || 0), 0);
+    const costPerAnimal = recentHealthCost / (hayvanlar.length || 1);
+    
+    const targetHealthCost = 50; // Etçi işletmelerde daha düşük sağlık maliyeti beklenir
+    const maxHealthCost = 300;
+    
+    if (costPerAnimal <= targetHealthCost) {
+      healthScore = 30;
+    } else if (costPerAnimal >= maxHealthCost) {
+      healthScore = 0;
+      details.push('Sağlık maliyetleri kritik seviyenin üzerinde.');
+    } else {
+      healthScore = 30 - ((costPerAnimal - targetHealthCost) / (maxHealthCost - targetHealthCost)) * 30;
+    }
+
+    // 4. Yem Verimliliği (Max 30 Puan)
+    const dailyFeedCost = calculateTotalDailyFeedCost(yemler, gruplar, hayvanlar);
+    // Ortalama günlük canlı ağırlık artışı tahmini (örn: hayvan başı 1.2 kg)
+    const expectedDailyGainTotal = hayvanlar.length * 1.2; 
+    const dailyMeatRevenue = expectedDailyGainTotal * canliKiloFiyati;
+
+    if (dailyFeedCost === 0) {
+      feedScore = 15;
+      details.push('Yem maliyeti girilmediği için FCR verimliliği nötr hesaplandı.');
+    } else {
+      const ratio = dailyMeatRevenue / dailyFeedCost;
+      // Hedef: 1 TL yeme karşılık 1.5 TL et değeri
+      if (ratio >= 1.5) {
+        feedScore = 30;
+      } else if (ratio <= 1.0) {
+        feedScore = 0;
+        details.push('DİKKAT: Günlük yem maliyeti, kazanılan et değerinden yüksek (Zarar).');
+      } else {
+        feedScore = ((ratio - 1.0) / 0.5) * 30;
+      }
     }
   }
 

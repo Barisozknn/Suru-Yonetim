@@ -4,6 +4,8 @@ import { db } from '../lib/db';
 import { useStore } from '../store/useStore';
 import { Calculator, Plus, X, Activity, Droplets, Beef } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+// @ts-ignore
+import solver from 'javascript-lp-solver';
 
 // Sabit boş dizi referansları — her render'da yeni [] oluşturmayı önler.
 // useLiveFarmQuery undefined döndürdüğünde (yüklenirken) || [] kullanmak
@@ -57,12 +59,20 @@ const RationCalculator: React.FC = () => {
     setRationSelectedGrupId: setSelectedGrupId,
     rationVerimYonu: verimYonu,
     setRationVerimYonu: setVerimYonu,
+    rationSutcuDonemi: sutcuDonemi,
+    setRationSutcuDonemi: setSutcuDonemi,
     rationAvgWeight: avgWeight,
     setRationAvgWeight: setAvgWeight,
     rationMilkYield: milkYield,
     setRationMilkYield: setMilkYield,
+    rationDim: dim,
+    setRationDim: setDim,
     rationAdg: adg,
     setRationAdg: setAdg,
+    rationMinKabaOran: minKabaOran,
+    setRationMinKabaOran: setMinKabaOran,
+    rationMaxKabaOran: maxKabaOran,
+    setRationMaxKabaOran: setMaxKabaOran,
     rationListesi: rasyonListesi,
     setRationListesi: setRasyonListesi
   } = useStore();
@@ -100,21 +110,54 @@ const RationCalculator: React.FC = () => {
     const dailyAdg = Number(adg) || 0;
 
     const yasamaPayiME = 0.122 * Math.pow(Math.max(weight, 1), 0.75);
+    const yasamaPayiHP = weight * 0.67; // Canlı ağırlık başına yaklaşık 0.67 gram baz protein ihtiyacı
 
     if (verimYonu === 'Sütçü') {
-      hedefDMI = weight * 0.032;
-      hedefME = yasamaPayiME + (milk * 0.74);
-      hedefHP_g = 400 + (milk * 85);
+      if (sutcuDonemi === 'Laktasyon') {
+        const wol = (Number(dim) || 150) / 7;
+        const fcm = milk;
+        const dmiUnadjusted = (0.372 * fcm) + (0.0968 * Math.pow(Math.max(weight, 1), 0.75));
+        const depressionFactor = 1 - Math.exp(-0.192 * (wol + 3.67));
+        
+        hedefDMI = dmiUnadjusted * depressionFactor;
+        hedefME = yasamaPayiME + (milk * 0.74);
+        hedefHP_g = yasamaPayiHP + (milk * 85);
+      } else if (sutcuDonemi === 'Uzak Kuru') {
+        hedefDMI = weight * 0.020;
+        hedefME = yasamaPayiME + 3.0; // Gebelik payı
+        hedefHP_g = yasamaPayiHP + 700; // Yaşama payı + Fötüs/Gebelik payı
+      } else if (sutcuDonemi === 'Yakın Kuru') {
+        hedefDMI = weight * 0.016; // İştah düşer
+        hedefME = yasamaPayiME + 4.5;
+        hedefHP_g = yasamaPayiHP + 900; // Yaşama payı + Hızlı gebelik gelişimi ve kolostrum hazırlığı
+      }
     } else {
-      hedefDMI = weight * 0.023;
-      hedefME = yasamaPayiME + ((dailyAdg / 1000) * 4.5);
-      hedefHP_g = 400 + ((dailyAdg / 1000) * 320);
+      let dmiOrani = 0.023;
+      if (weight < 300) dmiOrani = 0.026;
+      else if (weight >= 300 && weight <= 450) dmiOrani = 0.023;
+      else dmiOrani = 0.020;
+      
+      let enerjiMaliyeti_kgGCA = 4.5;
+      if (weight < 300) enerjiMaliyeti_kgGCA = 3.8;
+      else if (weight >= 300 && weight <= 450) enerjiMaliyeti_kgGCA = 4.8;
+      else enerjiMaliyeti_kgGCA = 6.2;
+
+      hedefDMI = weight * dmiOrani;
+      hedefME = yasamaPayiME + ((dailyAdg / 1000) * enerjiMaliyeti_kgGCA);
+      hedefHP_g = yasamaPayiHP + ((dailyAdg / 1000) * 320);
     }
 
     const safeDMI = hedefDMI > 0 ? hedefDMI : 1;
     const hedefHP_Yuzde = (hedefHP_g / (safeDMI * 1000)) * 100;
-    const hedefCa = safeDMI * 0.006 * 1000;
-    const hedefP = safeDMI * 0.004 * 1000;
+
+    let caFactor = 0.006;
+    let pFactor = 0.004;
+    if (verimYonu === 'Sütçü' && sutcuDonemi !== 'Laktasyon') {
+      caFactor = 0.0045;
+      pFactor = 0.003;
+    }
+    const hedefCa = safeDMI * caFactor * 1000;
+    const hedefP = safeDMI * pFactor * 1000;
 
     return {
       dmi: isNaN(hedefDMI) || !isFinite(hedefDMI) ? 0 : hedefDMI,
@@ -124,7 +167,7 @@ const RationCalculator: React.FC = () => {
       ca: isNaN(hedefCa) || !isFinite(hedefCa) ? 0 : hedefCa,
       p: isNaN(hedefP) || !isFinite(hedefP) ? 0 : hedefP
     };
-  }, [avgWeight, milkYield, adg, verimYonu]);
+  }, [avgWeight, milkYield, adg, verimYonu, sutcuDonemi, dim]);
 
   // Sağlanan Toplamları Hesaplama
   const toplamSaglanan = useMemo(() => {
@@ -197,89 +240,82 @@ const RationCalculator: React.FC = () => {
     setIsOptimizing(true);
 
     setTimeout(() => {
-      const calculateMetrics = (ration: typeof safeRasyonListesi) => {
-        let dmi = 0, me = 0, hp_g = 0, cost = 0;
-        ration.forEach(r => {
-          const y = yemler.find(yem => yem && yem.id === r.yemId);
-          // #14 DÜZELTME: kmYuzde === 0 falsy olarak değerlendirilirdi; şimdi açık kontrol yapılıyor
-          if (y && y.kmYuzde != null && y.kmYuzde > 0) {
-            const kg = r.kgAsFed;
-            const kuruMaddeKg = kg * (y.kmYuzde / 100);
-            dmi += kuruMaddeKg;
-            me += kuruMaddeKg * (y.meMcalKg || 0);
-            hp_g += kuruMaddeKg * 1000 * ((y.hpYuzde || 0) / 100);
-            cost += kg * (y.birimFiyat || 0);
-          }
-        });
-        return { dmi, me, hp_g, cost };
+      // Lineer Programlama Modeli
+      const model: any = {
+        optimize: "cost",
+        opType: "min",
+        constraints: {
+          me: { min: hedefIhtiyac.me },
+          hp: { min: hedefIhtiyac.hp_g },
+          dmi: { min: hedefIhtiyac.dmi * 0.95, max: hedefIhtiyac.dmi * 1.05 },
+          roughage_min: { min: 0 },
+          roughage_max: { max: 0 }
+        },
+        variables: {},
+        ints: {}
       };
 
-      let bestRation = safeRasyonListesi.map(r => {
-        let kg = r.kgAsFed;
-        if (r.minKg !== undefined && kg < r.minKg) kg = r.minKg;
-        if (r.maxKg !== undefined && kg > r.maxKg) kg = r.maxKg;
-        return { ...r, kgAsFed: kg };
+      safeRasyonListesi.forEach((r) => {
+        if (!r) return;
+        const y = yemler.find(yem => yem && yem.id === r.yemId);
+        if (y && y.kmYuzde != null && y.kmYuzde > 0) {
+          const varName = `yem_${r.id}`;
+          
+          // Yemin 1 kg'ının (Taze) besin değerleri
+          const kuruMaddeKg = 1 * (y.kmYuzde / 100);
+          const meMcal = kuruMaddeKg * (Number(y.meMcalKg) || 0);
+          const hpGr = kuruMaddeKg * 1000 * (Number(y.hpYuzde) || 0) / 100;
+          const caGr = kuruMaddeKg * 1000 * (Number(y.caYuzde) || 0) / 100;
+          const pGr = kuruMaddeKg * 1000 * (Number(y.pYuzde) || 0) / 100;
+          const price = Number(y.birimFiyat) || 0.001; // fiyat yoksa 0.001 ver
+
+          const isKaba = y.tur === 'Kaba Yem';
+          const rMinVal = minKabaOran / 100;
+          const rMaxVal = maxKabaOran / 100;
+
+          model.variables[varName] = {
+            cost: price,
+            me: meMcal,
+            hp: hpGr,
+            dmi: kuruMaddeKg,
+            roughage_min: isKaba ? (1 - rMinVal) * kuruMaddeKg : -rMinVal * kuruMaddeKg,
+            roughage_max: isKaba ? (1 - rMaxVal) * kuruMaddeKg : -rMaxVal * kuruMaddeKg,
+            ca: caGr,
+            p: pGr
+          };
+          
+          // Min/Max limitlerini modele ekle
+          if (r.minKg !== undefined || r.maxKg !== undefined) {
+             model.constraints[varName] = {};
+             if (r.minKg !== undefined) model.constraints[varName].min = r.minKg;
+             if (r.maxKg !== undefined) model.constraints[varName].max = r.maxKg;
+             model.variables[varName][varName] = 1;
+          }
+        }
       });
 
-      const getScore = (metrics: { dmi: number, me: number, hp_g: number, cost: number }) => {
-        // Yüzdesel oranlar (1 = %100 tam karşılama)
-        const meRatio = hedefIhtiyac.me > 0 ? metrics.me / hedefIhtiyac.me : 1;
-        const hpRatio = hedefIhtiyac.hp_g > 0 ? metrics.hp_g / hedefIhtiyac.hp_g : 1;
-        const dmiRatio = hedefIhtiyac.dmi > 0 ? metrics.dmi / hedefIhtiyac.dmi : 1;
-
-        let penalty = 0;
-
-        // 1. ÖNCELİK: ME (Enerji) ve HP (Protein)
-        // Eksikliklerine devasa ceza (100.000 çarpan), fazlalıklarına israf cezası (10.000 çarpan)
-        if (meRatio < 1) penalty += Math.pow((1 - meRatio) * 100, 2) * 100000;
-        else penalty += Math.pow((meRatio - 1) * 100, 2) * 10000;
-
-        if (hpRatio < 1) penalty += Math.pow((1 - hpRatio) * 100, 2) * 100000;
-        else penalty += Math.pow((hpRatio - 1) * 100, 2) * 10000;
-
-        // 2. ÖNCELİK: KMT (Kuru Madde Tüketimi)
-        // Kullanıcı isteği: KMT cezası uygulansın ancak HP ve ME'den az olsun (10.000 çarpan)
-        if (dmiRatio < 1) penalty += Math.pow((1 - dmiRatio) * 100, 2) * 10000;
-        else penalty += Math.pow((dmiRatio - 1) * 100, 2) * 10000;
-
-        // KMT fiziksel sınırı (Hayvan midesi %5'ten fazla aşılırsa devasa ceza)
-        if (dmiRatio > 1.05) penalty += Math.pow((dmiRatio - 1.05) * 100, 2) * 500000;
-
-        // 3. ÖNCELİK: MALİYET
-        // Hedefler tutturulduğunda devasa cezalar 0'a yaklaşır, geriye maliyet minimizasyonu kalır
-        penalty += metrics.cost;
-
-        return -penalty;
-      };
-
-      let bestScore = getScore(calculateMetrics(bestRation));
-
-      for (let i = 0; i < 10000; i++) {
-        const candidate = bestRation.map(r => ({ ...r }));
-        const idx = Math.floor(Math.random() * candidate.length);
-        const change = (Math.random() - 0.5) * 1.5; // -0.75 to +0.75 kg
-        
-        let newKg = candidate[idx].kgAsFed + change;
-        
-        // Uygula: Min ve Max kısıtları
-        const minLimit = candidate[idx].minKg !== undefined ? candidate[idx].minKg! : 0.1;
-        const maxLimit = candidate[idx].maxKg !== undefined ? candidate[idx].maxKg! : Infinity;
-        
-        newKg = Math.max(minLimit, Math.min(newKg, maxLimit));
-        candidate[idx].kgAsFed = newKg;
-
-        const metrics = calculateMetrics(candidate);
-        const score = getScore(metrics);
-
-        if (score > bestScore) {
-          bestScore = score;
-          bestRation = candidate;
-        }
+      let result: any;
+      try {
+        result = solver.Solve(model);
+      } catch (e) {
+        console.error("Solver Error", e);
+        result = { feasible: false };
       }
 
-      setRasyonListesi(bestRation.map(r => ({ ...r, kgAsFed: Number(r.kgAsFed.toFixed(2)) })));
+      if (result.feasible === false) {
+        alert("Optimum bir rasyon bulunamadı. Lütfen hedef ihtiyaçları ve kısıtlamaları (min/max) kontrol edin veya farklı yemler ekleyin.");
+      } else {
+        const newRasyon = safeRasyonListesi.map(r => {
+          if (!r) return r;
+          const varName = `yem_${r.id}`;
+          const miktar = result[varName] || 0;
+          return { ...r, kgAsFed: Number(miktar.toFixed(2)) };
+        });
+        setRasyonListesi(newRasyon);
+      }
+
       setIsOptimizing(false);
-    }, 600);
+    }, 100);
   };
 
   return (
@@ -336,17 +372,40 @@ const RationCalculator: React.FC = () => {
             <input type="number" value={avgWeight} onChange={e => setAvgWeight(Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 font-bold" />
           </div>
 
-          {verimYonu === 'Sütçü' ? (
+          {verimYonu === 'Sütçü' && (
             <div>
-              <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Hedef Süt Verimi (Litre/Gün)</label>
-              <input type="number" value={milkYield} onChange={e => setMilkYield(Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 font-bold" />
+              <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Dönem Seçimi</label>
+              <div className="flex space-x-2">
+                {['Laktasyon', 'Uzak Kuru', 'Yakın Kuru'].map((d) => (
+                  <button
+                    key={d}
+                    onClick={() => setSutcuDonemi(d as any)}
+                    className={`flex-1 py-1.5 px-2 rounded-lg font-bold text-sm flex items-center justify-center transition ${sutcuDonemi === d ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 border-2 border-blue-500' : 'bg-earth-50 dark:bg-gray-900 text-earth-600 dark:text-gray-400 border-2 border-transparent'}`}
+                  >
+                    {d}
+                  </button>
+                ))}
+              </div>
             </div>
-          ) : (
+          )}
+
+          {verimYonu === 'Sütçü' && sutcuDonemi === 'Laktasyon' ? (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Süt (Litre/Gün)</label>
+                <input type="number" value={milkYield} onChange={e => setMilkYield(Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 font-bold" />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Sağım Günü (DIM)</label>
+                <input type="number" value={dim} onChange={e => setDim(Number(e.target.value))} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 font-bold" />
+              </div>
+            </div>
+          ) : verimYonu === 'Etçi' ? (
             <div>
               <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Hedef Ağırlık Artışı (GCAA - gr/Gün)</label>
               <input type="number" value={adg} onChange={e => setAdg(Number(e.target.value))} step="100" className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 font-bold" />
             </div>
-          )}
+          ) : null}
 
           <div className="bg-earth-50 dark:bg-gray-900 p-4 rounded-xl border border-earth-200 dark:border-gray-700 mt-4">
             <h3 className="font-bold text-earth-800 dark:text-gray-200 text-sm mb-3">Hesaplanan Hedef İhtiyaç</h3>
@@ -478,14 +537,19 @@ const RationCalculator: React.FC = () => {
                   })()}
                 </span>
               </div>
-              <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-nature-100 dark:border-nature-800">
-                <span className="block text-xs font-bold text-nature-500 dark:text-nature-400 mb-1">Vit/Min (KM Oranı)</span>
-                <span className="text-lg font-black text-nature-700 dark:text-nature-300">
-                  {(() => {
-                    if (toplamSaglanan.dmi === 0) return '%0.0';
-                    return `%${((toplamSaglanan.vitMinKm / toplamSaglanan.dmi) * 100).toFixed(1)}`;
-                  })()}
-                </span>
+              <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-nature-100 dark:border-nature-800 flex flex-col justify-between">
+                <span className="block text-xs font-bold text-nature-500 dark:text-nature-400 mb-1">Kaba Yem Oranı Hedefi (%)</span>
+                <div className="flex items-center space-x-2 mt-1">
+                  <div className="flex-1">
+                    <span className="text-[10px] text-gray-400">Min</span>
+                    <input type="number" min="0" max="100" value={minKabaOran} onChange={e => setMinKabaOran(Number(e.target.value))} className="w-full p-1 border border-nature-200 dark:border-nature-700 rounded text-center text-sm font-bold bg-gray-50 dark:bg-gray-900 outline-none focus:ring-1 focus:ring-nature-500" />
+                  </div>
+                  <span className="text-gray-300">-</span>
+                  <div className="flex-1">
+                    <span className="text-[10px] text-gray-400">Max</span>
+                    <input type="number" min="0" max="100" value={maxKabaOran} onChange={e => setMaxKabaOran(Number(e.target.value))} className="w-full p-1 border border-nature-200 dark:border-nature-700 rounded text-center text-sm font-bold bg-gray-50 dark:bg-gray-900 outline-none focus:ring-1 focus:ring-nature-500" />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -520,7 +584,7 @@ const RationCalculator: React.FC = () => {
               disabled={isOptimizing || safeRasyonListesi.length === 0}
               className="w-full py-2 mb-4 bg-orange-100 text-orange-700 border border-orange-300 rounded-lg font-bold hover:bg-orange-200 transition disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center"
             >
-              {isOptimizing ? 'Optimizasyon Hesaplanıyor...' : 'Maliyeti Optimize Et (Akıllı Asistan)'}
+              {isOptimizing ? 'Optimizasyon Hesaplanıyor...' : 'Maliyeti Optimize Et'}
             </button>
 
             <button

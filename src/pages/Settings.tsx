@@ -8,12 +8,14 @@ import { STANDART_IRKLAR } from '../components/AnimalForm';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
-  const { user, uremeAyarlari, setUremeAyarlari, theme, setTheme, sutLitreFiyati, setSutLitreFiyati, buzagiFiyati, setBuzagiFiyati } = useStore();
+  const { user, uremeAyarlari, setUremeAyarlari, theme, setTheme, sutLitreFiyati, setSutLitreFiyati, buzagiFiyati, setBuzagiFiyati, canliKiloFiyati, setCanliKiloFiyati, isletmeTipi, setIsletmeTipi } = useStore();
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [localUremeAyarlari, setLocalUremeAyarlari] = useState(uremeAyarlari);
   const [localSutFiyati, setLocalSutFiyati] = useState(sutLitreFiyati.toString());
   const [localBuzagiFiyati, setLocalBuzagiFiyati] = useState(buzagiFiyati.toString());
+  const [localCanliKiloFiyati, setLocalCanliKiloFiyati] = useState(canliKiloFiyati?.toString() || '300');
+  const [localIsletmeTipi, setLocalIsletmeTipi] = useState<'Sütçü' | 'Etçi'>(isletmeTipi || 'Sütçü');
   const [selectedIrk, setSelectedIrk] = useState<string>('Varsayılan');
 
   const currentValues = selectedIrk === 'Varsayılan' 
@@ -136,10 +138,13 @@ const Settings: React.FC = () => {
   const handleSaveEkonomikAyarlar = () => {
     const valSut = parseFloat(localSutFiyati);
     const valBuzagi = parseFloat(localBuzagiFiyati);
-    if (!isNaN(valSut) && valSut > 0 && !isNaN(valBuzagi) && valBuzagi >= 0) {
+    const valCanliKilo = parseFloat(localCanliKiloFiyati);
+    if (!isNaN(valSut) && valSut >= 0 && !isNaN(valBuzagi) && valBuzagi >= 0 && !isNaN(valCanliKilo) && valCanliKilo >= 0) {
       setSutLitreFiyati(valSut);
       setBuzagiFiyati(valBuzagi);
-      alert('Ekonomik ayarlar başarıyla kaydedildi.');
+      setCanliKiloFiyati(valCanliKilo);
+      setIsletmeTipi(localIsletmeTipi);
+      alert('İşletme ve Ekonomik ayarlar başarıyla kaydedildi.');
     } else {
       alert('Lütfen geçerli bir fiyat giriniz.');
     }
@@ -368,15 +373,27 @@ const Settings: React.FC = () => {
             <div className="p-2 bg-green-100 text-green-600 rounded-lg">
               <span className="font-black text-xl">₺</span>
             </div>
-            <h2 className="text-xl font-bold text-earth-900 dark:text-gray-100">Ekonomik Ayarlar</h2>
+            <h2 className="text-xl font-bold text-earth-900 dark:text-gray-100">İşletme ve Ekonomik Ayarlar</h2>
           </div>
           
           <p className="text-sm text-earth-600 dark:text-gray-400">
-            Sistemdeki finansal hesaplamalar ve gelir projeksiyonları için kullanılacak temel fiyatlandırmaları belirleyin.
+            İşletme tipini ve finansal hesaplamalar için kullanılacak temel fiyatlandırmaları belirleyin. İşletme tipi SürüMetri panosunu şekillendirir.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 items-end">
-            <div className="space-y-1 w-full sm:w-1/4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-earth-700 dark:text-gray-300">İşletme Tipi</label>
+              <select 
+                value={localIsletmeTipi}
+                onChange={e => setLocalIsletmeTipi(e.target.value as 'Sütçü' | 'Etçi')}
+                className="w-full p-3 border-2 border-earth-200 dark:border-gray-700 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-nature-500 outline-none font-bold"
+              >
+                <option value="Sütçü">Sütçü İşletme</option>
+                <option value="Etçi">Besi / Etçi İşletme</option>
+              </select>
+            </div>
+            
+            <div className="space-y-1">
               <label className="text-xs font-bold text-earth-700 dark:text-gray-300">Süt Litre Fiyatı (₺)</label>
               <input 
                 type="number" 
@@ -387,7 +404,7 @@ const Settings: React.FC = () => {
               />
             </div>
 
-            <div className="space-y-1 w-full sm:w-1/4">
+            <div className="space-y-1">
               <label className="text-xs font-bold text-earth-700 dark:text-gray-300">Varsayılan Buzağı Fiyatı (₺)</label>
               <input 
                 type="number" 
@@ -397,11 +414,22 @@ const Settings: React.FC = () => {
                 className="w-full p-3 border-2 border-earth-200 dark:border-gray-700 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-nature-500 outline-none"
               />
             </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-earth-700 dark:text-gray-300">Canlı Kilo (Baskül) Fiyatı (₺)</label>
+              <input 
+                type="number" 
+                step="1"
+                value={localCanliKiloFiyati}
+                onChange={e => setLocalCanliKiloFiyati(e.target.value)}
+                className="w-full p-3 border-2 border-earth-200 dark:border-gray-700 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-nature-500 outline-none"
+              />
+            </div>
             
             <div className="w-full sm:w-auto">
               <button 
                 onClick={handleSaveEkonomikAyarlar}
-                className="w-full sm:w-auto flex items-center justify-center space-x-2 bg-nature-600 hover:bg-nature-700 text-white px-6 py-3 rounded-xl font-bold transition shadow-sm"
+                className="w-full flex items-center justify-center space-x-2 bg-nature-600 hover:bg-nature-700 text-white px-6 py-3 rounded-xl font-bold transition shadow-sm"
               >
                 <Save className="w-5 h-5" />
                 <span>Kaydet</span>

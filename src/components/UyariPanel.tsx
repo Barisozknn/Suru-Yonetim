@@ -131,7 +131,7 @@ const UyariPanel: React.FC<UyariPanelProps> = ({ uyarilar }) => {
         </div>
         <div>
           <p className="font-black text-emerald-900 dark:text-emerald-300">
-            Sürünüz Sağlıklı 🎉
+            Sürünüz Sağlıklı
           </p>
           <p className="text-sm text-emerald-700 dark:text-emerald-400 mt-0.5">
             Tespit edilen anomali veya gecikme bulunmuyor.

@@ -36,25 +36,37 @@ interface StoreState {
   durumFiltresi: string;
   sutLitreFiyati: number;
   buzagiFiyati: number;
+  canliKiloFiyati: number;
+  isletmeTipi: 'Sütçü' | 'Etçi';
   setAramaMetni: (metin: string) => void;
   setTurFiltresi: (tur: string) => void;
   setDurumFiltresi: (durum: string) => void;
   setSutLitreFiyati: (fiyat: number) => void;
   setBuzagiFiyati: (fiyat: number) => void;
+  setCanliKiloFiyati: (fiyat: number) => void;
+  setIsletmeTipi: (tip: 'Sütçü' | 'Etçi') => void;
 
   // Ration Calculator State
   rationSelectedGrupId: string;
   rationVerimYonu: 'Sütçü' | 'Etçi';
+  rationSutcuDonemi: 'Laktasyon' | 'Uzak Kuru' | 'Yakın Kuru';
   rationAvgWeight: number;
   rationMilkYield: number;
+  rationDim: number;
   rationAdg: number;
+  rationMinKabaOran: number;
+  rationMaxKabaOran: number;
   rationListesi: { id: string; yemId: string; kgAsFed: number; minKg?: number; maxKg?: number }[];
   
   setRationSelectedGrupId: (id: string) => void;
   setRationVerimYonu: (yon: 'Sütçü' | 'Etçi') => void;
+  setRationSutcuDonemi: (donem: 'Laktasyon' | 'Uzak Kuru' | 'Yakın Kuru') => void;
   setRationAvgWeight: (weight: number) => void;
   setRationMilkYield: (yields: number) => void;
+  setRationDim: (dim: number) => void;
   setRationAdg: (adg: number) => void;
+  setRationMinKabaOran: (val: number) => void;
+  setRationMaxKabaOran: (val: number) => void;
   setRationListesi: (liste: { id: string; yemId: string; kgAsFed: number; minKg?: number; maxKg?: number }[]) => void;
 
   // Üreme ve Uyarı Ayarları
@@ -86,26 +98,38 @@ export const useStore = create<StoreState>()(
       durumFiltresi: 'Aktif',
       sutLitreFiyati: 15.0,
       buzagiFiyati: 50000.0,
+      canliKiloFiyati: 300.0,
+      isletmeTipi: 'Sütçü',
 
       setAramaMetni: (metin) => set({ aramaMetni: metin }),
       setTurFiltresi: (tur) => set({ turFiltresi: tur }),
       setDurumFiltresi: (durum) => set({ durumFiltresi: durum }),
       setSutLitreFiyati: (fiyat) => set({ sutLitreFiyati: fiyat }),
       setBuzagiFiyati: (fiyat) => set({ buzagiFiyati: fiyat }),
+      setCanliKiloFiyati: (fiyat) => set({ canliKiloFiyati: fiyat }),
+      setIsletmeTipi: (tip) => set({ isletmeTipi: tip }),
 
       // Ration Calculator
       rationSelectedGrupId: '',
       rationVerimYonu: 'Sütçü',
+      rationSutcuDonemi: 'Laktasyon',
       rationAvgWeight: 600,
       rationMilkYield: 30,
+      rationDim: 150,
       rationAdg: 1200,
+      rationMinKabaOran: 40,
+      rationMaxKabaOran: 60,
       rationListesi: [],
 
       setRationSelectedGrupId: (id) => set({ rationSelectedGrupId: id }),
       setRationVerimYonu: (yon) => set({ rationVerimYonu: yon }),
+      setRationSutcuDonemi: (donem) => set({ rationSutcuDonemi: donem }),
       setRationAvgWeight: (weight) => set({ rationAvgWeight: weight }),
       setRationMilkYield: (yields) => set({ rationMilkYield: yields }),
+      setRationDim: (dim) => set({ rationDim: dim }),
       setRationAdg: (adg) => set({ rationAdg: adg }),
+      setRationMinKabaOran: (val) => set({ rationMinKabaOran: val }),
+      setRationMaxKabaOran: (val) => set({ rationMaxKabaOran: val }),
       setRationListesi: (liste) => set({ rationListesi: liste }),
 
       // Üreme ve Uyarı Ayarları
@@ -134,11 +158,17 @@ export const useStore = create<StoreState>()(
         ciftlikler: state.ciftlikler,
         sutLitreFiyati: state.sutLitreFiyati,
         buzagiFiyati: state.buzagiFiyati,
+        canliKiloFiyati: state.canliKiloFiyati,
+        isletmeTipi: state.isletmeTipi,
         rationSelectedGrupId: state.rationSelectedGrupId,
         rationVerimYonu: state.rationVerimYonu,
+        rationSutcuDonemi: state.rationSutcuDonemi,
         rationAvgWeight: state.rationAvgWeight,
         rationMilkYield: state.rationMilkYield,
+        rationDim: state.rationDim,
         rationAdg: state.rationAdg,
+        rationMinKabaOran: state.rationMinKabaOran,
+        rationMaxKabaOran: state.rationMaxKabaOran,
         rationListesi: state.rationListesi,
         uremeAyarlari: state.uremeAyarlari,
         isGuest: state.isGuest,
@@ -157,11 +187,17 @@ useStore.subscribe((state, prevState) => {
     activeCiftlikId: state.activeCiftlikId,
     sutLitreFiyati: state.sutLitreFiyati, 
     buzagiFiyati: state.buzagiFiyati,
+    canliKiloFiyati: state.canliKiloFiyati,
+    isletmeTipi: state.isletmeTipi,
     rationSelectedGrupId: state.rationSelectedGrupId, 
     rationVerimYonu: state.rationVerimYonu, 
+    rationSutcuDonemi: state.rationSutcuDonemi,
     rationAvgWeight: state.rationAvgWeight, 
     rationMilkYield: state.rationMilkYield, 
+    rationDim: state.rationDim,
     rationAdg: state.rationAdg, 
+    rationMinKabaOran: state.rationMinKabaOran,
+    rationMaxKabaOran: state.rationMaxKabaOran,
     rationListesi: state.rationListesi, 
     uremeAyarlari: state.uremeAyarlari 
   };
@@ -170,11 +206,17 @@ useStore.subscribe((state, prevState) => {
     activeCiftlikId: prevState.activeCiftlikId,
     sutLitreFiyati: prevState.sutLitreFiyati, 
     buzagiFiyati: prevState.buzagiFiyati,
+    canliKiloFiyati: prevState.canliKiloFiyati,
+    isletmeTipi: prevState.isletmeTipi,
     rationSelectedGrupId: prevState.rationSelectedGrupId, 
     rationVerimYonu: prevState.rationVerimYonu, 
+    rationSutcuDonemi: prevState.rationSutcuDonemi,
     rationAvgWeight: prevState.rationAvgWeight, 
     rationMilkYield: prevState.rationMilkYield, 
+    rationDim: prevState.rationDim,
     rationAdg: prevState.rationAdg, 
+    rationMinKabaOran: prevState.rationMinKabaOran,
+    rationMaxKabaOran: prevState.rationMaxKabaOran,
     rationListesi: prevState.rationListesi, 
     uremeAyarlari: prevState.uremeAyarlari 
   };
