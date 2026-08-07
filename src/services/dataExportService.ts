@@ -15,11 +15,21 @@ export const exportData = async (
 ) => {
   let data: any[] = [];
   let headers: string[] = [];
+  let sheets: { name: string, headers: string[], data: any[][] }[] = [];
   let title = '';
 
   switch (kategori) {
     case 'hayvanlar': {
-      const hayvanlar = await db.hayvanlar.toArray();
+      let hayvanlar = await db.hayvanlar.toArray();
+      if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate + 'T23:59:59');
+        hayvanlar = hayvanlar.filter(h => {
+          if (!h.dogumTarihi) return false;
+          const dt = new Date(h.dogumTarihi);
+          return dt >= start && dt <= end;
+        });
+      }
       headers = ['Küpe No', 'Tür', 'Irk', 'Doğum Tarihi', 'Cinsiyet', 'Ağırlık (kg)', 'Durum'];
       data = hayvanlar.map(h => [
         h.kupeNo, h.tur, h.irk, h.dogumTarihi, h.cinsiyet, h.guncelAgirlikKg, h.durum
@@ -48,7 +58,16 @@ export const exportData = async (
       break;
     }
     case 'buzagilar': {
-      const buzagilar = await db.hayvanlar.filter(h => h.tur === 'Buzağı').toArray();
+      let buzagilar = await db.hayvanlar.filter(h => h.tur === 'Buzağı').toArray();
+      if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate + 'T23:59:59');
+        buzagilar = buzagilar.filter(b => {
+          if (!b.dogumTarihi) return false;
+          const dt = new Date(b.dogumTarihi);
+          return dt >= start && dt <= end;
+        });
+      }
       const buzagiKayitlari = await db.buzagiKayitlari.toArray();
       headers = [
         'Küpe No', 'Doğum Şekli', 'Doğum Ağırlığı', 'Ağız Sütü Verildi', 'Kolostrum Miktarı (Lt)', 
@@ -118,52 +137,50 @@ export const exportData = async (
       break;
     }
     case 'verimGecmisi': {
-      if (!hayvanIds || hayvanIds.length === 0) throw new Error("Verim geçmişi için hayvan seçilmelidir.");
+      let targetAnimalIds = hayvanIds;
+      if (!targetAnimalIds || targetAnimalIds.length === 0) {
+        // Tüm sürü seçilmişse tüm hayvanların ID'lerini al
+        const tumHayvanlar = await db.hayvanlar.toArray();
+        targetAnimalIds = tumHayvanlar.map(h => h.id);
+      }
       
-      headers = [];
-      let firstAnimalKupeNo = '';
-      const allAnimalsData: { t: Date, row: string[] }[][] = [];
+      const start = startDate ? new Date(startDate) : new Date('1970-01-01');
+      const end = endDate ? new Date(endDate + 'T23:59:59') : new Date('2099-12-31');
 
-      for (const hId of hayvanIds) {
+      headers = ['Küpe No', 'Tarih', 'Kayıt Türü', 'Değer'];
+      const records: { t: Date, row: string[] }[] = [];
+
+      for (const hId of targetAnimalIds) {
         const vh = await db.hayvanlar.get(hId);
         if (!vh) continue;
-        if (!firstAnimalKupeNo) firstAnimalKupeNo = vh.kupeNo;
 
         const sutKayitlari = await db.sutKayitlari.where('hayvanId').equals(hId).toArray();
         const agirlikKayitlari = await db.agirlikKayitlari.where('hayvanId').equals(hId).toArray();
 
-        const records = [
-          ...sutKayitlari.map(s => ({ t: new Date(s.tarih), row: [vh.kupeNo, s.tarih, 'Süt', `${s.litre} Lt`] })),
-          ...agirlikKayitlari.map(a => ({ t: new Date(a.tarih), row: [vh.kupeNo, a.tarih, 'Ağırlık', `${a.kg} kg`] }))
-        ];
-        records.sort((a, b) => b.t.getTime() - a.t.getTime());
-        allAnimalsData.push(records);
-
-        if (headers.length > 0) headers.push(''); // Boş sütun
-        headers.push('Küpe No', 'Tarih', 'Kayıt Türü', 'Değer');
-      }
-
-      if (allAnimalsData.length === 0) throw new Error("Seçilen hayvanlar için verim kaydı bulunamadı.");
-
-      const maxRows = Math.max(...allAnimalsData.map(arr => arr.length));
-      data = [];
-
-      for (let i = 0; i < maxRows; i++) {
-        const rowData: string[] = [];
-        for (let j = 0; j < allAnimalsData.length; j++) {
-          if (j > 0) rowData.push(''); // Boş sütun
-          
-          const record = allAnimalsData[j][i];
-          if (record) {
-            rowData.push(record.row[0], record.row[1], record.row[2], record.row[3]);
-          } else {
-            rowData.push('', '', '', '');
+        // Filtrele ve ekle
+        sutKayitlari.forEach(s => {
+          const t = new Date(s.tarih);
+          if (t >= start && t <= end) {
+            records.push({ t, row: [vh.kupeNo, s.tarih, 'Süt', `${s.litre} Lt`] });
           }
-        }
-        data.push(rowData);
+        });
+
+        agirlikKayitlari.forEach(a => {
+          const t = new Date(a.tarih);
+          if (t >= start && t <= end) {
+            records.push({ t, row: [vh.kupeNo, a.tarih, 'Ağırlık', `${a.kg} kg`] });
+          }
+        });
       }
+
+      if (records.length === 0) throw new Error("Seçilen kriterlere uygun verim kaydı bulunamadı.");
+
+      records.sort((a, b) => b.t.getTime() - a.t.getTime());
+      data = records.map(r => r.row);
       
-      title = hayvanIds.length === 1 ? `${firstAnimalKupeNo} - Verim Geçmişi` : `Çoklu Verim Geçmişi Dökümü`;
+      title = (!hayvanIds || hayvanIds.length === 0) 
+        ? 'Tüm Sürü - Verim Geçmişi' 
+        : hayvanIds.length === 1 ? `${data[0][0]} - Verim Geçmişi` : 'Çoklu Verim Geçmişi Dökümü';
       break;
     }
     case 'gelirGider': {
@@ -241,18 +258,23 @@ export const exportData = async (
       data = financialData.map(f => [
         f.date.toLocaleDateString('tr-TR'),
         f.category,
-        f.type === 'Gelir' ? f.amount.toString() : '',
-        f.type === 'Gider' ? f.amount.toString() : ''
+        f.type === 'Gelir' ? f.amount : '',
+        f.type === 'Gider' ? f.amount : ''
       ]);
       title = 'Gelir Gider Analizi';
       break;
     }
     case 'suruOzeti': {
+      const start = startDate ? new Date(startDate) : new Date('1970-01-01');
+      const end = endDate ? new Date(endDate + 'T23:59:59') : new Date('2099-12-31');
+
       const hayvanlar = await db.hayvanlar.toArray();
       const gruplar = await db.gruplar.toArray();
       const sutKayitlari = await db.sutKayitlari.toArray();
       const agirlikKayitlari = await db.agirlikKayitlari.toArray();
+      const saglikOlaylari = await db.saglikOlaylari.toArray();
 
+      // SAYFA 1: Genel Özet (Tarihten Bağımsız Genelde)
       const aktifHayvanlar = hayvanlar.filter(h => h.durum === 'Aktif');
       const inekler = aktifHayvanlar.filter(h => h.tur === 'İnek');
       const duveler = aktifHayvanlar.filter(h => h.tur === 'Düve');
@@ -260,43 +282,101 @@ export const exportData = async (
       const buzagilar = aktifHayvanlar.filter(h => h.tur === 'Buzağı');
       const bogalar = aktifHayvanlar.filter(h => h.tur === 'Boğa');
 
-      headers = ['Metrik', 'Değer'];
-      data = [
-        ['Toplam Aktif Hayvan', aktifHayvanlar.length.toString()],
-        ['İnek Sayısı', inekler.length.toString()],
-        ['Düve Sayısı', duveler.length.toString()],
-        ['Dana Sayısı', danalar.length.toString()],
-        ['Buzağı Sayısı', buzagilar.length.toString()],
-        ['Boğa Sayısı', bogalar.length.toString()],
-        ['Kayıtlı Grup Sayısı', gruplar.length.toString()],
-        ['Toplam Süt Kaydı', sutKayitlari.length.toString()],
-        ['Toplam Ağırlık Kaydı', agirlikKayitlari.length.toString()],
-      ];
+      sheets.push({
+        name: 'Genel Özet',
+        headers: ['Metrik', 'Değer'],
+        data: [
+          ['Toplam Aktif Hayvan', aktifHayvanlar.length],
+          ['İnek Sayısı', inekler.length],
+          ['Düve Sayısı', duveler.length],
+          ['Dana Sayısı', danalar.length],
+          ['Buzağı Sayısı', buzagilar.length],
+          ['Boğa Sayısı', bogalar.length],
+          ['Kayıtlı Grup Sayısı', gruplar.length]
+        ]
+      });
+
+      // SAYFA 2: Süt ve Verimlilik (Tarih Filtreli)
+      const filteredSut = sutKayitlari.filter(s => new Date(s.tarih) >= start && new Date(s.tarih) <= end);
+      const sutByAnimal: Record<string, { total: number, count: number }> = {};
+      let totalMilk = 0;
+      filteredSut.forEach(s => {
+        if (!sutByAnimal[s.hayvanId]) sutByAnimal[s.hayvanId] = { total: 0, count: 0 };
+        sutByAnimal[s.hayvanId].total += s.litre;
+        sutByAnimal[s.hayvanId].count += 1;
+        totalMilk += s.litre;
+      });
+
+      const sutData = Object.entries(sutByAnimal)
+        .map(([hId, stats]) => {
+          const h = hayvanlar.find(x => x.id === hId);
+          return [h?.kupeNo || 'Silinmiş', stats.total, stats.count, (stats.total / stats.count).toFixed(2)];
+        })
+        .sort((a, b) => Number(b[1]) - Number(a[1])); // Süt verimine göre sırala
+
+      sutData.unshift(['GENEL TOPLAM', totalMilk, filteredSut.length, filteredSut.length ? (totalMilk / filteredSut.length).toFixed(2) : 0]);
+
+      sheets.push({
+        name: 'Süt Verimi',
+        headers: ['Küpe No', 'Toplam Süt (Lt)', 'Sağım Sayısı', 'Ortalama (Lt)'],
+        data: sutData
+      });
+
+      // SAYFA 3: Ağırlık Verimi (Tarih Filtreli)
+      const filteredAgirlik = agirlikKayitlari.filter(a => new Date(a.tarih) >= start && new Date(a.tarih) <= end);
+      const agirlikData = filteredAgirlik.map(a => {
+        const h = hayvanlar.find(x => x.id === a.hayvanId);
+        return [h?.kupeNo || 'Silinmiş', a.tarih, a.kg];
+      }).sort((a, b) => new Date(b[1] as string).getTime() - new Date(a[1] as string).getTime());
+
+      sheets.push({
+        name: 'Ağırlık Kayıtları',
+        headers: ['Küpe No', 'Tarih', 'Ölçülen Ağırlık (kg)'],
+        data: agirlikData
+      });
+
+      // SAYFA 4: Sağlık (Tarih Filtreli)
+      const filteredSaglik = saglikOlaylari.filter(s => new Date(s.tarih) >= start && new Date(s.tarih) <= end);
+      const saglikData = filteredSaglik.map(s => {
+        const h = hayvanlar.find(x => x.id === s.hayvanId);
+        return [s.tarih, h?.kupeNo || 'Silinmiş', s.tur, s.aciklama, s.maliyet || 0];
+      }).sort((a, b) => new Date(b[0] as string).getTime() - new Date(a[0] as string).getTime());
+
+      sheets.push({
+        name: 'Sağlık',
+        headers: ['Tarih', 'Küpe No', 'İşlem Türü', 'Teşhis/Açıklama', 'Maliyet (TL)'],
+        data: saglikData
+      });
+
       title = 'Sürü Özeti Raporu';
       break;
     }
     case 'veterinerRaporu': {
-      const simdi = new Date();
-      const otuzGunOnce = new Date(simdi.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const start = startDate ? new Date(startDate) : new Date('1970-01-01');
+      const end = endDate ? new Date(endDate + 'T23:59:59') : new Date('2099-12-31');
+      
       const saglikOlaylari = await db.saglikOlaylari.toArray();
       const hayvanlar = await db.hayvanlar.toArray();
       const hayvanMap = new Map(hayvanlar.map(h => [h.id, h.kupeNo]));
 
-      const son30GunOlaylari = saglikOlaylari.filter(o => new Date(o.tarih) >= otuzGunOnce);
+      const filteredOlaylar = saglikOlaylari.filter(o => {
+        const t = new Date(o.tarih);
+        return t >= start && t <= end;
+      });
 
       headers = ['Tarih', 'Küpe No', 'İşlem Türü', 'Teşhis/Açıklama', 'Uygulayan', 'Maliyet (TL)'];
-      data = son30GunOlaylari.map(o => [
+      data = filteredOlaylar.map(o => [
         o.tarih,
         hayvanMap.get(o.hayvanId) || 'Bilinmiyor',
         o.tur,
         o.aciklama,
         o.detaylar?.veterinerHekim || '-',
-        o.maliyet ? o.maliyet.toString() : '-'
-      ]);
+        o.maliyet || 0
+      ]).sort((a, b) => new Date(b[0] as string).getTime() - new Date(a[0] as string).getTime());
 
-      title = 'Veteriner Raporu (Son 30 Gün)';
+      title = 'Veteriner Raporu';
       if (data.length === 0) {
-         data.push(['-', '-', 'Son 30 günde sağlık kaydı bulunamadı', '-', '-', '-']);
+         data.push(['-', '-', 'Seçili kriterlerde sağlık kaydı bulunamadı', '-', '-', '-']);
       }
       break;
     }
@@ -304,35 +384,42 @@ export const exportData = async (
       throw new Error("Geçersiz kategori");
   }
 
-  if (data.length === 0) {
+  if (sheets.length === 0 && data.length === 0) {
     throw new Error("Dışa aktarılacak veri bulunamadı.");
+  }
+
+  // Fallback for categories that don't use multi-sheet yet
+  if (sheets.length === 0) {
+    sheets.push({ name: 'Veri', headers, data });
   }
 
   if (format === 'excel') {
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Veri');
+    
+    sheets.forEach((sheet) => {
+      if (sheet.data.length === 0) return; // Skip empty sheets
+      
+      const worksheet = workbook.addWorksheet(sheet.name.substring(0, 31)); // Excel limit
+      worksheet.addRow(sheet.headers);
+      sheet.data.forEach(row => worksheet.addRow(row));
 
-    worksheet.addRow(headers);
-    data.forEach(row => {
-      worksheet.addRow(row);
-    });
+      const headerRow = worksheet.getRow(1);
+      headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      headerRow.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF4F46E5' } // Indigo color
+      };
+      headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
 
-    const headerRow = worksheet.getRow(1);
-    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-    headerRow.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF4F46E5' } // Indigo color
-    };
-    headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
-
-    worksheet.columns.forEach(column => {
-      let maxLen = 10;
-      column.eachCell!({ includeEmpty: true }, cell => {
-        const valLen = cell.value ? cell.value.toString().length : 0;
-        if (valLen > maxLen) maxLen = valLen;
+      worksheet.columns.forEach(column => {
+        let maxLen = 10;
+        column.eachCell!({ includeEmpty: true }, cell => {
+          const valLen = cell.value ? cell.value.toString().length : 0;
+          if (valLen > maxLen) maxLen = valLen;
+        });
+        column.width = maxLen + 2;
       });
-      column.width = maxLen + 2;
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
@@ -350,18 +437,38 @@ export const exportData = async (
     doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
     doc.setFont('Roboto');
 
+    let startY = 20;
     doc.text(title, 14, 15);
-    autoTable(doc, {
-      head: [headers],
-      body: data,
-      startY: 20,
-      styles: {
-        font: 'Roboto',
-      },
-      headStyles: {
-        fontStyle: 'normal',
+    
+    const validSheets = sheets.filter(s => s.data.length > 0);
+    
+    validSheets.forEach((sheet, index) => {
+      if (index > 0) {
+        doc.addPage();
+        startY = 20;
+      } else {
+        startY = 25;
       }
+      
+      if (validSheets.length > 1) {
+        doc.setFontSize(12);
+        doc.text(sheet.name, 14, startY);
+        startY += 5;
+      }
+      
+      autoTable(doc, {
+        head: [sheet.headers],
+        body: sheet.data,
+        startY: startY,
+        styles: {
+          font: 'Roboto',
+        },
+        headStyles: {
+          fontStyle: 'normal',
+        }
+      });
     });
+
     doc.save(`${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
   }
 };

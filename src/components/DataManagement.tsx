@@ -14,13 +14,15 @@ const KATEGORILER = [
   { id: 'verimGecmisi', label: 'Verim Geçmişi (Süt/Ağırlık)', importable: false, requireAnimal: true },
   { id: 'gelirGider', label: 'Gelir Gider Analizi', importable: false, requireDates: true },
   { id: 'suruOzeti', label: 'Sürü Özeti Raporu', importable: false },
-  { id: 'veterinerRaporu', label: 'Veteriner Raporu (Son 30 Gün)', importable: false },
+  { id: 'veterinerRaporu', label: 'Veteriner Raporu', importable: false },
 ];
 
 const DataManagement: React.FC = () => {
   const [selectedKategori, setSelectedKategori] = useState<string>('hayvanlar');
   const [selectedAnimalIds, setSelectedAnimalIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [animalSelectionMode, setAnimalSelectionMode] = useState<'all' | 'specific'>('specific');
+  const [dateMode, setDateMode] = useState<'all' | 'specific'>('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   
@@ -38,7 +40,11 @@ const DataManagement: React.FC = () => {
   const handleExport = async (format: 'excel' | 'pdf') => {
     try {
       setIsLoading(true);
-      await exportData(format, selectedKategori, selectedAnimalIds, startDate, endDate);
+      const sDate = dateMode === 'specific' ? startDate : undefined;
+      const eDate = dateMode === 'specific' ? endDate : undefined;
+      // If mode is 'all', we pass undefined to signify all animals.
+      const idsToExport = animalSelectionMode === 'all' ? undefined : selectedAnimalIds;
+      await exportData(format, selectedKategori, idsToExport, sDate, eDate);
     } catch (err: any) {
       alert(err.message || 'Dışa aktarma sırasında hata oluştu.');
     } finally {
@@ -96,42 +102,59 @@ const DataManagement: React.FC = () => {
 
         {/* Dinamik Filtreler */}
         {activeKategori?.requireAnimal && (
-          <div className="space-y-1 p-4 bg-earth-50 dark:bg-gray-900 rounded-xl border border-earth-200 dark:border-gray-700">
+          <div className="space-y-3 p-4 bg-earth-50 dark:bg-gray-900 rounded-xl border border-earth-200 dark:border-gray-700">
             <label className="text-sm font-bold text-earth-700 dark:text-gray-300 flex items-center space-x-2">
               <Search className="w-4 h-4 text-earth-500 dark:text-gray-400" />
-              <span>Hayvan Seçin</span>
+              <span>Hayvan Seçimi</span>
             </label>
-            <div className="relative">
-              <input 
-                type="text" 
-                placeholder="Küpe numarası ara..." 
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg outline-none focus:border-blue-500"
-              />
-              {searchTerm && (
-                <div className="absolute w-full mt-1 bg-white dark:bg-gray-800 border border-earth-200 dark:border-gray-700 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
-                  {filteredHayvanlar.map(h => (
-                    <div 
-                      key={h.id} 
-                      className="p-2 hover:bg-blue-50 cursor-pointer text-sm font-medium border-b border-earth-100 dark:border-gray-700 last:border-0"
-                      onClick={() => {
-                        setSelectedAnimalIds(prev => [...prev, h.id]);
-                        setSearchTerm('');
-                      }}
-                    >
-                      {h.kupeNo} ({h.tur})
-                    </div>
-                  ))}
-                  {filteredHayvanlar.length === 0 && (
-                    <div className="p-2 text-sm text-earth-500 dark:text-gray-400 text-center">Sonuç bulunamadı</div>
-                  )}
-                </div>
-              )}
+            <div className="flex bg-white dark:bg-gray-800 rounded-lg p-1 border border-earth-200 dark:border-gray-700">
+              <button
+                onClick={() => setAnimalSelectionMode('specific')}
+                className={`flex-1 py-1.5 text-sm font-bold rounded-md transition ${animalSelectionMode === 'specific' ? 'bg-blue-500 text-white shadow' : 'text-earth-500 hover:bg-earth-100 dark:hover:bg-gray-700'}`}
+              >
+                Seçili Hayvanlar
+              </button>
+              <button
+                onClick={() => setAnimalSelectionMode('all')}
+                className={`flex-1 py-1.5 text-sm font-bold rounded-md transition ${animalSelectionMode === 'all' ? 'bg-blue-500 text-white shadow' : 'text-earth-500 hover:bg-earth-100 dark:hover:bg-gray-700'}`}
+              >
+                Tüm Sürü
+              </button>
             </div>
+
+            {animalSelectionMode === 'specific' && (
+              <div className="relative mt-2">
+                <input 
+                  type="text" 
+                  placeholder="Küpe numarası ara..." 
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg outline-none focus:border-blue-500"
+                />
+                {searchTerm && (
+                  <div className="absolute w-full mt-1 bg-white dark:bg-gray-800 border border-earth-200 dark:border-gray-700 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
+                    {filteredHayvanlar.map(h => (
+                      <div 
+                        key={h.id} 
+                        className="p-2 hover:bg-blue-50 cursor-pointer text-sm font-medium border-b border-earth-100 dark:border-gray-700 last:border-0"
+                        onClick={() => {
+                          setSelectedAnimalIds(prev => [...prev, h.id]);
+                          setSearchTerm('');
+                        }}
+                      >
+                        {h.kupeNo} ({h.tur})
+                      </div>
+                    ))}
+                    {filteredHayvanlar.length === 0 && (
+                      <div className="p-2 text-sm text-earth-500 dark:text-gray-400 text-center">Sonuç bulunamadı</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
             
             {/* Seçili Hayvanlar (Pills) */}
-            {selectedAnimalIds.length > 0 && (
+            {animalSelectionMode === 'specific' && selectedAnimalIds.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-3">
                 {selectedAnimalIds.map(id => {
                   const h = hayvanlar.find(x => x.id === id);
@@ -151,7 +174,7 @@ const DataManagement: React.FC = () => {
               </div>
             )}
             
-            {selectedAnimalIds.length > 0 && (
+            {animalSelectionMode === 'specific' && selectedAnimalIds.length > 0 && (
               <p className="text-xs text-green-600 font-bold mt-2 flex items-center">
                 ✓ Toplam {selectedAnimalIds.length} hayvan seçildi.
                 <button onClick={() => {setSelectedAnimalIds([]); setSearchTerm('');}} className="ml-2 text-red-500 underline">Tümünü Temizle</button>
@@ -160,13 +183,28 @@ const DataManagement: React.FC = () => {
           </div>
         )}
 
-        {activeKategori?.requireDates && (
-          <div className="space-y-2 p-4 bg-earth-50 dark:bg-gray-900 rounded-xl border border-earth-200 dark:border-gray-700">
-            <label className="text-sm font-bold text-earth-700 dark:text-gray-300 flex items-center space-x-2">
-              <Calendar className="w-4 h-4 text-earth-500 dark:text-gray-400" />
-              <span>Tarih Aralığı (Opsiyonel)</span>
-            </label>
-            <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-3 p-4 bg-earth-50 dark:bg-gray-900 rounded-xl border border-earth-200 dark:border-gray-700">
+          <label className="text-sm font-bold text-earth-700 dark:text-gray-300 flex items-center space-x-2">
+            <Calendar className="w-4 h-4 text-earth-500 dark:text-gray-400" />
+            <span>Tarih Kapsamı</span>
+          </label>
+          <div className="flex bg-white dark:bg-gray-800 rounded-lg p-1 border border-earth-200 dark:border-gray-700">
+            <button
+              onClick={() => setDateMode('all')}
+              className={`flex-1 py-1.5 text-sm font-bold rounded-md transition ${dateMode === 'all' ? 'bg-nature-500 text-white shadow' : 'text-earth-500 hover:bg-earth-100 dark:hover:bg-gray-700'}`}
+            >
+              Tüm Veriler
+            </button>
+            <button
+              onClick={() => setDateMode('specific')}
+              className={`flex-1 py-1.5 text-sm font-bold rounded-md transition ${dateMode === 'specific' ? 'bg-nature-500 text-white shadow' : 'text-earth-500 hover:bg-earth-100 dark:hover:bg-gray-700'}`}
+            >
+              Belirli Tarih
+            </button>
+          </div>
+          
+          {dateMode === 'specific' && (
+            <div className="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-earth-200 dark:border-gray-700">
               <div>
                 <span className="text-xs text-earth-500 dark:text-gray-400 mb-1 block">Başlangıç</span>
                 <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg" />
@@ -176,8 +214,8 @@ const DataManagement: React.FC = () => {
                 <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg" />
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Aksiyon Butonları */}
         <div className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-earth-100 dark:border-gray-700">
@@ -186,7 +224,7 @@ const DataManagement: React.FC = () => {
             <h3 className="text-sm font-bold text-earth-600 dark:text-gray-400 mb-2 uppercase">Dışa Aktar (Rapor)</h3>
             <button 
               onClick={() => handleExport('excel')}
-              disabled={isLoading || (activeKategori?.requireAnimal && selectedAnimalIds.length === 0)}
+              disabled={isLoading || (activeKategori?.requireAnimal && animalSelectionMode === 'specific' && selectedAnimalIds.length === 0)}
               className="flex items-center justify-center space-x-2 w-full py-2.5 bg-green-50 dark:bg-green-900/20 text-green-700 border border-green-200 rounded-xl font-bold hover:bg-green-100 transition disabled:opacity-50"
             >
               <FileSpreadsheet className="w-5 h-5" />
@@ -194,7 +232,7 @@ const DataManagement: React.FC = () => {
             </button>
             <button 
               onClick={() => handleExport('pdf')}
-              disabled={isLoading || (activeKategori?.requireAnimal && selectedAnimalIds.length === 0)}
+              disabled={isLoading || (activeKategori?.requireAnimal && animalSelectionMode === 'specific' && selectedAnimalIds.length === 0)}
               className="flex items-center justify-center space-x-2 w-full py-2.5 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/50 rounded-xl font-bold hover:bg-red-100 transition disabled:opacity-50"
             >
               <FileText className="w-5 h-5" />
