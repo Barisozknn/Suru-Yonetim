@@ -16,7 +16,7 @@ const Settings: React.FC = () => {
   const [localSutFiyati, setLocalSutFiyati] = useState(sutLitreFiyati.toString());
   const [localBuzagiFiyati, setLocalBuzagiFiyati] = useState(buzagiFiyati.toString());
   const [localCanliKiloFiyati, setLocalCanliKiloFiyati] = useState(canliKiloFiyati?.toString() || '300');
-  const [localIsletmeTipi, setLocalIsletmeTipi] = useState<'Süt' | 'Besi' | 'Karma'>(isletmeTipi || 'Süt');
+  const [localIsletmeTipi, setLocalIsletmeTipi] = useState<'Süt' | 'Besi' | 'Karma'>(isletmeTipi || 'Karma');
   const [selectedIrk, setSelectedIrk] = useState<string>('Varsayılan');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [pushLoading, setPushLoading] = useState(true);

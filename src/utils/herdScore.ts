@@ -24,7 +24,7 @@ export function calculateHerdScore(
   gruplar: Grup[],
   saglikOlaylari: SaglikOlayi[],
   sutFiyati: number,
-  isletmeTipi: 'Süt' | 'Besi' | 'Karma' = 'Süt',
+  isletmeTipi: 'Süt' | 'Besi' | 'Karma' = 'Karma',
   canliKiloFiyati: number = 300
 ): HerdScoreResult {
   let milkScore = 0;

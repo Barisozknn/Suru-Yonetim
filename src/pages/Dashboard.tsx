@@ -41,7 +41,8 @@ const Dashboard: React.FC = () => {
   const yemler = useLiveFarmQuery(() => db.yemler.toArray()) || [];
   const gruplar = useLiveFarmQuery(() => db.gruplar.toArray()) || [];
   const saglikOlaylari = useLiveFarmQuery(() => db.saglikOlaylari.toArray()) || [];
-  const { uremeAyarlari, activeCiftlikId, sutLitreFiyati, isletmeTipi, canliKiloFiyati } = useStore();
+  const { uremeAyarlari, activeCiftlikId, sutLitreFiyati, isletmeTipi: storeIsletmeTipi, canliKiloFiyati } = useStore();
+  const isletmeTipi = storeIsletmeTipi || 'Karma';
   const anomalyUyarilar = useAnomalyDetection();
 
   const rawTodos = useLiveFarmQuery(() => db.todos.orderBy('olusturulmaTarihi').reverse().toArray()) || [];

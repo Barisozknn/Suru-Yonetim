@@ -103,7 +103,7 @@ export const useStore = create<StoreState>()(
       sutLitreFiyati: 15.0,
       buzagiFiyati: 50000.0,
       canliKiloFiyati: 300.0,
-      isletmeTipi: 'Süt',
+      isletmeTipi: 'Karma',
 
       setAramaMetni: (metin) => set({ aramaMetni: metin }),
       setTurFiltresi: (tur) => set({ turFiltresi: tur }),

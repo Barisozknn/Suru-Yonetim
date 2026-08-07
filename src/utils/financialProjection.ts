@@ -23,7 +23,7 @@ export function calculate30DayProjection(
   gruplar: Grup[],
   saglikOlaylari: SaglikOlayi[],
   sutFiyati: number,
-  isletmeTipi: 'Süt' | 'Besi' | 'Karma' = 'Süt',
+  isletmeTipi: 'Süt' | 'Besi' | 'Karma' = 'Karma',
   canliKiloFiyati: number = 300
 ): FinancialProjectionResult {
   const now = new Date();
