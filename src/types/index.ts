@@ -262,3 +262,68 @@ export interface GunlukNotu {
   medyalar?: string[];
   etiketler?: string[];
 }
+
+// ─── Genetik Analiz & Islah Modülü ───────────────────────────────────────────────
+
+export interface SkorDetay {
+  hamDeger: number;
+  cevreselDuzeltme: number;
+  duzeltilmisDeger: number;
+  h2Katsayisi: number;
+  genetikTahmin: number;
+  normalizedSkor: number; // 0-100
+  guvenilirlik: number;   // 0-100 (veri yeterliliği)
+  veriSayisi: number;
+}
+
+export interface TDI {
+  hayvanId: string;
+  sutSkoru?: SkorDetay;
+  buyumeSkoru: SkorDetay;
+  saglikSkoru: SkorDetay;
+  fertiliteSkor?: SkorDetay;
+  dogumKolayligi?: SkorDetay;
+  genelIndeks: number;
+  genelGuvenilirlik: number;
+  hesaplamaTarihi: string;
+  isletmeTipi: 'Süt' | 'Besi' | 'Karma';
+}
+
+export interface SpermaKaydi {
+  id: string;
+  ciftlikId?: string;
+  bogaAdi: string;
+  irk?: string;
+  sirket?: string;
+  stokMiktari: number;
+  katalogDegerleri?: Record<string, any>;
+}
+
+export interface PlanlananCiftlesme {
+  id: string;
+  ciftlikId?: string;
+  disiHayvanId: string;
+  erkekHayvanId?: string;
+  spermaId?: string;
+  planlananTarih: string;
+  hedefOzellikler?: string;
+  akrabalikKatsayisi?: number;
+  tahminDogumTarihi?: string;
+  durum: 'Planlandı' | 'Gerçekleşti' | 'İptal';
+  notlar?: string;
+}
+
+export interface ProgenyTestResult {
+  bogaId: string;
+  isVirtualSperm: boolean; // True ise Sperma tablosundan, false ise Hayvanlar tablosundan
+  bogaAdi: string;
+  irk: string;
+  yavruSayisi: number;
+  guvenilirlik: number; // %0-100
+  yavruOrtalamaSut?: number; // Kg/Litre
+  yavruOrtalamaSutSapma?: number; // Sürü ortalamasından sapma (+/-)
+  yavruOrtalamaCanliAgirlik?: number; 
+  yavruOrtalamaCanliAgirlikSapma?: number;
+  // İhtiyaca göre diğer metrikler eklenebilir
+}
+

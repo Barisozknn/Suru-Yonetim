@@ -3,6 +3,8 @@ import { calculateTotalDailyFeedCost, getUpcomingBirths } from './dashboardCalcu
 
 export interface FinancialProjectionResult {
   expectedMilkRevenue: number;
+  expectedMeatRevenue: number;
+  expectedTotalRevenue: number;
   expectedFeedCost: number;
   expectedHealthCost: number;
   netProfit: number;
@@ -21,7 +23,7 @@ export function calculate30DayProjection(
   gruplar: Grup[],
   saglikOlaylari: SaglikOlayi[],
   sutFiyati: number,
-  isletmeTipi: 'Sütçü' | 'Etçi' = 'Sütçü',
+  isletmeTipi: 'Süt' | 'Besi' | 'Karma' = 'Süt',
   canliKiloFiyati: number = 300
 ): FinancialProjectionResult {
   const now = new Date();
@@ -29,11 +31,14 @@ export function calculate30DayProjection(
 
   // 1. Gelir Tahmini
   let expectedMilkRevenue = 0;
+  let expectedMeatRevenue = 0;
+  let expectedTotalRevenue = 0;
+
   let baseMilkVolume = 0;
   let extraMilkFromBirths = 0;
   let totalMilkVolume = 0;
 
-  if (isletmeTipi === 'Sütçü') {
+  if (isletmeTipi === 'Süt' || isletmeTipi === 'Karma') {
     // Son 7 günün ortalama günlük toplam süt üretimini bul
     const sevenDaysAgo = new Date(now);
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -72,11 +77,15 @@ export function calculate30DayProjection(
 
     totalMilkVolume = baseMilkVolume + extraMilkFromBirths;
     expectedMilkRevenue = totalMilkVolume * sutFiyati;
-  } else {
-    // Etçi İşletme Gelir Tahmini
-    const expectedDailyGainTotal = hayvanlar.length * 1.2; // 1.2 kg ortalama ADG varsayımı
-    expectedMilkRevenue = expectedDailyGainTotal * 30 * canliKiloFiyati; // MilkRevenue alanını et geliri olarak kullanıyoruz
   }
+  
+  if (isletmeTipi === 'Besi' || isletmeTipi === 'Karma') {
+    // Etçi / Karma İşletme Gelir Tahmini
+    const expectedDailyGainTotal = hayvanlar.length * 1.2; // 1.2 kg ortalama ADG varsayımı
+    expectedMeatRevenue = expectedDailyGainTotal * 30 * canliKiloFiyati;
+  }
+
+  expectedTotalRevenue = expectedMilkRevenue + expectedMeatRevenue;
 
   // 2. Yem Gideri Tahmini
   const dailyFeedCost = calculateTotalDailyFeedCost(yemler, gruplar, hayvanlar);
@@ -95,10 +104,12 @@ export function calculate30DayProjection(
   const expectedHealthCost = recentHealthCost;
 
   // 4. Net Kar
-  const netProfit = expectedMilkRevenue - expectedFeedCost - expectedHealthCost;
+  const netProfit = expectedTotalRevenue - expectedFeedCost - expectedHealthCost;
 
   return {
     expectedMilkRevenue,
+    expectedMeatRevenue,
+    expectedTotalRevenue,
     expectedFeedCost,
     expectedHealthCost,
     netProfit,

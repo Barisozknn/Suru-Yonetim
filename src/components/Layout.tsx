@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
-  Menu, X, Home, Wheat, Activity, Network, Calculator,
+  Menu, X, Home, Wheat, Activity, Dna, Calculator,
   Syringe, CalendarDays, Settings, Sparkles, Wifi, WifiOff, RefreshCw, Wallet, User, Sun, Moon, NotebookPen
 } from 'lucide-react';
 import { processSyncQueue, pullInitialData, subscribeToRealtimeChanges } from '../services/syncService';
@@ -17,7 +17,7 @@ const NAV_ITEMS = [
   { path: '/saglik', label: 'Sağlık Yönetimi', icon: <Syringe className="w-[22px] h-[22px]" /> },
   { path: '/ureme', label: 'Üreme Yönetimi', icon: <CalendarDays className="w-[22px] h-[22px]" /> },
   { path: '/buzagi', label: 'Buzağı Büyütme', icon: <PiCow className="w-[22px] h-[22px]" /> },
-  { path: '/soy-agaci', label: 'Soy Ağacı', icon: <Network className="w-[22px] h-[22px]" /> },
+  { path: '/soy-agaci', label: 'Genetik', icon: <Dna className="w-[22px] h-[22px]" /> },
   { path: '/sut-agirlik', label: 'Süt & Ağırlık Özet', icon: <Activity className="w-[22px] h-[22px]" /> },
   { path: '/rasyon', label: 'Rasyon Hesaplama', icon: <Calculator className="w-[22px] h-[22px]" /> },
   { path: '/finans', label: 'Gelir Gider Analizi', icon: <Wallet className="w-[22px] h-[22px]" /> },

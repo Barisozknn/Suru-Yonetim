@@ -16,7 +16,7 @@ const Settings: React.FC = () => {
   const [localSutFiyati, setLocalSutFiyati] = useState(sutLitreFiyati.toString());
   const [localBuzagiFiyati, setLocalBuzagiFiyati] = useState(buzagiFiyati.toString());
   const [localCanliKiloFiyati, setLocalCanliKiloFiyati] = useState(canliKiloFiyati?.toString() || '300');
-  const [localIsletmeTipi, setLocalIsletmeTipi] = useState<'Sütçü' | 'Etçi'>(isletmeTipi || 'Sütçü');
+  const [localIsletmeTipi, setLocalIsletmeTipi] = useState<'Süt' | 'Besi' | 'Karma'>(isletmeTipi || 'Süt');
   const [selectedIrk, setSelectedIrk] = useState<string>('Varsayılan');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [pushLoading, setPushLoading] = useState(true);
@@ -455,11 +455,12 @@ const Settings: React.FC = () => {
               <label className="text-xs font-bold text-earth-700 dark:text-gray-300">İşletme Tipi</label>
               <select 
                 value={localIsletmeTipi}
-                onChange={e => setLocalIsletmeTipi(e.target.value as 'Sütçü' | 'Etçi')}
+                onChange={e => setLocalIsletmeTipi(e.target.value as 'Süt' | 'Besi' | 'Karma')}
                 className="w-full p-3 border-2 border-earth-200 dark:border-gray-700 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-nature-500 outline-none font-bold"
               >
-                <option value="Sütçü">Sütçü İşletme</option>
-                <option value="Etçi">Besi / Etçi İşletme</option>
+                <option value="Süt">Süt İşletmesi</option>
+                <option value="Besi">Besi İşletmesi</option>
+                <option value="Karma">Karma İşletme</option>
               </select>
             </div>
             

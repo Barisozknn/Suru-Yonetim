@@ -232,9 +232,11 @@ const Dashboard: React.FC = () => {
               </button>
             </div>
             <p className="text-sm text-indigo-200 mb-6">
-              {isletmeTipi === 'Etçi'
+              {isletmeTipi === 'Besi'
                 ? 'İşletmenizin genel sağlık, büyüme ve yem verimliliği performansı'
-                : 'İşletmenizin genel sağlık, üreme ve verim performansı'}
+                : isletmeTipi === 'Karma'
+                  ? 'İşletmenizin süt, büyüme, üreme, sağlık ve yem verimliliği performansı'
+                  : 'İşletmenizin genel sağlık, üreme ve verim performansı'}
             </p>
           </div>
 
@@ -245,24 +247,32 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className={`grid ${isletmeTipi === 'Etçi' ? 'grid-cols-3' : 'grid-cols-4'} gap-2 mt-6`}>
-            <div className="bg-indigo-900/30 p-2 rounded-lg text-center">
-              <p className="text-[10px] text-indigo-300 uppercase font-bold mb-1">{isletmeTipi === 'Etçi' ? 'Büyüme' : 'Süt'}</p>
-              <p className="font-bold">{herdScoreData.breakdown.milkScore}/40</p>
-            </div>
-            {isletmeTipi === 'Sütçü' && (
+          <div className={`grid gap-2 mt-6 ${isletmeTipi === 'Karma' ? 'grid-cols-5' : isletmeTipi === 'Süt' ? 'grid-cols-4' : 'grid-cols-3'}`}>
+            {(isletmeTipi === 'Süt' || isletmeTipi === 'Karma') && (
+              <div className="bg-indigo-900/30 p-2 rounded-lg text-center">
+                <p className="text-[10px] text-indigo-300 uppercase font-bold mb-1">Süt</p>
+                <p className="font-bold">{herdScoreData.breakdown.milkScore}/{isletmeTipi === 'Karma' ? '20' : '40'}</p>
+              </div>
+            )}
+            {(isletmeTipi === 'Besi' || isletmeTipi === 'Karma') && (
+              <div className="bg-indigo-900/30 p-2 rounded-lg text-center">
+                <p className="text-[10px] text-indigo-300 uppercase font-bold mb-1">Büyüme</p>
+                <p className="font-bold">{herdScoreData.breakdown.growthScore}/{isletmeTipi === 'Karma' ? '20' : '40'}</p>
+              </div>
+            )}
+            {(isletmeTipi === 'Süt' || isletmeTipi === 'Karma') && (
               <div className="bg-indigo-900/30 p-2 rounded-lg text-center">
                 <p className="text-[10px] text-indigo-300 uppercase font-bold mb-1">Üreme</p>
-                <p className="font-bold">{herdScoreData.breakdown.reproductionScore}/30</p>
+                <p className="font-bold">{herdScoreData.breakdown.reproductionScore}/{isletmeTipi === 'Karma' ? '20' : '30'}</p>
               </div>
             )}
             <div className="bg-indigo-900/30 p-2 rounded-lg text-center">
               <p className="text-[10px] text-indigo-300 uppercase font-bold mb-1">Sağlık</p>
-              <p className="font-bold">{herdScoreData.breakdown.healthScore}/{isletmeTipi === 'Etçi' ? '30' : '20'}</p>
+              <p className="font-bold">{herdScoreData.breakdown.healthScore}/{isletmeTipi === 'Karma' ? '20' : isletmeTipi === 'Besi' ? '30' : '20'}</p>
             </div>
             <div className="bg-indigo-900/30 p-2 rounded-lg text-center">
               <p className="text-[10px] text-indigo-300 uppercase font-bold mb-1">Yem Ver.</p>
-              <p className="font-bold">{herdScoreData.breakdown.feedScore}/{isletmeTipi === 'Etçi' ? '30' : '10'}</p>
+              <p className="font-bold">{herdScoreData.breakdown.feedScore}/{isletmeTipi === 'Karma' ? '20' : isletmeTipi === 'Besi' ? '30' : '10'}</p>
             </div>
           </div>
         </div>
@@ -285,9 +295,11 @@ const Dashboard: React.FC = () => {
               </button>
             </div>
             <p className="text-sm text-emerald-200 mb-6">
-              {isletmeTipi === 'Etçi'
+              {isletmeTipi === 'Besi'
                 ? 'Mevcut verilere göre önümüzdeki 30 günün et geliri ve maliyet tahmini'
-                : 'Mevcut verilere göre önümüzdeki 30 günün süt geliri ve maliyet tahmini'}
+                : isletmeTipi === 'Karma'
+                  ? 'Mevcut verilere göre önümüzdeki 30 günün süt + et geliri ve maliyet tahmini'
+                  : 'Mevcut verilere göre önümüzdeki 30 günün süt geliri ve maliyet tahmini'}
             </p>
           </div>
 
@@ -301,13 +313,22 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="space-y-2 text-sm bg-emerald-900/30 p-3 rounded-xl border border-emerald-500/30">
-            <div className="flex justify-between items-center">
-              <span className="text-emerald-200 flex items-center gap-1">
-                {isletmeTipi === 'Etçi' ? <TrendingUp className="w-4 h-4" /> : <Droplets className="w-4 h-4" />}
-                {isletmeTipi === 'Etçi' ? ' Beklenen Et Değer Artışı:' : ' Beklenen Süt Geliri:'}
-              </span>
-              <span className="font-bold">{finProj.expectedMilkRevenue.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })}</span>
-            </div>
+            {(isletmeTipi === 'Süt' || isletmeTipi === 'Karma') && (
+              <div className="flex justify-between items-center">
+                <span className="text-emerald-200 flex items-center gap-1">
+                  <Droplets className="w-4 h-4" /> Beklenen Süt Geliri:
+                </span>
+                <span className="font-bold">{finProj.expectedMilkRevenue.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })}</span>
+              </div>
+            )}
+            {(isletmeTipi === 'Besi' || isletmeTipi === 'Karma') && (
+              <div className="flex justify-between items-center">
+                <span className="text-emerald-200 flex items-center gap-1">
+                  <TrendingUp className="w-4 h-4" /> Beklenen Et Değer Artışı:
+                </span>
+                <span className="font-bold">{finProj.expectedMeatRevenue.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })}</span>
+              </div>
+            )}
             <div className="flex justify-between items-center">
               <span className="text-emerald-300 flex items-center gap-1"><TrendingDown className="w-4 h-4 text-red-300" /> Beklenen Yem Gideri:</span>
               <span className="font-bold text-red-200">-{finProj.expectedFeedCost.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })}</span>
@@ -622,43 +643,51 @@ const Dashboard: React.FC = () => {
               SürüMetri Skoru Nedir?
             </h3>
             <p className="text-sm text-earth-600 dark:text-gray-400 mb-4">
-              SürüMetri Skoru işletmenizin genel sağlık, {isletmeTipi === 'Etçi' ? 'büyüme ve yem verimliliği' : 'üreme ve süt verimi'} performansını 100 üzerinden değerlendiren bilimsel temelli bir hesaplamadır.
+              SürüMetri Skoru işletmenizin genel sağlık, {isletmeTipi === 'Besi' ? 'büyüme ve yem verimliliği' : isletmeTipi === 'Karma' ? 'süt, büyüme, üreme, sağlık ve yem verimliliği' : 'üreme ve süt verimi'} performansını 100 üzerinden değerlendiren bilimsel temelli bir hesaplamadır.
             </p>
             <ul className="text-sm text-earth-700 dark:text-gray-300 space-y-3 mb-6">
-              <li className="flex items-start gap-2">
-                <strong className="text-indigo-600 dark:text-indigo-400 min-w-[70px]">
-                  {isletmeTipi === 'Etçi' ? 'Büyüme (40 Puan)' : 'Süt (40 Puan)'}
-                </strong>
-                <span>
-                  {isletmeTipi === 'Etçi'
-                    ? 'Ortalama canlı ağırlık artış (ADG) performansınıza göre değerlendirilir.'
-                    : 'Son 7 günlük inek başı süt ortalamanızın ideal hedef değere (28 Lt) oranına göre hesaplanır.'}
-                </span>
-              </li>
-              {isletmeTipi === 'Sütçü' && (
+              {(isletmeTipi === 'Süt' || isletmeTipi === 'Karma') && (
                 <li className="flex items-start gap-2">
-                  <strong className="text-indigo-600 dark:text-indigo-400 min-w-[70px]">Üreme (30 Puan)</strong>
+                  <strong className="text-indigo-600 dark:text-indigo-400 min-w-[70px]">
+                    Süt ({isletmeTipi === 'Karma' ? '20' : '40'} Puan)
+                  </strong>
+                  <span>Son 7 günlük inek başı süt ortalamanızın ideal hedef değere (28 Lt) oranına göre hesaplanır.</span>
+                </li>
+              )}
+              {(isletmeTipi === 'Besi' || isletmeTipi === 'Karma') && (
+                <li className="flex items-start gap-2">
+                  <strong className="text-indigo-600 dark:text-indigo-400 min-w-[70px]">
+                    Büyüme ({isletmeTipi === 'Karma' ? '20' : '40'} Puan)
+                  </strong>
+                  <span>Ortalama canlı ağırlık artış (ADG) performansınıza göre değerlendirilir.</span>
+                </li>
+              )}
+              {(isletmeTipi === 'Süt' || isletmeTipi === 'Karma') && (
+                <li className="flex items-start gap-2">
+                  <strong className="text-indigo-600 dark:text-indigo-400 min-w-[70px]">Üreme ({isletmeTipi === 'Karma' ? '20' : '30'} Puan)</strong>
                   <span>Ortalama buzağılama aralığı ve gebelik başına tohumlama sayınızın standartlara uygunluğuna göre belirlenir.</span>
                 </li>
               )}
               <li className="flex items-start gap-2">
                 <strong className="text-indigo-600 dark:text-indigo-400 min-w-[70px]">
-                  {isletmeTipi === 'Etçi' ? 'Sağlık (30 Puan)' : 'Sağlık (20 Puan)'}
+                  Sağlık ({isletmeTipi === 'Karma' ? '20' : isletmeTipi === 'Besi' ? '30' : '20'} Puan)
                 </strong>
                 <span>
-                  {isletmeTipi === 'Etçi'
+                  {isletmeTipi === 'Besi'
                     ? 'Son 30 gündeki hayvan başı sağlık giderinizin kabul edilebilir sınırın altında olmasına göre ölçülür.'
-                    : 'Son 30 gündeki inek başı sağlık giderinizin kabul edilebilir sınırın ne kadar altında olduğuna göre ölçülür.'}
+                    : 'Son 30 gündeki hayvan başı sağlık giderinizin kabul edilebilir sınırın ne kadar altında olduğuna göre ölçülür.'}
                 </span>
               </li>
               <li className="flex items-start gap-2">
                 <strong className="text-indigo-600 dark:text-indigo-400 min-w-[70px]">
-                  {isletmeTipi === 'Etçi' ? 'Yem Ver. (30 Puan)' : 'Yem Ver. (10 Puan)'}
+                  Yem Ver. ({isletmeTipi === 'Karma' ? '20' : isletmeTipi === 'Besi' ? '30' : '10'} Puan)
                 </strong>
                 <span>
-                  {isletmeTipi === 'Etçi'
+                  {isletmeTipi === 'Besi'
                     ? 'Günlük beklenen et değer artışının, toplam günlük yem giderinize oranına (FCR) göre hesaplanır.'
-                    : 'Günlük süt gelirinizin, toplam günlük yem giderinize oranına (IOFC / Yemden yararlanma) göre hesaplanır.'}
+                    : isletmeTipi === 'Karma'
+                      ? 'Günlük toplam (süt + et) gelirinizin, günlük yem giderinize oranına göre hesaplanır.'
+                      : 'Günlük süt gelirinizin, toplam günlük yem giderinize oranına (IOFC / Yemden yararlanma) göre hesaplanır.'}
                 </span>
               </li>
             </ul>
@@ -683,16 +712,22 @@ const Dashboard: React.FC = () => {
               Mevcut verilerinize dayanarak önümüzdeki 30 gün içinde elde edilmesi beklenen net karı ve temel gider/gelir kalemlerini tahmin eder.
             </p>
             <ul className="text-sm text-earth-700 dark:text-gray-300 space-y-3 mb-6">
-              <li className="flex items-start gap-2">
-                <strong className="text-emerald-600 dark:text-emerald-400 min-w-[140px]">
-                  {isletmeTipi === 'Etçi' ? 'Beklenen Et Değer Artışı' : 'Beklenen Süt Geliri'}
-                </strong>
-                <span>
-                  {isletmeTipi === 'Etçi'
-                    ? 'Mevcut sürünüzün tahmini günlük canlı ağırlık artışı ve güncel canlı kilo fiyatı üzerinden hesaplanır.'
-                    : 'Mevcut sağmal ineklerinizin son süt verimleri ve güncel süt litre fiyatı üzerinden hesaplanır.'}
-                </span>
-              </li>
+              {(isletmeTipi === 'Süt' || isletmeTipi === 'Karma') && (
+                <li className="flex items-start gap-2">
+                  <strong className="text-emerald-600 dark:text-emerald-400 min-w-[140px]">
+                    Beklenen Süt Geliri
+                  </strong>
+                  <span>Mevcut sağmal ineklerinizin son süt verimleri ve güncel süt litre fiyatı üzerinden hesaplanır.</span>
+                </li>
+              )}
+              {(isletmeTipi === 'Besi' || isletmeTipi === 'Karma') && (
+                <li className="flex items-start gap-2">
+                  <strong className="text-emerald-600 dark:text-emerald-400 min-w-[140px]">
+                    Beklenen Et Değer Artışı
+                  </strong>
+                  <span>Mevcut sürünüzün tahmini günlük canlı ağırlık artışı ve güncel canlı kilo fiyatı üzerinden hesaplanır.</span>
+                </li>
+              )}
               <li className="flex items-start gap-2">
                 <strong className="text-emerald-600 dark:text-emerald-400 min-w-[140px]">Beklenen Yem Gideri</strong>
                 <span>Hayvanlarınızın bulunduğu gruplara atanan rasyon maliyetleri üzerinden günlük tüketim hesabı yapılarak belirlenir.</span>

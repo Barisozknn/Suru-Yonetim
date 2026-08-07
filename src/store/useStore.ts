@@ -37,14 +37,14 @@ interface StoreState {
   sutLitreFiyati: number;
   buzagiFiyati: number;
   canliKiloFiyati: number;
-  isletmeTipi: 'Sütçü' | 'Etçi';
+  isletmeTipi: 'Süt' | 'Besi' | 'Karma';
   setAramaMetni: (metin: string) => void;
   setTurFiltresi: (tur: string) => void;
   setDurumFiltresi: (durum: string) => void;
   setSutLitreFiyati: (fiyat: number) => void;
   setBuzagiFiyati: (fiyat: number) => void;
   setCanliKiloFiyati: (fiyat: number) => void;
-  setIsletmeTipi: (tip: 'Sütçü' | 'Etçi') => void;
+  setIsletmeTipi: (tip: 'Süt' | 'Besi' | 'Karma') => void;
 
   // Ration Calculator State
   rationSelectedGrupId: string;
@@ -103,7 +103,7 @@ export const useStore = create<StoreState>()(
       sutLitreFiyati: 15.0,
       buzagiFiyati: 50000.0,
       canliKiloFiyati: 300.0,
-      isletmeTipi: 'Sütçü',
+      isletmeTipi: 'Süt',
 
       setAramaMetni: (metin) => set({ aramaMetni: metin }),
       setTurFiltresi: (tur) => set({ turFiltresi: tur }),

@@ -482,4 +482,49 @@ CREATE UNIQUE INDEX IF NOT EXISTS hayvanlar_kupe_no_user_aktif_unique
 ON public.hayvanlar (user_id, kupe_no) 
 WHERE durum = 'Aktif';
 
+-- =============================================================
+-- Yeni Modüller: Genetik ve Islah (Sperma Kayıtları & Çiftleştirme Planları)
+-- =============================================================
+
+-- 1. SPERMA KAYITLARI TABLOSU (Dışarıdan alınan veya stokta olan)
+CREATE TABLE IF NOT EXISTS public.sperma_kayitlari (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    boga_adi TEXT NOT NULL,
+    irk TEXT,
+    sirket TEXT,
+    stok_miktari INTEGER DEFAULT 0,
+    katalog_degerleri JSONB DEFAULT '{}'::jsonb,
+    ciftlik_id UUID REFERENCES public.ciftlikler(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.sperma_kayitlari ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "sperma_kayitlari_all" ON public.sperma_kayitlari USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+ALTER TABLE public.sperma_kayitlari REPLICA IDENTITY FULL;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.sperma_kayitlari;
+
+-- 2. PLANLANAN ÇİFTLEŞMELER TABLOSU
+CREATE TABLE IF NOT EXISTS public.planlanan_ciftlesmeler (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    ciftlik_id UUID REFERENCES public.ciftlikler(id) ON DELETE CASCADE,
+    disi_hayvan_id UUID REFERENCES public.hayvanlar(id) ON DELETE CASCADE,
+    erkek_hayvan_id UUID REFERENCES public.hayvanlar(id) ON DELETE SET NULL, -- Sürü içi boğa
+    sperma_id UUID REFERENCES public.sperma_kayitlari(id) ON DELETE SET NULL, -- Suni Tohumlama
+    planlanan_tarih TEXT NOT NULL,
+    hedef_ozellikler TEXT,
+    akrabalik_katsayisi NUMERIC,
+    tahmin_dogum_tarihi TEXT,
+    durum TEXT NOT NULL DEFAULT 'Planlandı',
+    notlar TEXT,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.planlanan_ciftlesmeler ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "planlanan_ciftlesmeler_all" ON public.planlanan_ciftlesmeler USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+ALTER TABLE public.planlanan_ciftlesmeler REPLICA IDENTITY FULL;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.planlanan_ciftlesmeler;
+
+
 

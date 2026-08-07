@@ -83,13 +83,15 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
 
   const getYasMetni = (dogumTarihi: string) => {
     const yasGun = calculateAgeInDays(dogumTarihi);
-    if (yasGun > 365) {
+    if (yasGun >= 365) {
       const yas = Math.floor(yasGun / 365);
       const ay = Math.floor((yasGun % 365) / 30);
       return ay > 0 ? `${yas} Yaş, ${ay} Ay` : `${yas} Yaş`;
     }
-    if (yasGun > 30) {
-      return `${Math.floor(yasGun / 30)} Aylık`;
+    if (yasGun >= 30) {
+      const ay = Math.floor(yasGun / 30);
+      const gun = yasGun % 30;
+      return gun > 0 ? `${ay} Ay ${gun} Günlük` : `${ay} Aylık`;
     }
     return `${yasGun} Günlük`;
   };
