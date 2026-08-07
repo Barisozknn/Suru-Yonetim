@@ -51,17 +51,19 @@ tam kapsamlı, çevrimdışı-öncelikli yönetim platformu.**
 - Edge Functions destekli sunucu mimarisi
 
 ### 📊 Akıllı Analiz (SürüMetri Skoru & Projeksiyon)
-- Süt verimi, üreme, sağlık ve yem verimliliği metriklerini harmanlayan **SürüMetri Skoru** (100 üzerinden işletme puanı)
-- Gelecek 30 günlük süreçte beklenen yem, sağlık giderleri ve süt gelirlerini hesaplayan **30 Günlük Projeksiyon**
+- İşletme tipinize (Süt, Besi, Karma) özel olarak hesaplanan süt verimi, büyüme (ADG), üreme, sağlık ve yem verimliliği metriklerini harmanlayan **SürüMetri Skoru** (100 üzerinden işletme puanı)
+- Gelecek 30 günlük süreçte beklenen yem, sağlık giderleri ile süt ve et (büyüme) gelirlerini hesaplayan **30 Günlük Projeksiyon**
 
 ### 🐮 Hayvan & Sürü Yönetimi
 - Küpe numarası, ırk, cinsiyet, doğum tarihi ve ebeveyn bilgileri ile tam hayvan kaydı
 - Grup bazlı sürü organizasyonu ve filtreleme
 - Satış takibi ve durum yönetimi (Aktif / Satıldı / Hasta)
 
-### 🌳 Soy Ağacı
+### 🧬 Genetik ve Soy Ağacı
 - 3 nesil boyunca görsel ebeveyn-yavru ilişkisi haritası
 - Anne ve baba tarafı ayrı ayrı izlenebilir
+- Çiftleştirme planlayıcısı (Suni Tohumlama), inbreeding hesaplaması ve genetik skorlama paneli
+- Detaylı boğa kataloğu ve yavruların (progeny testing) takibi
 
 ### 🥛 Süt & Ağırlık Takibi
 - Günlük süt kaydı (litre, yağ %, protein %, somatik hücre)
