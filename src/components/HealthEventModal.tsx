@@ -3,6 +3,7 @@ import { X, Save, Syringe, Stethoscope, Pill, Scissors, FileText } from 'lucide-
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import type { SaglikOlayi, SaglikOlayiTur } from '../types';
+import { COMMON_DISEASES, normalizeDiseaseName } from '../constants/diseases';
 import { v4 as uuidv4 } from 'uuid';
 
 interface Props {
@@ -31,6 +32,8 @@ const HealthEventModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => {
   const today = new Date().toISOString().split('T')[0];
   const [tarih, setTarih] = useState(existing?.tarih || today);
   const [tur, setTur] = useState<SaglikOlayiTur>(existing?.tur || 'Muayene');
+  const [hastalikAdi, setHastalikAdi] = useState(existing?.hastalikAdi || '');
+  const [showHastalikDropdown, setShowHastalikDropdown] = useState(false);
   const [ilacAdi, setIlacAdi] = useState(existing?.ilacAdi || '');
   const [aciklama, setAciklama] = useState(existing?.aciklama || '');
   const [arinmaSuresiGun, setArinmaSuresiGun] = useState(existing?.arinmaSuresiGun || 0);
@@ -41,16 +44,20 @@ const HealthEventModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => {
   const hayvan = useLiveFarmQuery(() => db.hayvanlar.get(hayvanId), [hayvanId]);
 
   const handleSave = async () => {
-    if (!aciklama.trim()) {
-      alert('Açıklama zorunludur.');
+    const finalHastalik = tur === 'Muayene' && hastalikAdi.trim() ? normalizeDiseaseName(hastalikAdi) : undefined;
+    
+    if (!finalHastalik && !aciklama.trim()) {
+      alert('Lütfen ya bir Hastalık seçin/girin, ya da Açıklama alanını doldurun.');
       return;
     }
+
     setSaving(true);
     const payload: SaglikOlayi = {
       id: existing?.id || uuidv4(),
       hayvanId,
       tarih,
       tur,
+      hastalikAdi: finalHastalik,
       ilacAdi: (tur === 'Aşı' || tur === 'İlaç') ? ilacAdi : undefined,
       aciklama,
       arinmaSuresiGun,
@@ -160,6 +167,46 @@ const HealthEventModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => {
               className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500" />
           </div>
 
+          {/* Hastalık Seçimi (Sadece Muayene) */}
+          {tur === 'Muayene' && (
+            <div className="relative">
+              <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Hastalık Adı (İsteğe Bağlı)</label>
+              <input 
+                type="text" 
+                value={hastalikAdi}
+                onChange={e => {
+                  setHastalikAdi(e.target.value);
+                  setShowHastalikDropdown(true);
+                }}
+                onFocus={() => setShowHastalikDropdown(true)}
+                onBlur={() => setTimeout(() => setShowHastalikDropdown(false), 200)}
+                placeholder="Örn: Asidoz (Yazın veya seçin)"
+                className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500"
+              />
+              {showHastalikDropdown && (
+                <ul className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-earth-200 dark:border-gray-700 rounded-lg shadow-xl max-h-48 overflow-y-auto">
+                  {COMMON_DISEASES.filter(d => d.toLowerCase().includes(hastalikAdi.toLowerCase())).map(d => (
+                    <li 
+                      key={d} 
+                      onMouseDown={() => { setHastalikAdi(d); setShowHastalikDropdown(false); }}
+                      className="px-3 py-2 text-sm text-earth-700 dark:text-gray-300 hover:bg-nature-50 dark:hover:bg-nature-900/30 cursor-pointer"
+                    >
+                      {d}
+                    </li>
+                  ))}
+                  {hastalikAdi && !COMMON_DISEASES.some(d => d.toLowerCase() === hastalikAdi.toLowerCase()) && (
+                    <li 
+                      onMouseDown={() => setShowHastalikDropdown(false)}
+                      className="px-3 py-2 text-sm text-nature-600 dark:text-nature-400 italic bg-nature-50/50 dark:bg-nature-900/10 cursor-pointer"
+                    >
+                      "{hastalikAdi}" olarak yeni hastalık kaydet
+                    </li>
+                  )}
+                </ul>
+              )}
+            </div>
+          )}
+
           {/* İlaç/Aşı Adı */}
           {(tur === 'Aşı' || tur === 'İlaç') && (
             <div>
@@ -185,7 +232,9 @@ const HealthEventModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => {
 
           {/* Açıklama */}
           <div>
-            <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Açıklama *</label>
+            <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">
+              {tur === 'Muayene' && hastalikAdi.trim() ? 'Notlar / Ek Detaylar (İsteğe Bağlı)' : 'Açıklama *'}
+            </label>
             <textarea value={aciklama} onChange={e => setAciklama(e.target.value)} rows={3}
               placeholder="Muayene bulguları, doz miktarı, hekim adı..."
               className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 resize-none" />

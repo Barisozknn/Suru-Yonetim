@@ -4,6 +4,7 @@ import type {
   AgirlikKaydi,
   UremeKaydi,
   BuzagiKaydi,
+  SaglikOlayi,
   UyariItem,
   UyariTipi,
   UyariSiddeti,
@@ -395,6 +396,7 @@ export interface AnomalyDetectionInput {
   agirlikKayitlari: AgirlikKaydi[];
   uremeKayitlari: UremeKaydi[];
   buzagiKayitlari: BuzagiKaydi[]; // #7: Gerçek doğum ağırlığı için
+  saglikOlaylari: SaglikOlayi[];
   uremeAyarlari: UremeAyarlari;
 }
 
@@ -408,8 +410,174 @@ const SIDDET_SIRA: Record<UyariSiddeti, number> = {
  * Tum anomali algilayicilarini calistirir ve birlesik, oncelikli uyari listesi doner.
  * Ayni hayvan + tip icin tekrar yoktur (id ile tekillestirilir).
  */
+// ─── 6. Yüksek Somatik Hücre Tespiti ──────────────────────────────────────
+export function detectHighSCC(hayvanlar: Hayvan[], sutKayitlari: SutKaydi[]): UyariItem[] {
+  const uyarilar: UyariItem[] = [];
+  const now = new Date();
+  
+  const inekler = hayvanlar.filter(h => h.tur === 'İnek' && h.durum === 'Aktif');
+  
+  for (const inek of inekler) {
+    const sonKayitlar = sutKayitlari
+      .filter(k => k.hayvanId === inek.id && k.somatikHucre && getDiffDays(new Date(k.tarih), now) <= 30)
+      .sort((a, b) => new Date(b.tarih).getTime() - new Date(a.tarih).getTime());
+      
+    if (sonKayitlar.length === 0) continue;
+    
+    const avgSCC = sonKayitlar.reduce((acc, curr) => acc + (curr.somatikHucre || 0), 0) / sonKayitlar.length;
+    
+    if (avgSCC >= 200000) {
+      const siddet: UyariSiddeti = avgSCC > 400000 ? 'KRITIK' : 'ORTA';
+      uyarilar.push({
+        id: makeId(inek.id, 'YUKSEK_SOMATIK_HUCRE'),
+        hayvanId: inek.id,
+        hayvanKupeNo: inek.kupeNo,
+        tip: 'YUKSEK_SOMATIK_HUCRE',
+        siddet,
+        mesaj: `Yüksek Somatik Hücre (${Math.round(avgSCC).toLocaleString('tr-TR')})`,
+        detay: `Mastitis riski! Son 30 gün SCC ortalaması yüksek.`,
+        tarih: now,
+        linkTo: `/hayvanlar?id=${inek.id}`
+      });
+    }
+  }
+  return uyarilar;
+}
+
+// ─── 7. Negatif Ağırlık Büyümesi Tespiti ─────────────────────────────────
+export function detectNegativeADG(hayvanlar: Hayvan[], agirlikKayitlari: AgirlikKaydi[]): UyariItem[] {
+  const uyarilar: UyariItem[] = [];
+  const now = new Date();
+  
+  const aktifHayvanlar = hayvanlar.filter(h => h.durum === 'Aktif');
+  
+  for (const hayvan of aktifHayvanlar) {
+    const kayitlar = agirlikKayitlari
+      .filter(a => a.hayvanId === hayvan.id)
+      .sort((a, b) => new Date(b.tarih).getTime() - new Date(a.tarih).getTime());
+      
+    if (kayitlar.length < 2) continue;
+    
+    const son = kayitlar[0];
+    const onceki = kayitlar[1];
+    
+    if (son.kg < onceki.kg) {
+      const kayip = onceki.kg - son.kg;
+      uyarilar.push({
+        id: makeId(hayvan.id, 'NEGATIF_ADG'),
+        hayvanId: hayvan.id,
+        hayvanKupeNo: hayvan.kupeNo,
+        tip: 'NEGATIF_ADG',
+        siddet: 'ORTA',
+        mesaj: `Ağırlık Kaybı (${kayip.toFixed(1)} kg)`,
+        detay: `${new Date(onceki.tarih).toLocaleDateString('tr-TR')} tarihinde ${onceki.kg}kg iken şu an ${son.kg}kg.`,
+        tarih: now,
+        linkTo: `/hayvanlar?id=${hayvan.id}`
+      });
+    }
+  }
+  return uyarilar;
+}
+
+// ─── 8. Yüksek Sağlık Maliyeti Tespiti ───────────────────────────────────
+export function detectHighHealthCost(hayvanlar: Hayvan[], saglikOlaylari: SaglikOlayi[]): UyariItem[] {
+  const uyarilar: UyariItem[] = [];
+  const now = new Date();
+  
+  const aktifHayvanlar = hayvanlar.filter(h => h.durum === 'Aktif');
+  if (aktifHayvanlar.length === 0) return uyarilar;
+  
+  const son30GunOlaylar = saglikOlaylari.filter(o => getDiffDays(new Date(o.tarih), now) <= 30);
+  if (son30GunOlaylar.length === 0) return uyarilar;
+  
+  const maliyetler = new Map<string, number>();
+  let toplamMaliyet = 0;
+  
+  for (const olay of son30GunOlaylar) {
+    if (!olay.maliyet) continue;
+    toplamMaliyet += olay.maliyet;
+    maliyetler.set(olay.hayvanId, (maliyetler.get(olay.hayvanId) || 0) + olay.maliyet);
+  }
+  
+  const suruOrtMaliyet = toplamMaliyet / aktifHayvanlar.length;
+  if (suruOrtMaliyet === 0) return uyarilar;
+  
+  for (const hayvan of aktifHayvanlar) {
+    const hayvanMaliyet = maliyetler.get(hayvan.id) || 0;
+    if (hayvanMaliyet > suruOrtMaliyet * 2 && hayvanMaliyet > 500) {
+      uyarilar.push({
+        id: makeId(hayvan.id, 'YUKSEK_SAGLIK_MALIYETI'),
+        hayvanId: hayvan.id,
+        hayvanKupeNo: hayvan.kupeNo,
+        tip: 'YUKSEK_SAGLIK_MALIYETI',
+        siddet: 'ORTA',
+        mesaj: `Yüksek Sağlık Gideri`,
+        detay: `Son 30 günde ₺${hayvanMaliyet.toFixed(0)} harcandı (Sürü ort.: ₺${suruOrtMaliyet.toFixed(0)})`,
+        tarih: now,
+        linkTo: `/hayvanlar?id=${hayvan.id}`
+      });
+    }
+  }
+  return uyarilar;
+}
+
+// ─── 9. Kuru Dönem Besleme Tespiti ───────────────────────────────────────
+export function detectDryPeriodFeeding(hayvanlar: Hayvan[], uremeKayitlari: UremeKaydi[], uremeAyarlari: UremeAyarlari): UyariItem[] {
+  const uyarilar: UyariItem[] = [];
+  const now = new Date();
+  
+  const inekler = hayvanlar.filter(h => h.tur === 'İnek' && h.durum === 'Aktif');
+  
+  for (const inek of inekler) {
+    const irkAyari = getUremeAyarForIrk(inek.irk, uremeAyarlari);
+    const kayitlar = uremeKayitlari
+      .filter((k) => k.hayvanId === inek.id)
+      .sort((a, b) => new Date(b.tarih).getTime() - new Date(a.tarih).getTime());
+      
+    if (kayitlar.length === 0) continue;
+    
+    const sonOlay = kayitlar[0];
+    if (sonOlay.tur === 'Gebelik Kontrolü' && sonOlay.durum === 'Gebe') {
+       const sonTohumlama = kayitlar.find(o => o.tur === 'Tohumlama/Aşım');
+       if (sonTohumlama) {
+          const tohumlamaDate = new Date(sonTohumlama.tarih);
+          const gebelikSuresiGun = irkAyari.gebelikSuresi || 280;
+          const kuruSuresiGun = irkAyari.kuruyaCikarma || 60;
+          
+          const tahminiDogumDate = new Date(tohumlamaDate);
+          tahminiDogumDate.setDate(tahminiDogumDate.getDate() + gebelikSuresiGun);
+          
+          const onerilenKuruDate = new Date(tahminiDogumDate);
+          onerilenKuruDate.setDate(onerilenKuruDate.getDate() - kuruSuresiGun);
+          
+          const kuruyaKalanGun = getDiffDays(now, onerilenKuruDate);
+          
+          // Kuruya 1-14 gün kalmışsa haber ver (özel besleme diyeti için)
+          // Zaten kuruya çıkmışsa (gecenGun < 0) uyarma.
+          // Sonradan kuruya çıkarma olayı girilmiş mi?
+          const kuruyaCikarmaGirilmisMi = kayitlar.some(k => k.tur === 'Kuruya Çıkarma' && new Date(k.tarih) >= tohumlamaDate);
+          
+          if (!kuruyaCikarmaGirilmisMi && kuruyaKalanGun > 0 && kuruyaKalanGun <= 14) {
+             uyarilar.push({
+               id: makeId(inek.id, 'KURU_DONEM_BESLEME'),
+               hayvanId: inek.id,
+               hayvanKupeNo: inek.kupeNo,
+               tip: 'KURU_DONEM_BESLEME',
+               siddet: 'DUSUK',
+               mesaj: `Kuruya çıkmaya ${kuruyaKalanGun} gün kaldı`,
+               detay: `Özel kuru dönem beslemesine geçiş planlayın. Hedef tarih: ${onerilenKuruDate.toLocaleDateString('tr-TR')}`,
+               tarih: now,
+               linkTo: `/hayvanlar?id=${inek.id}`
+             });
+          }
+       }
+    }
+  }
+  return uyarilar;
+}
+
 export function detectAllAnomalies(input: AnomalyDetectionInput): UyariItem[] {
-  const { hayvanlar, sutKayitlari, agirlikKayitlari, uremeKayitlari, buzagiKayitlari, uremeAyarlari } = input;
+  const { hayvanlar, sutKayitlari, agirlikKayitlari, uremeKayitlari, buzagiKayitlari, saglikOlaylari, uremeAyarlari } = input;
 
   const tum: UyariItem[] = [
     ...detectMilkDropAnomalies(hayvanlar, sutKayitlari),
@@ -417,6 +585,10 @@ export function detectAllAnomalies(input: AnomalyDetectionInput): UyariItem[] {
     ...detectReproductionDelays(hayvanlar, uremeKayitlari, uremeAyarlari),
     ...detectOverdueLactations(hayvanlar, uremeKayitlari, uremeAyarlari),
     ...detectDryOffDelays(hayvanlar, uremeKayitlari, uremeAyarlari),
+    ...detectHighSCC(hayvanlar, sutKayitlari),
+    ...detectNegativeADG(hayvanlar, agirlikKayitlari),
+    ...detectHighHealthCost(hayvanlar, saglikOlaylari),
+    ...detectDryPeriodFeeding(hayvanlar, uremeKayitlari, uremeAyarlari),
   ];
 
   const gorulenIds = new Set<string>();

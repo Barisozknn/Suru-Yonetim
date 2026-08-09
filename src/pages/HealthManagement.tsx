@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
-import { Search, Syringe, CalendarDays, Activity } from 'lucide-react';
+import { Search, Syringe, CalendarDays, Activity, BarChart2 } from 'lucide-react';
 import VaccineSchedule from '../components/VaccineSchedule';
 import HealthTimeline from '../components/HealthTimeline';
 import HealthEventModal from '../components/HealthEventModal';
 import VaccineProtocolManager from '../components/VaccineProtocolManager';
+import HealthStats from '../components/HealthStats';
 
 const HealthManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAnimalId, setSelectedAnimalId] = useState<string | null>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'Takvim' | 'Protokoller'>('Takvim');
+  const [activeTab, setActiveTab] = useState<'Takvim' | 'Protokoller' | 'Istatistik'>('Takvim');
 
   const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
+  const saglikOlaylari = useLiveFarmQuery(() => db.saglikOlaylari.toArray()) || [];
   
   const filteredHayvanlar = searchTerm.length > 1 
     ? hayvanlar.filter(h => h.kupeNo.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -84,10 +86,15 @@ const HealthManagement: React.FC = () => {
          <button onClick={() => setActiveTab('Protokoller')} className={`px-4 py-2 rounded-lg font-bold flex items-center transition ${activeTab === 'Protokoller' ? 'bg-earth-800 text-white' : 'bg-white dark:bg-gray-800 text-earth-600 dark:text-gray-400 hover:bg-earth-100 dark:hover:bg-gray-700 border border-earth-200 dark:border-gray-700'}`}>
            <Syringe className="w-5 h-5 mr-2" /> Aşı Protokolleri
          </button>
+         <button onClick={() => setActiveTab('Istatistik')} className={`px-4 py-2 rounded-lg font-bold flex items-center transition ${activeTab === 'Istatistik' ? 'bg-earth-800 text-white' : 'bg-white dark:bg-gray-800 text-earth-600 dark:text-gray-400 hover:bg-earth-100 dark:hover:bg-gray-700 border border-earth-200 dark:border-gray-700'}`}>
+           <BarChart2 className="w-5 h-5 mr-2" /> İstatistikler
+         </button>
       </div>
 
       <div className="flex-1 min-h-[500px]">
-        {activeTab === 'Takvim' ? <VaccineSchedule /> : <VaccineProtocolManager />}
+        {activeTab === 'Takvim' && <VaccineSchedule />}
+        {activeTab === 'Protokoller' && <VaccineProtocolManager />}
+        {activeTab === 'Istatistik' && <HealthStats saglikOlaylari={saglikOlaylari} hayvanlar={hayvanlar} />}
       </div>
 
       {isEventModalOpen && selectedAnimal && (

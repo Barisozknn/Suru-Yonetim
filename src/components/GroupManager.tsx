@@ -72,7 +72,16 @@ const GroupManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
     const grup = gruplar.find(g => g.id === grupId);
     if (!grup) return;
 
-    const payload = { ...grup, rasyonAdi, rasyonOzet, rasyonTarihi: new Date().toISOString() };
+    const yeniTarihce = grup.rasyonTarihcesi || [];
+    if (grup.rasyonAdi && grup.rasyonOzet) {
+      yeniTarihce.push({
+        tarih: grup.rasyonTarihi || new Date().toISOString(),
+        rasyonAdi: grup.rasyonAdi,
+        rasyonOzet: grup.rasyonOzet
+      });
+    }
+
+    const payload = { ...grup, rasyonAdi, rasyonOzet, rasyonTarihi: new Date().toISOString(), rasyonTarihcesi: yeniTarihce };
     await db.gruplar.put(payload);
     await db.syncQueue.add({
       table: 'gruplar',
@@ -84,6 +93,7 @@ const GroupManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
 
   const RasyonForm: React.FC<{ grup: any }> = ({ grup }) => {
     const [isEditing, setIsEditing] = useState(false);
+    const [showHistory, setShowHistory] = useState(false);
     const [rAdi, setRAdi] = useState(grup.rasyonAdi || '');
     const [rOzet, setROzet] = useState(grup.rasyonOzet || '');
     
@@ -131,6 +141,22 @@ const GroupManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
                 </>
               ) : (
                 <p className="text-sm text-earth-500 dark:text-gray-400 italic">Henüz rasyon atanmamış.</p>
+              )}
+              {grup.rasyonTarihcesi && grup.rasyonTarihcesi.length > 0 && (
+                <div className="mt-2">
+                  <button onClick={() => setShowHistory(!showHistory)} className="text-xs font-bold text-nature-600 dark:text-nature-400 hover:underline">
+                    {showHistory ? 'Geçmişi Gizle' : `Tarihçeyi Görüntüle (${grup.rasyonTarihcesi.length})`}
+                  </button>
+                  {showHistory && (
+                    <div className="mt-2 p-2 border border-nature-200 dark:border-nature-800 rounded bg-white dark:bg-gray-800 space-y-2 max-h-40 overflow-y-auto">
+                      {[...grup.rasyonTarihcesi].reverse().map((t: any, i: number) => (
+                        <div key={i} className="text-xs text-earth-700 dark:text-gray-300 border-b border-earth-100 dark:border-gray-700 last:border-0 pb-1 last:pb-0">
+                          <span className="font-bold">{new Date(t.tarih).toLocaleDateString('tr-TR')}</span> - {t.rasyonAdi}: {t.rasyonOzet}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
             <button onClick={() => setIsEditing(true)} className="text-sm text-nature-600 dark:text-nature-400 font-bold hover:underline">Düzenle</button>

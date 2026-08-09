@@ -3,7 +3,8 @@ import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { useStore } from '../store/useStore';
 import { calculateAnimalProfitability } from '../utils/profitability';
-import { Trophy, TrendingUp, AlertCircle, Banknote, HeartPulse, Droplets, Sprout, BarChart3 } from 'lucide-react';
+import { Trophy, TrendingUp, AlertCircle, Banknote, HeartPulse, Droplets, BarChart3 } from 'lucide-react';
+import { PiCow } from 'react-icons/pi';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { Hayvan } from '../types';
 
@@ -163,7 +164,7 @@ const AnimalProfitability: React.FC<Props> = ({ hayvan }) => {
              
              <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
                 <div className="flex items-center space-x-3">
-                   <Sprout className="w-5 h-5 text-purple-500" />
+                   <PiCow className="w-5 h-5 text-purple-500" />
                    <div>
                       <div className="font-bold text-earth-800 dark:text-gray-200">Buzağı Geliri</div>
                       <div className="text-xs text-earth-500 dark:text-gray-400">Tahmini Değer</div>

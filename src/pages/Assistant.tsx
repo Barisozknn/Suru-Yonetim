@@ -252,6 +252,24 @@ const ASSISTANT_TOOLS = [
   {
     type: "function",
     function: {
+      name: "compareGroups",
+      description: "İki veya daha fazla grubun süt ortalamalarını, yem maliyetlerini ve karlılığını karşılaştırır. Kullanıcı grupları kıyaslamak istediğinde çağrılır.",
+      parameters: {
+        type: "object",
+        properties: {
+          grupAdlari: { 
+            type: "array", 
+            items: { type: "string" },
+            description: "Karşılaştırılacak grupların adları (Örn: ['Sağmal 1', 'Sağmal 2'])"
+          }
+        },
+        required: ["grupAdlari"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
       name: "bulkApplyHealthRecord",
       description: "Belirli bir gruptaki TÜM hayvanlara aynı anda (topluca) sağlık işlemi, aşı veya tedavi kaydı ekler.",
       parameters: {
@@ -1337,6 +1355,55 @@ const Assistant: React.FC = () => {
                  await db.syncQueue.add({ table: 'todos', action: 'UPDATE', payload: updated, created_at: Date.now() });
                  functionResult = yapildi ? "Görev 'TAMAMLANDI' olarak işaretlendi." : "Görev 'BEKLİYOR' olarak geri alındı.";
                }
+
+            } else if (functionName === "compareGroups") {
+               const gruplar = await db.gruplar.toArray();
+               const yemler = await db.yemler.toArray();
+               const hayvanlar = await db.hayvanlar.toArray();
+               const sutKayitlari = await db.sutKayitlari.toArray();
+               
+               const grupAdlari = functionArgs.grupAdlari as string[];
+               const karsilastirmaSonucu: any[] = [];
+               
+               for (const gAd of grupAdlari) {
+                 const grup = gruplar.find(g => g.ad.toLowerCase() === gAd.toLowerCase());
+                 if (grup) {
+                    const grupHayvanlari = hayvanlar.filter(h => h.grupId === grup.id);
+                    
+                    let yemMaliyeti = 0;
+                    if (grup.rasyonOzet) {
+                       yemMaliyeti = calculateTotalDailyFeedCost(yemler, [grup], hayvanlar);
+                    }
+                    
+                    let toplamSut = 0;
+                    const now = new Date();
+                    const birHaftaOnce = new Date();
+                    birHaftaOnce.setDate(now.getDate() - 7);
+                    
+                    const grupHayvanIds = new Set(grupHayvanlari.map(h => h.id));
+                    const grupSut = sutKayitlari.filter(k => grupHayvanIds.has(k.hayvanId) && new Date(k.tarih) >= birHaftaOnce);
+                    
+                    if (grupHayvanlari.length > 0) {
+                      const sutTotal = grupSut.reduce((acc, curr) => acc + curr.litre, 0);
+                      toplamSut = sutTotal / 7;
+                    }
+                    
+                    karsilastirmaSonucu.push({
+                      grupAdi: grup.ad,
+                      hayvanSayisi: grupHayvanlari.length,
+                      toplamGunlukYemMaliyetiTL: yemMaliyeti.toFixed(2),
+                      hayvanBasiGunlukYemMaliyetiTL: grupHayvanlari.length > 0 ? (yemMaliyeti / grupHayvanlari.length).toFixed(2) : "0",
+                      son7GunGrupGunlukSutOrtalamasiLitre: toplamSut.toFixed(1),
+                      hayvanBasiGunlukSutOrtalamasiLitre: grupHayvanlari.length > 0 ? (toplamSut / grupHayvanlari.length).toFixed(1) : "0"
+                    });
+                 }
+               }
+               
+               if (karsilastirmaSonucu.length === 0) {
+                 throw new Error("Belirtilen gruplar bulunamadı.");
+               }
+               
+               functionResult = "Grupların Karşılaştırma Sonucu:\n" + JSON.stringify(karsilastirmaSonucu, null, 2);
 
             } else {
               throw new Error("Bilinmeyen fonksiyon çağrısı.");

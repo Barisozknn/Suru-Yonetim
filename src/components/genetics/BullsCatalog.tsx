@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useLiveFarmQuery } from '../../hooks/useLiveFarmQuery';
 import { db } from '../../lib/db';
 import { generateBullsCatalog } from '../../utils/progenyTesting';
-import { calcHerdMilkAvg, calcHerdWeightAvg } from '../../utils/geneticScoring';
+import { calcHerdMilkAvg, calcHerdADGAvg } from '../../utils/geneticScoring';
 import { ShieldCheck, AlertTriangle } from 'lucide-react';
 
 const BullsCatalog: React.FC = () => {
@@ -15,7 +15,7 @@ const BullsCatalog: React.FC = () => {
     if (hayvanlar.length === 0) return [];
     
     const sutS = calcHerdMilkAvg(sutKayitlari);
-    const agS = calcHerdWeightAvg(agirlikKayitlari);
+    const agS = calcHerdADGAvg(agirlikKayitlari, hayvanlar);
     return generateBullsCatalog(hayvanlar, uremeKayitlari, sutKayitlari, agirlikKayitlari, sutS, agS);
   }, [hayvanlar, uremeKayitlari, sutKayitlari, agirlikKayitlari]);
 

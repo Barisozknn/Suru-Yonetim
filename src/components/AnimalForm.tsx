@@ -7,6 +7,7 @@ import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import OcrScanner from './OcrScanner';
 import { v4 as uuidv4 } from 'uuid';
+import { COMMON_DISEASES, normalizeDiseaseName } from '../constants/diseases';
 
 export const STANDART_IRKLAR = [
   "Holstein", "Jersey", "Ayrshire", "Simmental", "Montofon", "Şarole", 
@@ -45,6 +46,9 @@ const schema = z.object({
   kisirlastirildiMi: z.boolean().optional(),
   satisFiyati: z.number().or(z.nan()).optional(),
   satisTarihi: z.string().optional(),
+  olumTarihi: z.string().optional(),
+  olumNedeniTipi: z.enum(['Hastalık', 'Diğer']).optional(),
+  olumNedeniDetay: z.string().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -104,6 +108,11 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
   const currentCinsiyet = watch('cinsiyet');
   const currentTur = watch('tur');
   const currentDurum = watch('durum');
+  
+  const [olumTarihi, setOlumTarihi] = useState(initialData?.olumTarihi || new Date().toISOString().split('T')[0]);
+  const [olumNedeniTipi, setOlumNedeniTipi] = useState<'Hastalık' | 'Diğer'>(initialData?.olumNedeniTipi || 'Hastalık');
+  const [olumNedeniDetay, setOlumNedeniDetay] = useState(initialData?.olumNedeniDetay || '');
+  const [showHastalikDropdown, setShowHastalikDropdown] = useState(false);
 
   React.useEffect(() => {
     if (['İnek', 'Düve'].includes(currentTur)) {
@@ -167,6 +176,18 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
       } else {
         data.satisTarihi = undefined;
         data.satisFiyati = undefined;
+      }
+
+      if (data.durum === 'Öldü') {
+        data.olumTarihi = olumTarihi;
+        data.olumNedeniTipi = olumNedeniTipi;
+        data.olumNedeniDetay = olumNedeniTipi === 'Hastalık' && olumNedeniDetay.trim() 
+          ? normalizeDiseaseName(olumNedeniDetay) 
+          : olumNedeniDetay;
+      } else {
+        data.olumTarihi = undefined;
+        data.olumNedeniTipi = undefined;
+        data.olumNedeniDetay = undefined;
       }
 
       const payload = {
@@ -356,24 +377,108 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
             </div>
 
             {currentDurum === 'Satıldı' && (
-              <>
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-earth-700 dark:text-gray-300">Satış Fiyatı (₺)</label>
-                  <input 
-                    type="number" 
-                    {...register('satisFiyati', { valueAsNumber: true })} 
-                    className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500"
-                  />
+              <div className="col-span-1 md:col-span-2 space-y-4 bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-200 dark:border-blue-800/30 mt-2">
+                <h4 className="font-bold text-blue-800 dark:text-blue-400">Satış Kayıt Bilgileri</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-sm font-semibold text-blue-700 dark:text-blue-300">Satış Fiyatı (₺)</label>
+                    <input 
+                      type="number" 
+                      {...register('satisFiyati', { valueAsNumber: true })} 
+                      className="w-full p-2 border border-blue-300 dark:border-blue-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-sm font-semibold text-blue-700 dark:text-blue-300">Satış Tarihi</label>
+                    <input 
+                      type="date" 
+                      {...register('satisTarihi')} 
+                      className="w-full p-2 border border-blue-300 dark:border-blue-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-earth-700 dark:text-gray-300">Satış Tarihi</label>
-                  <input 
-                    type="date" 
-                    {...register('satisTarihi')} 
-                    className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500"
-                  />
+              </div>
+            )}
+
+            {currentDurum === 'Öldü' && (
+              <div className="col-span-1 md:col-span-2 space-y-4 bg-red-50 dark:bg-red-900/10 p-4 rounded-xl border border-red-200 dark:border-red-800/30 mt-2">
+                <h4 className="font-bold text-red-800 dark:text-red-400">Ölüm Kayıt Bilgileri</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-sm font-semibold text-red-700 dark:text-red-300">Ölüm Tarihi</label>
+                    <input 
+                      type="date" 
+                      value={olumTarihi}
+                      onChange={e => setOlumTarihi(e.target.value)}
+                      className="w-full p-2 border border-red-300 dark:border-red-600 rounded-lg focus:ring-2 focus:ring-red-500 bg-white dark:bg-gray-800"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-sm font-semibold text-red-700 dark:text-red-300">Ölüm Nedeni Tipi</label>
+                    <select 
+                      value={olumNedeniTipi}
+                      onChange={e => {
+                        setOlumNedeniTipi(e.target.value as any);
+                        setOlumNedeniDetay('');
+                      }}
+                      className="w-full p-2 border border-red-300 dark:border-red-600 rounded-lg focus:ring-2 focus:ring-red-500 bg-white dark:bg-gray-800"
+                    >
+                      <option value="Hastalık">Hastalık</option>
+                      <option value="Diğer">Diğer Nedenler</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1 relative">
+                    <label className="text-sm font-semibold text-red-700 dark:text-red-300">
+                      {olumNedeniTipi === 'Hastalık' ? 'Hastalık Adı' : 'Nedeni Belirtin'}
+                    </label>
+                    {olumNedeniTipi === 'Hastalık' ? (
+                      <div>
+                        <input 
+                          type="text" 
+                          value={olumNedeniDetay}
+                          onChange={e => {
+                            setOlumNedeniDetay(e.target.value);
+                            setShowHastalikDropdown(true);
+                          }}
+                          onFocus={() => setShowHastalikDropdown(true)}
+                          onBlur={() => setTimeout(() => setShowHastalikDropdown(false), 200)}
+                          placeholder="Örn: Ketozis (Seçin/Yazın)"
+                          className="w-full p-2 border border-red-300 dark:border-red-600 rounded-lg focus:ring-2 focus:ring-red-500 bg-white dark:bg-gray-800"
+                        />
+                        {showHastalikDropdown && (
+                          <ul className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-red-200 dark:border-gray-700 rounded-lg shadow-xl max-h-48 overflow-y-auto">
+                            {COMMON_DISEASES.filter(d => d.toLowerCase().includes(olumNedeniDetay.toLowerCase())).map(d => (
+                              <li 
+                                key={d} 
+                                onMouseDown={() => { setOlumNedeniDetay(d); setShowHastalikDropdown(false); }}
+                                className="px-3 py-2 text-sm text-earth-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/30 cursor-pointer"
+                              >
+                                {d}
+                              </li>
+                            ))}
+                            {olumNedeniDetay && !COMMON_DISEASES.some(d => d.toLowerCase() === olumNedeniDetay.toLowerCase()) && (
+                              <li 
+                                onMouseDown={() => setShowHastalikDropdown(false)}
+                                className="px-3 py-2 text-sm text-red-600 dark:text-red-400 italic bg-red-50/50 dark:bg-red-900/10 cursor-pointer"
+                              >
+                                "{olumNedeniDetay}" olarak kaydet
+                              </li>
+                            )}
+                          </ul>
+                        )}
+                      </div>
+                    ) : (
+                      <input 
+                        type="text" 
+                        value={olumNedeniDetay}
+                        onChange={e => setOlumNedeniDetay(e.target.value)}
+                        placeholder="Örn: Boğulma, Kaza vb."
+                        className="w-full p-2 border border-red-300 dark:border-red-600 rounded-lg focus:ring-2 focus:ring-red-500 bg-white dark:bg-gray-800"
+                      />
+                    )}
+                  </div>
                 </div>
-              </>
+              </div>
             )}
 
             <div className="space-y-1">

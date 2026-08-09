@@ -9,6 +9,9 @@ export interface Hayvan {
   guncelAgirlikKg: number;
   grupId: string | null;
   durum: 'Aktif' | 'Satıldı' | 'Öldü';
+  olumTarihi?: string;
+  olumNedeniTipi?: 'Hastalık' | 'Diğer';
+  olumNedeniDetay?: string;
   anneKupeNo?: string;
   babaKupeNo?: string;
   fotografUrl?: string;
@@ -26,8 +29,15 @@ export interface Grup {
   aciklama?: string;
   hayvanSayisi?: number;
   rasyonAdi?: string;
-  rasyonOzet?: string;
-  rasyonTarihi?: string;
+  rasyonOzet?: string; // { yemId: kg_miktari } gibi bir string özet
+  rasyonTarihi?: string; // Atanma veya güncellenme tarihi
+  
+  // Faz 7.3 Rasyon Versiyonlama
+  rasyonTarihcesi?: Array<{
+    tarih: string;
+    rasyonAdi: string;
+    rasyonOzet: string;
+  }>;
 }
 
 export interface Yem {
@@ -63,6 +73,7 @@ export interface SutKaydi {
   hayvanId: string;
   tarih: string;
   litre: number;
+  ogun?: 'Sabah' | 'Akşam' | 'Gece';
   yagYuzde?: number;
   proteinYuzde?: number;
   laktozYuzde?: number;
@@ -85,6 +96,7 @@ export interface SaglikOlayi {
   hayvanId: string;
   tarih: string;
   tur: SaglikOlayiTur;
+  hastalikAdi?: string;
   ilacAdi?: string;
   aciklama: string;
   arinmaSuresiGun: number;
@@ -216,7 +228,11 @@ export type UyariTipi =
   | 'UREME_GECIKME'      // Doğum sonrası tohumlama süresi aşıldı
   | 'LAKTASYON_UZADI'    // Laktasyon süresi normalin üzerinde (kuru kayıt yok)
   | 'KIZGINLIK_BEKLIYOR' // Kızgınlık dönemine girdi ama kayıt girilmedi
-  | 'KURUYA_CIKARMA_GECIKTI'; // Gebelik kontrolü 'Gebe' ise ve kuruya çıkarma tarihi geçtiyse
+  | 'KURUYA_CIKARMA_GECIKTI' // Gebelik kontrolü 'Gebe' ise ve kuruya çıkarma tarihi geçtiyse
+  | 'YUKSEK_SOMATIK_HUCRE'   // SCC > 400.000 → mastitis riski
+  | 'NEGATIF_ADG'             // Son 2 ölçüm arası kilo kaybı
+  | 'YUKSEK_SAGLIK_MALIYETI'  // 30 gün maliyet > sürü ort. × 2
+  | 'KURU_DONEM_BESLEME';     // Kuruya çıkarma tarihi 14 gün kala
 
 export type UyariSiddeti = 'DUSUK' | 'ORTA' | 'KRITIK';
 

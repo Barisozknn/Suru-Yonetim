@@ -7,6 +7,8 @@ import ReproductionTimeline from '../components/ReproductionTimeline';
 import ReproductionModal from '../components/ReproductionModal';
 import MaleReproductionTimeline from '../components/MaleReproductionTimeline';
 import MaleReproductionModal from '../components/MaleReproductionModal';
+import ReproductionKPI from '../components/ReproductionKPI';
+import ReproductionStatusReport from '../components/ReproductionStatusReport';
 
 const ReproductionManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,6 +31,8 @@ const ReproductionManagement: React.FC = () => {
           <p className="text-earth-500 dark:text-gray-400 font-medium text-sm sm:text-base mt-0.5">Tohumlama, gebelik kontrolleri ve doğum takibi</p>
         </div>
       </div>
+
+      <ReproductionKPI />
 
       <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex-shrink-0 relative">
         <h2 className="text-lg font-bold text-earth-800 dark:text-gray-200 mb-3 flex items-center"><Search className="w-5 h-5 mr-2 text-earth-500 dark:text-gray-400"/> Hızlı İşlem (Hayvan Ara)</h2>
@@ -80,6 +84,8 @@ const ReproductionManagement: React.FC = () => {
           </div>
         )}
       </div>
+
+      <ReproductionStatusReport />
 
       <div className="flex-1 min-h-[500px]">
         <ReproductionSchedule />

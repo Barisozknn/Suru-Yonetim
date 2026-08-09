@@ -9,6 +9,8 @@ import {
   Scale,
   Heart,
   Clock,
+  Activity,
+  CreditCard
 } from 'lucide-react';
 import type { UyariItem, UyariTipi, UyariSiddeti } from '../types';
 
@@ -47,6 +49,10 @@ const TIP_IKON: Record<UyariTipi, React.ComponentType<{ className?: string }>> =
   LAKTASYON_UZADI: Clock,
   KIZGINLIK_BEKLIYOR: Heart,
   KURUYA_CIKARMA_GECIKTI: Clock,
+  YUKSEK_SOMATIK_HUCRE: Activity,
+  NEGATIF_ADG: TrendingDown,
+  YUKSEK_SAGLIK_MALIYETI: CreditCard,
+  KURU_DONEM_BESLEME: Clock,
 };
 
 const TIP_ETIKET: Record<UyariTipi, string> = {
@@ -56,6 +62,10 @@ const TIP_ETIKET: Record<UyariTipi, string> = {
   LAKTASYON_UZADI: 'Uzamış Laktasyon',
   KIZGINLIK_BEKLIYOR: 'Kızgınlık Bekleniyor',
   KURUYA_CIKARMA_GECIKTI: 'Kuruya Çıkarma Gecikti',
+  YUKSEK_SOMATIK_HUCRE: 'Yüksek Somatik Hücre',
+  NEGATIF_ADG: 'Negatif Büyüme (Kilo Kaybı)',
+  YUKSEK_SAGLIK_MALIYETI: 'Yüksek Sağlık Maliyeti',
+  KURU_DONEM_BESLEME: 'Kuru Dönem Beslemesi Yaklaşıyor',
 };
 
 const SIDDET_ETIKET: Record<UyariSiddeti, string> = {

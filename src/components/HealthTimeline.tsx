@@ -109,8 +109,13 @@ const HealthTimeline: React.FC<Props> = ({ hayvanId }) => {
                 <div className={`flex-1 border rounded-xl p-3 ${config.bg} group`}>
                   <div className="flex justify-between items-start">
                     <div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className={`font-bold text-sm ${config.color}`}>{olay.tur}</span>
+                        {olay.hastalikAdi && (
+                          <span className="text-xs font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded border border-red-300">
+                            Hastalık: {olay.hastalikAdi}
+                          </span>
+                        )}
                         {olay.ilacAdi && (
                           <span className="text-xs font-mono bg-white/70 px-2 py-0.5 rounded border border-current/20">{olay.ilacAdi}</span>
                         )}

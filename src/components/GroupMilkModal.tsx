@@ -24,6 +24,7 @@ const GroupMilkModal: React.FC<Props> = ({ grup, onClose }) => {
   }
 
   const [tarih, setTarih] = useState(new Date().toISOString().split('T')[0]);
+  const [ogun, setOgun] = useState<'Sabah' | 'Akşam' | 'Gece' | ''>('');
   const [kayitlar, setKayitlar] = useState<Record<string, SutVeri>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -48,6 +49,7 @@ const GroupMilkModal: React.FC<Props> = ({ grup, onClose }) => {
           id: uuidv4(),
           hayvanId,
           tarih,
+          ogun: ogun || undefined,
           litre: kayitlar[hayvanId].litre!,
           yagYuzde: kayitlar[hayvanId].yagYuzde,
           proteinYuzde: kayitlar[hayvanId].proteinYuzde,
@@ -99,13 +101,30 @@ const GroupMilkModal: React.FC<Props> = ({ grup, onClose }) => {
         </div>
 
         <div className="p-4 border-b border-earth-200 dark:border-gray-700 bg-earth-50 dark:bg-gray-900">
-          <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Sağım Tarihi</label>
-          <input 
-            type="date" 
-            value={tarih} 
-            onChange={e => setTarih(e.target.value)} 
-            className="w-full max-w-xs p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" 
-          />
+          <div className="flex gap-4">
+            <div className="flex-1 max-w-xs">
+              <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Sağım Tarihi</label>
+              <input 
+                type="date" 
+                value={tarih} 
+                onChange={e => setTarih(e.target.value)} 
+                className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" 
+              />
+            </div>
+            <div className="flex-1 max-w-xs">
+              <label className="block text-sm font-bold text-earth-700 dark:text-gray-300 mb-1">Sağım Zamanı <span className="font-normal text-earth-500">(opsiyonel)</span></label>
+              <select 
+                value={ogun} 
+                onChange={e => setOgun(e.target.value as any)} 
+                className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white dark:bg-gray-800"
+              >
+                 <option value="">-- Seçin --</option>
+                 <option value="Sabah">Sabah</option>
+                 <option value="Akşam">Akşam</option>
+                 <option value="Gece">Gece</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         <div className="flex-1 overflow-x-auto overflow-y-auto p-4 bg-earth-50/50">

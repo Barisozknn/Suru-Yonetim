@@ -6,6 +6,7 @@ import { Droplet, TrendingUp, Activity, Award, Search, ChevronRight, ArrowLeft }
 import { Link } from 'react-router-dom';
 import MilkRecords from '../components/MilkRecords';
 import WeightRecords from '../components/WeightRecords';
+import MilkQualityDashboard from '../components/MilkQualityDashboard';
 
 const YieldAnalysis: React.FC = () => {
   const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
@@ -15,6 +16,7 @@ const YieldAnalysis: React.FC = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAnimalId, setSelectedAnimalId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'Özet' | 'Kalite'>('Özet');
 
   const [timeFilter, setTimeFilter] = useState<'7' | '30' | '365' | 'all'>('30');
   const [groupFilter, setGroupFilter] = useState<string>('all');
@@ -46,6 +48,7 @@ const YieldAnalysis: React.FC = () => {
     targetHayvanIds.has(k.hayvanId) && 
     (!targetDate || new Date(k.tarih) >= targetDate)
   );
+
 
   // 1. Süt Eğrisi ve Toplamlar
   let toplamSut = 0;
@@ -133,10 +136,37 @@ const YieldAnalysis: React.FC = () => {
       </div>
 
       {!selectedAnimalId ? (
-        <>
-          {/* Hızlı İşlem Arama */}
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex-shrink-0 relative">
-            <h2 className="text-lg font-bold text-earth-800 dark:text-gray-200 mb-3 flex items-center"><Search className="w-5 h-5 mr-2 text-earth-500 dark:text-gray-400"/> Bireysel Verim Girişi (Hayvan Ara)</h2>
+        <div className="space-y-6">
+          <div className="flex bg-earth-100 dark:bg-gray-800 p-1 rounded-xl w-full sm:w-fit mt-2">
+            <button
+              onClick={() => setActiveTab('Özet')}
+              className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-6 py-2.5 rounded-lg font-bold text-sm transition ${
+                activeTab === 'Özet'
+                  ? 'bg-white dark:bg-gray-700 text-earth-900 dark:text-white shadow-sm'
+                  : 'text-earth-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-700/50'
+              }`}
+            >
+              <Activity className="w-4 h-4" />
+              <span>Verim Özeti</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('Kalite')}
+              className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-6 py-2.5 rounded-lg font-bold text-sm transition ${
+                activeTab === 'Kalite'
+                  ? 'bg-white dark:bg-gray-700 text-earth-900 dark:text-white shadow-sm'
+                  : 'text-earth-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-700/50'
+              }`}
+            >
+              <Droplet className="w-4 h-4" />
+              <span>Süt Kalitesi</span>
+            </button>
+          </div>
+
+          {activeTab === 'Özet' ? (
+            <div className="space-y-6">
+              {/* Hızlı İşlem Arama */}
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex-shrink-0 relative">
+                <h2 className="text-lg font-bold text-earth-800 dark:text-gray-200 mb-3 flex items-center"><Search className="w-5 h-5 mr-2 text-earth-500 dark:text-gray-400"/> Bireysel Verim Girişi (Hayvan Ara)</h2>
             <div className="relative">
               <input
                 type="text"
@@ -311,7 +341,11 @@ const YieldAnalysis: React.FC = () => {
         </div>
 
         </div>
-        </>
+            </div>
+          ) : (
+            <MilkQualityDashboard hayvanlar={hayvanlar} sutKayitlari={sutKayitlari} gruplar={gruplar} />
+          )}
+        </div>
       ) : (
         /* BİREYSEL HAYVAN VERİM GİRİŞİ */
         <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex-1 flex flex-col min-h-0">

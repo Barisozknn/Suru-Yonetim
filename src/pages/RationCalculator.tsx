@@ -301,42 +301,68 @@ const RationCalculator: React.FC = () => {
         }
       });
 
-      let result: any;
-      let usedFallback = false;
-      try {
-        result = solver.Solve(model);
-        if (result.feasible === false) {
-          // Çözüm bulunamazsa katı sınırları kaldırıp (fallback) tekrar dene
-          delete model.constraints.me.max;
-          delete model.constraints.hp.max;
-          delete model.constraints.ca;
-          delete model.constraints.p;
-          result = solver.Solve(model);
-          if (result.feasible !== false) {
-            usedFallback = true;
+      if (typeof Worker !== 'undefined') {
+        const worker = new Worker(new URL('../workers/rationWorker.ts', import.meta.url), { type: 'module' });
+        
+        worker.onmessage = (e) => {
+          const { success, result, usedFallback, error } = e.data;
+          
+          if (success) {
+            if (result.feasible === false) {
+              alert("Optimum bir rasyon bulunamadı. Lütfen hedef ihtiyaçları ve kısıtlamaları (min/max) kontrol edin veya farklı yemler ekleyin.");
+            } else {
+              if (usedFallback) {
+                alert("Katı kısıtlarla (maksimum %20 fazlalık sınırı) rasyon bulunamadı. Kısıtlar esnetilerek (sınırlar kaldırılarak) bir çözüm bulundu. Lütfen sonuçlardaki fazla kullanım uyarılarını dikkate alın.");
+              }
+              const newRasyon = safeRasyonListesi.map(r => {
+                if (!r) return r;
+                const varName = `yem_${r.id}`;
+                const miktar = result[varName] || 0;
+                return { ...r, kgAsFed: Number(miktar.toFixed(2)) };
+              });
+              setRasyonListesi(newRasyon);
+            }
+          } else {
+            console.error("Worker Error:", error);
+            alert("Hesaplama Hatası: " + error);
           }
-        }
-      } catch (e) {
-        console.error("Solver Error", e);
-        result = { feasible: false };
-      }
+          
+          setIsOptimizing(false);
+          worker.terminate();
+        };
 
-      if (result.feasible === false) {
-        alert("Optimum bir rasyon bulunamadı. Lütfen hedef ihtiyaçları ve kısıtlamaları (min/max) kontrol edin veya farklı yemler ekleyin.");
+        worker.postMessage({ model });
       } else {
-        if (usedFallback) {
-          alert("Katı kısıtlarla (maksimum %20 fazlalık sınırı) rasyon bulunamadı. Kısıtlar esnetilerek (sınırlar kaldırılarak) bir çözüm bulundu. Lütfen sonuçlardaki fazla kullanım uyarılarını dikkate alın.");
-        }
-        const newRasyon = safeRasyonListesi.map(r => {
-          if (!r) return r;
-          const varName = `yem_${r.id}`;
-          const miktar = result[varName] || 0;
-          return { ...r, kgAsFed: Number(miktar.toFixed(2)) };
-        });
-        setRasyonListesi(newRasyon);
-      }
+        // Fallback if Worker is not available
+        try {
+          let result: any = solver.Solve(model);
+          let usedFallback = false;
+          if (result.feasible === false) {
+            delete model.constraints.me.max;
+            delete model.constraints.hp.max;
+            delete model.constraints.ca;
+            delete model.constraints.p;
+            result = solver.Solve(model);
+            if (result.feasible !== false) usedFallback = true;
+          }
 
-      setIsOptimizing(false);
+          if (result.feasible === false) {
+            alert("Optimum bir rasyon bulunamadı. Lütfen hedef ihtiyaçları ve kısıtlamaları (min/max) kontrol edin veya farklı yemler ekleyin.");
+          } else {
+            if (usedFallback) alert("Katı kısıtlarla çözüm bulunamadı. Kısıtlar esnetilerek bir çözüm bulundu.");
+            const newRasyon = safeRasyonListesi.map(r => {
+              if (!r) return r;
+              const varName = `yem_${r.id}`;
+              const miktar = result[varName] || 0;
+              return { ...r, kgAsFed: Number(miktar.toFixed(2)) };
+            });
+            setRasyonListesi(newRasyon);
+          }
+        } catch (err: any) {
+          alert("Hesaplama Hatası: " + err.message);
+        }
+        setIsOptimizing(false);
+      }
     }, 100);
   };
 
@@ -650,22 +676,35 @@ const RationCalculator: React.FC = () => {
                   return y ? `${y.ad}: ${r.kgAsFed}kg` : '';
                 }).filter(Boolean).join(', ');
 
+                // 1. Önce eski rasyonu al
+                const guncelGrup = await db.gruplar.get(selectedGrupId);
+                
+                const yeniTarihce = guncelGrup?.rasyonTarihcesi || [];
+                if (guncelGrup && guncelGrup.rasyonAdi && guncelGrup.rasyonOzet) {
+                   yeniTarihce.push({
+                     tarih: guncelGrup.rasyonTarihi || new Date().toISOString(),
+                     rasyonAdi: guncelGrup.rasyonAdi,
+                     rasyonOzet: guncelGrup.rasyonOzet
+                   });
+                }
+
                 const rasyonGuncellemesi = {
                   rasyonAdi: `${verimYonu} Rasyonu`,
                   rasyonOzet: summary,
-                  rasyonTarihi: new Date().toISOString()
+                  rasyonTarihi: new Date().toISOString(),
+                  rasyonTarihcesi: yeniTarihce
                 };
 
-                // 1. Önce IndexedDB'yi güncelle
+                // 2. IndexedDB'yi güncelle
                 await db.gruplar.update(selectedGrupId, rasyonGuncellemesi);
 
-                // 2. syncQueue'ya ekle — Supabase'e de kaydedilsin
-                const guncelGrup = await db.gruplar.get(selectedGrupId);
-                if (guncelGrup) {
+                // 3. syncQueue'ya ekle
+                const updatedGrup = await db.gruplar.get(selectedGrupId);
+                if (updatedGrup) {
                   await db.syncQueue.add({
                     table: 'gruplar',
                     action: 'UPDATE',
-                    payload: guncelGrup,
+                    payload: updatedGrup,
                     created_at: Date.now()
                   });
 

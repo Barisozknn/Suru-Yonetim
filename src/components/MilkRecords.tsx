@@ -17,6 +17,7 @@ const MilkRecords: React.FC<Props> = ({ hayvan }) => {
 
   const [tarih, setTarih] = useState(new Date().toISOString().split('T')[0]);
   const [litre, setLitre] = useState<number | ''>('');
+  const [ogun, setOgun] = useState<'Sabah' | 'Akşam' | 'Gece' | ''>('');
   const [yagYuzde, setYagYuzde] = useState<number | ''>('');
   const [proteinYuzde, setProteinYuzde] = useState<number | ''>('');
   const [laktozYuzde, setLaktozYuzde] = useState<number | ''>('');
@@ -96,6 +97,7 @@ const MilkRecords: React.FC<Props> = ({ hayvan }) => {
       hayvanId: hayvan.id,
       tarih,
       litre: Number(litre),
+      ogun: ogun ? ogun : undefined,
       yagYuzde: yagYuzde ? Number(yagYuzde) : undefined,
       proteinYuzde: proteinYuzde ? Number(proteinYuzde) : undefined,
       laktozYuzde: laktozYuzde ? Number(laktozYuzde) : undefined,
@@ -111,6 +113,7 @@ const MilkRecords: React.FC<Props> = ({ hayvan }) => {
     });
 
     setLitre('');
+    setOgun('');
     setYagYuzde('');
     setProteinYuzde('');
     setLaktozYuzde('');
@@ -141,6 +144,15 @@ const MilkRecords: React.FC<Props> = ({ hayvan }) => {
           <div>
             <label className="block text-xs font-bold text-blue-800 mb-1">Tarih</label>
             <input required type="date" value={tarih} onChange={e => setTarih(e.target.value)} className="w-full p-2 border border-blue-200 dark:border-blue-800/50 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-blue-800 mb-1">Sağım Zamanı <span className="text-blue-500 font-normal">opsiyonel</span></label>
+            <select value={ogun} onChange={e => setOgun(e.target.value as any)} className="w-full p-2 border border-blue-200 dark:border-blue-800/50 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white dark:bg-gray-800">
+               <option value="">-- Seçin --</option>
+               <option value="Sabah">Sabah</option>
+               <option value="Akşam">Akşam</option>
+               <option value="Gece">Gece</option>
+            </select>
           </div>
           <div>
             <label className="block text-xs font-bold text-blue-800 mb-1">Litre</label>
@@ -230,6 +242,7 @@ const MilkRecords: React.FC<Props> = ({ hayvan }) => {
               <thead className="bg-earth-100 dark:bg-gray-800 text-earth-700 dark:text-gray-300 font-semibold border-b border-earth-200 dark:border-gray-700 sticky top-0 shadow-sm z-10">
                 <tr>
                   <th className="p-3">Tarih</th>
+                  <th className="p-3">Öğün</th>
                   <th className="p-3">Miktar (L)</th>
                   <th className="p-3">Yağ (%)</th>
                   <th className="p-3">Protein (%)</th>
@@ -249,6 +262,14 @@ const MilkRecords: React.FC<Props> = ({ hayvan }) => {
                   .map(k => editingId === k.id ? (
                     <tr key={k.id} className="bg-blue-50/50">
                       <td className="p-2"><input type="date" value={editForm.tarih} onChange={e => setEditForm({...editForm, tarih: e.target.value})} className="w-full p-1 border rounded text-xs outline-none" /></td>
+                      <td className="p-2">
+                        <select value={editForm.ogun || ''} onChange={e => setEditForm({...editForm, ogun: (e.target.value || undefined) as any})} className="w-full p-1 border rounded text-xs outline-none bg-white">
+                          <option value="">-</option>
+                          <option value="Sabah">Sabah</option>
+                          <option value="Akşam">Akşam</option>
+                          <option value="Gece">Gece</option>
+                        </select>
+                      </td>
                       <td className="p-2"><input type="number" step="0.1" value={editForm.litre} onChange={e => setEditForm({...editForm, litre: Number(e.target.value)})} className="w-full p-1 border rounded text-xs outline-none" /></td>
                       <td className="p-2"><input type="number" step="0.1" value={editForm.yagYuzde || ''} onChange={e => setEditForm({...editForm, yagYuzde: Number(e.target.value)})} className="w-full p-1 border rounded text-xs outline-none" /></td>
                       <td className="p-2"><input type="number" step="0.1" value={editForm.proteinYuzde || ''} onChange={e => setEditForm({...editForm, proteinYuzde: Number(e.target.value)})} className="w-full p-1 border rounded text-xs outline-none" /></td>
@@ -264,6 +285,7 @@ const MilkRecords: React.FC<Props> = ({ hayvan }) => {
                   ) : (
                     <tr key={k.id} className="hover:bg-earth-50/50 transition">
                       <td className="p-3 font-medium text-earth-900 dark:text-gray-100">{new Date(k.tarih).toLocaleDateString('tr-TR')}</td>
+                      <td className="p-3 text-earth-700 dark:text-gray-300">{k.ogun || '-'}</td>
                       <td className="p-3 font-bold text-blue-600 dark:text-blue-400">{k.litre} L</td>
                       <td className="p-3">{k.yagYuzde ? `%${k.yagYuzde}` : '-'}</td>
                       <td className="p-3">{k.proteinYuzde ? `%${k.proteinYuzde}` : '-'}</td>

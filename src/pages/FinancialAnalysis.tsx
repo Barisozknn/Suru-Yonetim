@@ -2,17 +2,23 @@ import React, { useState, useMemo } from 'react';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { useStore } from '../store/useStore';
-import { Wallet, TrendingUp, TrendingDown, Plus, Filter, Info, Settings2 } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, Plus, Filter, Info, Settings2, BarChart2, List, Calculator } from 'lucide-react';
 import FinancialTransactionModal from '../components/FinancialTransactionModal';
 import { calculateTotalDailyFeedCost } from '../utils/dashboardCalculations';
+import AnimalProfitability from '../components/AnimalProfitability';
+import BreakevenCalculator from '../components/BreakevenCalculator';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const FinancialAnalysis: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   
+  const [activeTab, setActiveTab] = useState<'ozet' | 'hayvanBazli' | 'breakeven'>('ozet');
+  const [selectedProfitAnimalId, setSelectedProfitAnimalId] = useState<string>('');
+
   const { sutLitreFiyati, setSutLitreFiyati } = useStore();
   const [localSutFiyati, setLocalSutFiyati] = useState(sutLitreFiyati.toString());
   
-  const [timeFilter, setTimeFilter] = useState<'all' | 'this_month' | 'last_7_days' | 'this_year'>('last_7_days');
+  const [timeFilter, setTimeFilter] = useState<'today' | 'last_7_days' | 'last_30_days' | 'last_12_months'>('last_30_days');
   const [groupFilter, setGroupFilter] = useState<string>('all');
 
   const gruplar = useLiveFarmQuery(() => db.gruplar.toArray()) || [];
@@ -33,20 +39,28 @@ const FinancialAnalysis: React.FC = () => {
     }
   };
 
+
   const calculations = useMemo(() => {
     const now = new Date();
     now.setHours(23, 59, 59, 999);
     
     let targetDate = new Date(0); // all time
     
-    if (timeFilter === 'last_7_days') {
+    if (timeFilter === 'today') {
+      targetDate = new Date(now);
+      targetDate.setHours(0, 0, 0, 0);
+    } else if (timeFilter === 'last_7_days') {
       targetDate = new Date(now);
       targetDate.setDate(targetDate.getDate() - 7);
       targetDate.setHours(0, 0, 0, 0);
-    } else if (timeFilter === 'this_month') {
-      targetDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    } else if (timeFilter === 'this_year') {
-      targetDate = new Date(now.getFullYear(), 0, 1);
+    } else if (timeFilter === 'last_30_days') {
+      targetDate = new Date(now);
+      targetDate.setDate(targetDate.getDate() - 30);
+      targetDate.setHours(0, 0, 0, 0);
+    } else if (timeFilter === 'last_12_months') {
+      targetDate = new Date(now);
+      targetDate.setMonth(targetDate.getMonth() - 12);
+      targetDate.setHours(0, 0, 0, 0);
     }
 
     const isInRange = (dateStr: string | undefined) => {
@@ -67,38 +81,60 @@ const FinancialAnalysis: React.FC = () => {
       return targetHayvanIds.has(hayvanId);
     };
 
+    const trendMap: Record<string, { gelir: number; gider: number; net: number; key: string }> = {};
+    const getTrendKey = (dateStr: string) => {
+      if (timeFilter === 'today' || timeFilter === 'last_7_days' || timeFilter === 'last_30_days') {
+        return dateStr.slice(0, 10);
+      } else {
+        return dateStr.slice(0, 7);
+      }
+    };
+    const addToTrend = (dateStr: string, type: 'gelir' | 'gider', amount: number) => {
+      if (!isInRange(dateStr)) return;
+      const key = getTrendKey(dateStr);
+      if (!trendMap[key]) trendMap[key] = { gelir: 0, gider: 0, net: 0, key };
+      trendMap[key][type] += amount;
+    };
+
     // 1. Süt Geliri
     const filteredSut = sutKayitlari.filter(k => isInRange(k.tarih) && isAnimalInGroup(k.hayvanId));
     const toplamLitre = filteredSut.reduce((acc, curr) => acc + curr.litre, 0);
     const sutGeliri = toplamLitre * sutLitreFiyati;
+    filteredSut.forEach(k => addToTrend(k.tarih, 'gelir', k.litre * sutLitreFiyati));
 
     // 2. Hayvan Satış Geliri
     const filteredSatis = hayvanlar.filter(h => h.durum === 'Satıldı' && isInRange(h.satisTarihi) && isAnimalInGroup(h.id));
     const hayvanSatisGeliri = filteredSatis.reduce((acc, curr) => acc + (curr.satisFiyati || 0), 0);
+    filteredSatis.forEach(h => addToTrend(h.satisTarihi!, 'gelir', h.satisFiyati || 0));
 
     // 3. Sağlık Gideri
     const filteredSaglik = saglikOlaylari.filter(s => isInRange(s.tarih) && isAnimalInGroup(s.hayvanId));
     let saglikGideri = filteredSaglik.reduce((acc, curr) => acc + (curr.maliyet || 0), 0);
+    filteredSaglik.forEach(s => addToTrend(s.tarih, 'gider', s.maliyet || 0));
 
     // Yapılmış aşıların maliyetlerini sağlık giderine ekle
     const filteredAsilar = planlananAsilar.filter(a => a.yapildiMi && isInRange(a.yapilmaTarihi) && isAnimalInGroup(a.hayvanId));
     saglikGideri += filteredAsilar.reduce((acc, curr) => acc + (curr.maliyet || 0), 0);
+    filteredAsilar.forEach(a => addToTrend(a.yapilmaTarihi, 'gider', a.maliyet || 0));
 
     // 4. Üreme Gideri
     const filteredUreme = uremeKayitlari.filter(u => isInRange(u.tarih) && isAnimalInGroup(u.hayvanId));
     const uremeGideri = filteredUreme.reduce((acc, curr) => acc + (curr.maliyet || 0), 0);
+    filteredUreme.forEach(u => addToTrend(u.tarih, 'gider', u.maliyet || 0));
 
     // 5. Yem Gideri (Günlük Kayıtlar Üzerinden)
     let yemGideri = 0;
+    const todayStr = new Date().toISOString().split('T')[0];
     
     if (groupFilter === 'all') {
-      const todayStr = new Date().toISOString().split('T')[0];
       const filteredYemMaliyetleri = gunlukYemMaliyetleri.filter(y => isInRange(y.tarih) && y.tarih !== todayStr);
       const pastYemGideri = filteredYemMaliyetleri.reduce((acc, curr) => acc + curr.toplamMaliyet, 0);
+      filteredYemMaliyetleri.forEach(y => addToTrend(y.tarih, 'gider', y.toplamMaliyet));
       
       let todayYemGideri = 0;
       if (isInRange(todayStr)) {
         todayYemGideri = calculateTotalDailyFeedCost(yemler, gruplar, hayvanlar);
+        addToTrend(todayStr, 'gider', todayYemGideri);
       }
       yemGideri = pastYemGideri + todayYemGideri;
     } else {
@@ -115,6 +151,9 @@ const FinancialAnalysis: React.FC = () => {
         }
         if (days === 0) days = 1;
         yemGideri = dailyCost * days;
+        if (isInRange(todayStr)) {
+          addToTrend(todayStr, 'gider', yemGideri);
+        }
       }
     }
 
@@ -122,10 +161,21 @@ const FinancialAnalysis: React.FC = () => {
     const filteredEk = ekFinansalIslemler.filter(e => isInRange(e.tarih));
     const ekGelir = filteredEk.filter(e => e.tip === 'Gelir').reduce((acc, curr) => acc + curr.miktar, 0);
     const ekGider = filteredEk.filter(e => e.tip === 'Gider').reduce((acc, curr) => acc + curr.miktar, 0);
+    filteredEk.forEach(e => addToTrend(e.tarih, e.tip === 'Gelir' ? 'gelir' : 'gider', e.miktar));
 
     const toplamGelir = sutGeliri + hayvanSatisGeliri + ekGelir;
     const toplamGider = saglikGideri + uremeGideri + yemGideri + ekGider;
     const netKar = toplamGelir - toplamGider;
+
+    const trendData = Object.values(trendMap)
+      .map(item => ({ ...item, net: item.gelir - item.gider }))
+      .sort((a, b) => a.key.localeCompare(b.key))
+      .map(item => ({
+        ...item,
+        ay: (timeFilter === 'today' || timeFilter === 'last_7_days' || timeFilter === 'last_30_days') 
+            ? new Date(item.key).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' })
+            : new Date(item.key + '-01').toLocaleDateString('tr-TR', { month: 'short', year: '2-digit' })
+      }));
 
     return {
       toplamLitre,
@@ -139,7 +189,8 @@ const FinancialAnalysis: React.FC = () => {
       toplamGelir,
       toplamGider,
       netKar,
-      ekList: filteredEk.sort((a,b) => new Date(b.tarih).getTime() - new Date(a.tarih).getTime())
+      ekList: filteredEk.sort((a,b) => new Date(b.tarih).getTime() - new Date(a.tarih).getTime()),
+      trendData
     };
   }, [
     hayvanlar, sutKayitlari, saglikOlaylari, uremeKayitlari, 
@@ -162,15 +213,56 @@ const FinancialAnalysis: React.FC = () => {
           </h1>
           <p className="text-earth-500 dark:text-gray-400 font-medium mt-1">İşletmenizin finansal durumunu detaylı inceleyin</p>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center space-x-2 bg-nature-600 hover:bg-nature-700 text-white px-4 py-2 rounded-xl font-bold transition shadow-sm"
+        {activeTab === 'ozet' && (
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center space-x-2 bg-nature-600 hover:bg-nature-700 text-white px-4 py-2 rounded-xl font-bold transition shadow-sm"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Ek Gelir / Gider Ekle</span>
+          </button>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <div className="flex bg-earth-100 dark:bg-gray-800 p-1 rounded-xl w-full sm:w-fit mt-4">
+        <button
+          onClick={() => setActiveTab('ozet')}
+          className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-6 py-2.5 rounded-lg font-bold text-sm transition ${
+            activeTab === 'ozet'
+              ? 'bg-white dark:bg-gray-700 text-earth-900 dark:text-white shadow-sm'
+              : 'text-earth-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-700/50'
+          }`}
         >
-          <Plus className="w-5 h-5" />
-          <span>Ek Gelir / Gider Ekle</span>
+          <List className="w-4 h-4" />
+          <span>Sürü Finans Özeti</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('hayvanBazli')}
+          className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-6 py-2.5 rounded-lg font-bold text-sm transition ${
+            activeTab === 'hayvanBazli'
+              ? 'bg-white dark:bg-gray-700 text-earth-900 dark:text-white shadow-sm'
+              : 'text-earth-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-700/50'
+          }`}
+        >
+          <BarChart2 className="w-4 h-4" />
+          <span>Hayvan Bazlı Karlılık</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('breakeven')}
+          className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-6 py-2.5 rounded-lg font-bold text-sm transition ${
+            activeTab === 'breakeven'
+              ? 'bg-white dark:bg-gray-700 text-earth-900 dark:text-white shadow-sm'
+              : 'text-earth-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-700/50'
+          }`}
+        >
+          <Calculator className="w-4 h-4" />
+          <span>Başabaş Noktası</span>
         </button>
       </div>
 
+      {activeTab === 'ozet' ? (
+        <>
       {/* Filters & Settings */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
         <div className="space-y-1">
@@ -200,10 +292,10 @@ const FinancialAnalysis: React.FC = () => {
             onChange={(e) => setTimeFilter(e.target.value as any)}
             className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 font-medium"
           >
+            <option value="today">Bugün</option>
             <option value="last_7_days">Son 7 Gün</option>
-            <option value="this_month">Bu Ay</option>
-            <option value="this_year">Bu Yıl</option>
-            <option value="all">Tüm Zamanlar</option>
+            <option value="last_30_days">Son 30 Gün</option>
+            <option value="last_12_months">Son 1 Yıl</option>
           </select>
         </div>
 
@@ -267,6 +359,33 @@ const FinancialAnalysis: React.FC = () => {
             <h3 className="text-lg font-bold opacity-90">Net Kar / Zarar</h3>
           </div>
           <p className="text-4xl font-black">{formatMoney(calculations.netKar)}</p>
+        </div>
+      </div>
+
+      {/* Trend Chart */}
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 mt-6 mb-6">
+        <h3 className="text-lg font-bold text-earth-800 dark:text-gray-200 mb-6 flex items-center">
+           <BarChart2 className="w-5 h-5 mr-2 text-nature-600" />
+           Gelir / Gider Trendi
+        </h3>
+        <div className="h-[300px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={calculations.trendData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+              <XAxis dataKey="ay" stroke="#888" fontSize={12} fontWeight="bold" />
+              <YAxis stroke="#888" fontSize={12} tickFormatter={(value) => `${value / 1000}k`} />
+              <Tooltip 
+                formatter={(value: any) => formatMoney(Number(value) || 0)}
+                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+              />
+              <Legend wrapperStyle={{ paddingTop: '20px' }} />
+              <Bar dataKey="gelir" name="Gelir" fill="#10b981" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="gider" name="Gider" fill="#ef4444" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
@@ -368,6 +487,34 @@ const FinancialAnalysis: React.FC = () => {
           </div>
         </div>
       )}
+      </>
+      ) : activeTab === 'hayvanBazli' ? (
+        <div className="space-y-6 mt-4">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700">
+            <label className="text-sm font-bold text-earth-700 dark:text-gray-300 block mb-2">Hayvan Seçin (Yalnızca İnekler)</label>
+            <select
+              value={selectedProfitAnimalId}
+              onChange={(e) => setSelectedProfitAnimalId(e.target.value)}
+              className="w-full p-3 border border-earth-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-nature-500 font-medium bg-white dark:bg-gray-700 dark:text-white"
+            >
+              <option value="">-- Hayvan Seçin --</option>
+              {hayvanlar.filter(h => h.tur === 'İnek').map(h => (
+                <option key={h.id} value={h.id}>{h.kupeNo} - {h.irk}</option>
+              ))}
+            </select>
+          </div>
+          
+          {selectedProfitAnimalId && hayvanlar.find(h => h.id === selectedProfitAnimalId) ? (
+            <AnimalProfitability hayvan={hayvanlar.find(h => h.id === selectedProfitAnimalId)!} />
+          ) : (
+             <div className="text-center p-8 text-earth-500 dark:text-gray-400 bg-earth-50 dark:bg-gray-900 rounded-2xl border border-earth-200 dark:border-gray-700">
+                Karlılık analizi için yukarıdan bir hayvan seçin.
+             </div>
+          )}
+        </div>
+      ) : activeTab === 'breakeven' ? (
+        <BreakevenCalculator />
+      ) : null}
 
       {isModalOpen && (
         <FinancialTransactionModal onClose={() => setIsModalOpen(false)} />

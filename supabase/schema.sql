@@ -7,6 +7,11 @@
 -- ---------------------------------------------------------------
 -- ADIM 1: Mevcut tabloları doğru sırada sil (bağımlı önce)
 -- ---------------------------------------------------------------
+DROP TABLE IF EXISTS public.planlanan_ciftlesmeler CASCADE;
+DROP TABLE IF EXISTS public.sperma_kayitlari CASCADE;
+DROP TABLE IF EXISTS public."push_subscriptions" CASCADE;
+DROP TABLE IF EXISTS public."gunlukNotlari" CASCADE;
+DROP TABLE IF EXISTS public."todos" CASCADE;
 DROP TABLE IF EXISTS public.gunluk_yem_maliyetleri CASCADE;
 DROP TABLE IF EXISTS public.ek_finansal_islemler CASCADE;
 DROP TABLE IF EXISTS public.sohbetler CASCADE;
@@ -43,7 +48,8 @@ CREATE TABLE public.gruplar (
     tur TEXT NOT NULL,
     aciklama TEXT,
     rasyon_adi TEXT,
-    rasyon_ozet JSONB,
+    rasyon_ozet TEXT,
+    rasyon_tarihcesi JSONB,
     rasyon_tarihi TEXT,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     ciftlik_id UUID REFERENCES public.ciftlikler(id) ON DELETE SET NULL,
@@ -105,6 +111,7 @@ CREATE TABLE public.sut_kayitlari (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     hayvan_id UUID REFERENCES public.hayvanlar(id) ON DELETE CASCADE,
     tarih TEXT NOT NULL,
+    ogun TEXT,
     litre NUMERIC NOT NULL,
     yag_yuzde NUMERIC,
     protein_yuzde NUMERIC,
