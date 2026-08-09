@@ -115,7 +115,7 @@ const FinancialAnalysis: React.FC = () => {
     // Yapılmış aşıların maliyetlerini sağlık giderine ekle
     const filteredAsilar = planlananAsilar.filter(a => a.yapildiMi && isInRange(a.yapilmaTarihi) && isAnimalInGroup(a.hayvanId));
     saglikGideri += filteredAsilar.reduce((acc, curr) => acc + (curr.maliyet || 0), 0);
-    filteredAsilar.forEach(a => addToTrend(a.yapilmaTarihi, 'gider', a.maliyet || 0));
+    filteredAsilar.forEach(a => addToTrend(a.yapilmaTarihi!, 'gider', a.maliyet || 0));
 
     // 4. Üreme Gideri
     const filteredUreme = uremeKayitlari.filter(u => isInRange(u.tarih) && isAnimalInGroup(u.hayvanId));
@@ -143,12 +143,7 @@ const FinancialAnalysis: React.FC = () => {
       const seciliGrup = gruplar.find(g => g.id === groupFilter);
       if (seciliGrup) {
         const dailyCost = calculateTotalDailyFeedCost(yemler, [seciliGrup], hayvanlar);
-        let days = 1;
-        if (timeFilter !== 'all') {
-          days = Math.ceil((now.getTime() - targetDate.getTime()) / (1000 * 3600 * 24));
-        } else {
-          days = 30; // 'Tüm Zamanlar' için 30 günlük varsayılan tahmin
-        }
+        let days = Math.ceil((now.getTime() - targetDate.getTime()) / (1000 * 3600 * 24));
         if (days === 0) days = 1;
         yemGideri = dailyCost * days;
         if (isInRange(todayStr)) {
