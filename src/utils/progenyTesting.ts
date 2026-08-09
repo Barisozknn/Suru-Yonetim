@@ -6,7 +6,7 @@ export const generateBullsCatalog = (
   sutKayitlari: SutKaydi[],
   agirlikKayitlari: AgirlikKaydi[],
   suruOrtSut: number,
-  suruOrtAgirlik: number
+  suruOrtADG: number
 ): ProgenyTestResult[] => {
   const results: ProgenyTestResult[] = [];
 
@@ -15,7 +15,7 @@ export const generateBullsCatalog = (
 
   bogalar.forEach(boga => {
     const yavrular = hayvanlar.filter(h => h.babaKupeNo === boga.kupeNo);
-    const result = calculateProgenyTest(boga.id, boga.kupeNo, boga.irk, false, yavrular, sutKayitlari, agirlikKayitlari, suruOrtSut, suruOrtAgirlik);
+    const result = calculateProgenyTest(boga.id, boga.kupeNo, boga.irk, false, yavrular, sutKayitlari, agirlikKayitlari, suruOrtSut, suruOrtADG);
     if (result.yavruSayisi > 0) results.push(result);
   });
 
@@ -36,7 +36,7 @@ export const generateBullsCatalog = (
       sutKayitlari,
       agirlikKayitlari,
       suruOrtSut,
-      suruOrtAgirlik
+      suruOrtADG
     );
     results.push(result);
   });
@@ -53,7 +53,7 @@ const calculateProgenyTest = (
   sutKayitlari: SutKaydi[],
   agirlikKayitlari: AgirlikKaydi[],
   suruOrtSut: number,
-  suruOrtAgirlik: number
+  suruOrtADG: number
 ): ProgenyTestResult => {
   if (yavrular.length === 0) {
     return { bogaId, isVirtualSperm, bogaAdi, irk, yavruSayisi: 0, guvenilirlik: 0 };
@@ -69,8 +69,23 @@ const calculateProgenyTest = (
     }
     const agirlikRecords = agirlikKayitlari.filter(a => a.hayvanId === yavru.id);
     if (agirlikRecords.length > 0) {
-      toplamAgirlik += agirlikRecords.reduce((sum, r) => sum + r.kg, 0) / agirlikRecords.length;
-      agirlikYavruSayisi++;
+      let yavruAdg = 0;
+      agirlikRecords.sort((a, b) => new Date(a.tarih).getTime() - new Date(b.tarih).getTime());
+      
+      if (agirlikRecords.length >= 2) {
+        const first = agirlikRecords[0];
+        const last = agirlikRecords[agirlikRecords.length - 1];
+        const gunFarki = Math.max(1, (new Date(last.tarih).getTime() - new Date(first.tarih).getTime()) / (1000 * 60 * 60 * 24));
+        yavruAdg = ((last.kg - first.kg) / gunFarki) * 1000;
+      } else if (agirlikRecords.length === 1 && yavru.dogumTarihi) {
+        const gunFarki = Math.max(1, (new Date(agirlikRecords[0].tarih).getTime() - new Date(yavru.dogumTarihi).getTime()) / (1000 * 60 * 60 * 24));
+        yavruAdg = ((agirlikRecords[0].kg - 40) / gunFarki) * 1000;
+      }
+
+      if (yavruAdg > 0) {
+        toplamAgirlik += yavruAdg;
+        agirlikYavruSayisi++;
+      }
     }
   });
 
@@ -86,6 +101,6 @@ const calculateProgenyTest = (
     yavruOrtalamaSut,
     yavruOrtalamaSutSapma: yavruOrtalamaSut !== undefined ? yavruOrtalamaSut - suruOrtSut : undefined,
     yavruOrtalamaCanliAgirlik,
-    yavruOrtalamaCanliAgirlikSapma: yavruOrtalamaCanliAgirlik !== undefined ? yavruOrtalamaCanliAgirlik - suruOrtAgirlik : undefined,
+    yavruOrtalamaCanliAgirlikSapma: yavruOrtalamaCanliAgirlik !== undefined ? yavruOrtalamaCanliAgirlik - suruOrtADG : undefined,
   };
 };

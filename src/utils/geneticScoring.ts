@@ -21,15 +21,41 @@ export const calcHerdMilkAvg = (sutKayitlari: SutKaydi[]): number => {
   return perAnimal.reduce((a, b) => a + b, 0) / perAnimal.length;
 };
 
-export const calcHerdWeightAvg = (agirlikKayitlari: AgirlikKaydi[]): number => {
+export const calcHerdADGAvg = (agirlikKayitlari: AgirlikKaydi[], hayvanlar: Hayvan[]): number => {
   if (agirlikKayitlari.length === 0) return 0;
-  const byAnimal: Record<string, number[]> = {};
+  
+  const byAnimal: Record<string, AgirlikKaydi[]> = {};
   agirlikKayitlari.forEach(r => {
     if (!byAnimal[r.hayvanId]) byAnimal[r.hayvanId] = [];
-    byAnimal[r.hayvanId].push(r.kg);
+    byAnimal[r.hayvanId].push(r);
   });
-  const perAnimal = Object.values(byAnimal).map(arr => arr.reduce((a, b) => a + b, 0) / arr.length);
-  return perAnimal.reduce((a, b) => a + b, 0) / perAnimal.length;
+
+  let totalAdg = 0;
+  let validAnimals = 0;
+
+  Object.entries(byAnimal).forEach(([hayvanId, records]) => {
+    records.sort((a, b) => new Date(a.tarih).getTime() - new Date(b.tarih).getTime());
+    let adg = 0;
+    if (records.length >= 2) {
+      const first = records[0];
+      const last = records[records.length - 1];
+      const gunFarki = Math.max(1, (new Date(last.tarih).getTime() - new Date(first.tarih).getTime()) / (1000 * 60 * 60 * 24));
+      adg = ((last.kg - first.kg) / gunFarki) * 1000;
+    } else if (records.length === 1) {
+      const hayvan = hayvanlar.find(h => h.id === hayvanId);
+      if (hayvan && hayvan.dogumTarihi) {
+        const gunFarki = Math.max(1, (new Date(records[0].tarih).getTime() - new Date(hayvan.dogumTarihi).getTime()) / (1000 * 60 * 60 * 24));
+        adg = ((records[0].kg - 40) / gunFarki) * 1000; // Varsayılan doğum ağırlığı 40kg
+      }
+    }
+    
+    if (adg > 0) {
+      totalAdg += adg;
+      validAnimals++;
+    }
+  });
+
+  return validAnimals > 0 ? totalAdg / validAnimals : 0;
 };
 
 // ─── Çevresel Düzeltme Fonksiyonları ────────────────────────────────────────
@@ -93,14 +119,16 @@ export const calculateGrowthTDI = (hayvan: Hayvan, agirlikKayitlari: AgirlikKayd
     return { hamDeger: 0, cevreselDuzeltme: 0, duzeltilmisDeger: 0, h2Katsayisi: H2.BUYUME_ADG, genetikTahmin: 0, normalizedSkor: 50, guvenilirlik: 0, veriSayisi: 0 };
   }
 
-  let adg: number;
+  let adg = 0;
   if (records.length >= 2) {
     const first = records[0];
     const last = records[records.length - 1];
     const gunFarki = Math.max(1, (new Date(last.tarih).getTime() - new Date(first.tarih).getTime()) / (1000 * 60 * 60 * 24));
     adg = ((last.kg - first.kg) / gunFarki) * 1000;
-  } else {
-    adg = records[0].kg;
+  } else if (records.length === 1 && hayvan.dogumTarihi) {
+    const last = records[0];
+    const gunFarki = Math.max(1, (new Date(last.tarih).getTime() - new Date(hayvan.dogumTarihi).getTime()) / (1000 * 60 * 60 * 24));
+    adg = ((last.kg - 40) / gunFarki) * 1000;
   }
 
   const genetikTahmin = applyHeritability(adg - suruOrtalamasi, H2.BUYUME_ADG);
@@ -112,7 +140,7 @@ export const calculateGrowthTDI = (hayvan: Hayvan, agirlikKayitlari: AgirlikKayd
     duzeltilmisDeger: adg,
     h2Katsayisi: H2.BUYUME_ADG,
     genetikTahmin,
-    normalizedSkor,
+    normalizedSkor: adg === 0 ? 50 : normalizedSkor,
     guvenilirlik: calculateReliability(records.length),
     veriSayisi: records.length
   };

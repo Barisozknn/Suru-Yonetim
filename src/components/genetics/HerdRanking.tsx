@@ -8,7 +8,7 @@ import {
   calculateHealthTDI,
   calculateOverallTDI,
   calcHerdMilkAvg,
-  calcHerdWeightAvg
+  calcHerdADGAvg
 } from '../../utils/geneticScoring';
 import { Trophy, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
 
@@ -26,14 +26,14 @@ const HerdRanking: React.FC = () => {
     if (hayvanlar.length === 0) return [];
 
     const suruOrtSut = calcHerdMilkAvg(sutKayitlari);
-    const suruOrtAgirlik = calcHerdWeightAvg(agirlikKayitlari);
+    const suruOrtADG = calcHerdADGAvg(agirlikKayitlari, hayvanlar);
 
     const list = hayvanlar
       // SADECE İnek ve Boğa damızlık olarak göster
       .filter(h => h.durum === 'Aktif' && (h.tur === 'İnek' || h.tur === 'Boğa') && (filterTur === 'Tümü' || h.tur === filterTur))
       .map(hayvan => {
         const sutSkoru = calculateMilkTDI(hayvan, sutKayitlari, suruOrtSut);
-        const buyumeSkoru = calculateGrowthTDI(hayvan, agirlikKayitlari, suruOrtAgirlik);
+        const buyumeSkoru = calculateGrowthTDI(hayvan, agirlikKayitlari, suruOrtADG);
         const saglikSkoru = calculateHealthTDI(hayvan, saglikOlaylari);
         const overall = calculateOverallTDI(sutSkoru, buyumeSkoru, saglikSkoru, isletmeTipi);
         

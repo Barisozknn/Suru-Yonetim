@@ -171,7 +171,7 @@ const RationCalculator: React.FC = () => {
 
   // Sağlanan Toplamları Hesaplama
   const toplamSaglanan = useMemo(() => {
-    let dmi = 0, me = 0, hp_g = 0, ca_g = 0, p_g = 0;
+    let dmi = 0, me = 0, hp_g = 0, ca_g = 0, p_g = 0, asFedTotal = 0;
     let kabaKm = 0, kesifKm = 0, vitMinKm = 0;
 
     const list = Array.isArray(rasyonListesi) ? rasyonListesi : EMPTY_ARRAY;
@@ -181,6 +181,7 @@ const RationCalculator: React.FC = () => {
       // #14 DÜZELTME: kmYuzde === 0 falsy olarak değerlendirilirdi; şimdi açık kontrol yapılıyor
       if (yem && yem.kmYuzde != null && yem.kmYuzde > 0) {
         const kg = Number(item.kgAsFed) || 0;
+        asFedTotal += kg;
         const kuruMaddeKg = kg * ((Number(yem.kmYuzde) || 0) / 100);
         dmi += kuruMaddeKg;
         me += kuruMaddeKg * (Number(yem.meMcalKg) || 0);
@@ -202,6 +203,7 @@ const RationCalculator: React.FC = () => {
 
     return {
       dmi: isNaN(dmi) || !isFinite(dmi) ? 0 : dmi,
+      asFedTotal: isNaN(asFedTotal) || !isFinite(asFedTotal) ? 0 : asFedTotal,
       me: isNaN(me) || !isFinite(me) ? 0 : me,
       hp_g: isNaN(hp_g) || !isFinite(hp_g) ? 0 : hp_g,
       hp_yuzde: isNaN(hp_yuzde) || !isFinite(hp_yuzde) ? 0 : hp_yuzde,
@@ -561,7 +563,7 @@ const RationCalculator: React.FC = () => {
           <div className="bg-nature-50 dark:bg-nature-900/30 p-4 rounded-xl border border-nature-200 dark:border-nature-800 mt-6">
             <h3 className="font-bold text-nature-800 dark:text-nature-200 text-sm mb-3">Rasyon Kompozisyonu</h3>
             <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-nature-100 dark:border-nature-800">
+              <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-nature-100 dark:border-nature-800 flex flex-col justify-center">
                 <span className="block text-xs font-bold text-nature-500 dark:text-nature-400 mb-1">Kaba / Kesif Yem Oranı</span>
                 <span className="text-lg font-black text-nature-700 dark:text-nature-300">
                   {(() => {
@@ -573,17 +575,30 @@ const RationCalculator: React.FC = () => {
                   })()}
                 </span>
               </div>
-              <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-nature-100 dark:border-nature-800 flex flex-col justify-between">
+              
+              <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-nature-100 dark:border-nature-800 flex flex-col justify-center">
+                <span className="block text-xs font-bold text-nature-500 dark:text-nature-400 mb-1">Rasyon Nemi (%)</span>
+                <span className="text-lg font-black text-nature-700 dark:text-nature-300">
+                  {(() => {
+                    if (toplamSaglanan.asFedTotal === 0) return '%0.0';
+                    const dmPercent = (toplamSaglanan.dmi / toplamSaglanan.asFedTotal) * 100;
+                    const moisture = 100 - dmPercent;
+                    return `%${Math.max(0, moisture).toFixed(1)}`;
+                  })()}
+                </span>
+              </div>
+
+              <div className="col-span-2 bg-white dark:bg-gray-800 p-3 rounded-lg border border-nature-100 dark:border-nature-800 flex flex-col justify-between">
                 <span className="block text-xs font-bold text-nature-500 dark:text-nature-400 mb-1">Kaba Yem Oranı Hedefi (%)</span>
-                <div className="flex items-center space-x-2 mt-1">
+                <div className="flex items-center space-x-4 mt-1 w-full sm:w-1/2">
                   <div className="flex-1">
                     <span className="text-[10px] text-gray-400">Min</span>
-                    <input type="number" min="0" max="100" value={minKabaOran} onChange={e => setMinKabaOran(Number(e.target.value))} className="w-full p-1 border border-nature-200 dark:border-nature-700 rounded text-center text-sm font-bold bg-gray-50 dark:bg-gray-900 outline-none focus:ring-1 focus:ring-nature-500" />
+                    <input type="number" min="0" max="100" value={minKabaOran} onChange={e => setMinKabaOran(Number(e.target.value))} className="w-full p-2 border border-nature-200 dark:border-nature-700 rounded text-center text-sm font-bold bg-gray-50 dark:bg-gray-900 outline-none focus:ring-1 focus:ring-nature-500" />
                   </div>
-                  <span className="text-gray-300">-</span>
+                  <span className="text-gray-300 mt-4">-</span>
                   <div className="flex-1">
                     <span className="text-[10px] text-gray-400">Max</span>
-                    <input type="number" min="0" max="100" value={maxKabaOran} onChange={e => setMaxKabaOran(Number(e.target.value))} className="w-full p-1 border border-nature-200 dark:border-nature-700 rounded text-center text-sm font-bold bg-gray-50 dark:bg-gray-900 outline-none focus:ring-1 focus:ring-nature-500" />
+                    <input type="number" min="0" max="100" value={maxKabaOran} onChange={e => setMaxKabaOran(Number(e.target.value))} className="w-full p-2 border border-nature-200 dark:border-nature-700 rounded text-center text-sm font-bold bg-gray-50 dark:bg-gray-900 outline-none focus:ring-1 focus:ring-nature-500" />
                   </div>
                 </div>
               </div>

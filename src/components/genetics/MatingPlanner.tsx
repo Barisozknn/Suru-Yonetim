@@ -17,15 +17,15 @@ const MatingPlanner: React.FC = () => {
   const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
   const uremeKayitlari = useLiveFarmQuery(() => db.uremeKayitlari.toArray()) || [];
   
-  // Damızlık: SADECE İnek ve Boğa
-  const disiler = hayvanlar.filter(h => h.durum === 'Aktif' && h.tur === 'İnek');
-  const erkekler = hayvanlar.filter(h => h.durum === 'Aktif' && h.tur === 'Boğa');
+  // Damızlık: İnek ve Düve (Dişiler), Boğa ve Tosun (Erkekler)
+  const disiler = hayvanlar.filter(h => h.durum === 'Aktif' && (h.tur === 'İnek' || h.tur === 'Düve'));
+  const erkekler = hayvanlar.filter(h => h.durum === 'Aktif' && (h.tur === 'Boğa' || h.tur === 'Tosun'));
 
-  // Üreme kayıtlarından benzersiz sperma bilgileri
+  // Üreme kayıtlarından benzersiz sperma bilgileri (sadece Suni Tohumlama/Aşım)
   const spermaListesi = uremeKayitlari
     .filter(k => k.tur === 'Tohumlama/Aşım' && k.detaylar?.spermaBogaBilgisi)
     .map(k => k.detaylar!.spermaBogaBilgisi as string)
-    .filter((v, i, a) => a.indexOf(v) === i);
+    .filter((v, i, a) => v && a.indexOf(v) === i);
 
   const selectedDisi = disiler.find(d => d.id === selectedDisiId);
   const selectedErkek = isSperma
@@ -92,7 +92,7 @@ const MatingPlanner: React.FC = () => {
           >
             <option value="">-- Dişi Seçiniz --</option>
             {disiler.map(d => (
-              <option key={d.id} value={d.id}>{d.kupeNo} - {d.irk}</option>
+              <option key={d.id} value={d.id}>{d.kupeNo} - {d.irk} ({d.tur})</option>
             ))}
           </select>
         </div>
@@ -116,17 +116,35 @@ const MatingPlanner: React.FC = () => {
               </button>
             </div>
           </div>
-          <select 
-            value={selectedErkekId}
-            onChange={(e) => setSelectedErkekId(e.target.value)}
-            className="w-full p-3 border-2 border-earth-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-nature-500 bg-white dark:bg-gray-700 text-earth-900 dark:text-white"
-          >
-            <option value="">-- {isSperma ? 'Sperma' : 'Boğa'} Seçiniz --</option>
-            {!isSperma 
-              ? erkekler.map(e => <option key={e.id} value={e.id}>{e.kupeNo} - {e.irk}</option>)
-              : spermaListesi.map((s, i) => <option key={i} value={s}>{s}</option>)
-            }
-          </select>
+          {!isSperma ? (
+            <select 
+              value={selectedErkekId}
+              onChange={(e) => setSelectedErkekId(e.target.value)}
+              className="w-full p-3 border-2 border-earth-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-nature-500 bg-white dark:bg-gray-700 text-earth-900 dark:text-white"
+            >
+              <option value="">-- Boğa / Tosun Seçiniz --</option>
+              {erkekler.map(e => <option key={e.id} value={e.id}>{e.kupeNo} - {e.irk} ({e.tur})</option>)}
+            </select>
+          ) : (
+            <div className="flex flex-col space-y-2">
+              <input
+                type="text"
+                value={selectedErkekId}
+                onChange={(e) => setSelectedErkekId(e.target.value)}
+                placeholder="Boğa veya sperma bilgisi girin..."
+                list="sperma-list"
+                className="w-full p-3 border-2 border-earth-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-nature-500 bg-white dark:bg-gray-700 text-earth-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+              />
+              <datalist id="sperma-list">
+                {spermaListesi.map((s, i) => (
+                  <option key={i} value={s} />
+                ))}
+              </datalist>
+              <p className="text-xs text-earth-500 dark:text-gray-400">
+                Listeden seçmek için kutuya tıklayın veya manuel olarak yeni bilgi girin.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

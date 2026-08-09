@@ -9,7 +9,7 @@ import {
   calculateHealthTDI,
   calculateOverallTDI,
   calcHerdMilkAvg,
-  calcHerdWeightAvg
+  calcHerdADGAvg
 } from '../../utils/geneticScoring';
 
 const GeneticScoreCard: React.FC = () => {
@@ -34,25 +34,31 @@ const GeneticScoreCard: React.FC = () => {
     if (!selectedAnimal) return null;
 
     const suruOrtSut = calcHerdMilkAvg(sutKayitlari);
-    const suruOrtAgirlik = calcHerdWeightAvg(agirlikKayitlari);
+    const suruOrtADG = calcHerdADGAvg(agirlikKayitlari, hayvanlar);
 
     const sutSkoru = calculateMilkTDI(selectedAnimal, sutKayitlari, suruOrtSut);
-    const buyumeSkoru = calculateGrowthTDI(selectedAnimal, agirlikKayitlari, suruOrtAgirlik);
+    const buyumeSkoru = calculateGrowthTDI(selectedAnimal, agirlikKayitlari, suruOrtADG);
     const saglikSkoru = calculateHealthTDI(selectedAnimal, saglikOlaylari);
     
     const overall = calculateOverallTDI(sutSkoru, buyumeSkoru, saglikSkoru, isletmeTipi);
 
     return { sutSkoru, buyumeSkoru, saglikSkoru, overall };
-  }, [selectedAnimal, sutKayitlari, agirlikKayitlari, saglikOlaylari, isletmeTipi]);
+  }, [selectedAnimal, sutKayitlari, agirlikKayitlari, saglikOlaylari, isletmeTipi, hayvanlar]);
 
   return (
     <div className="space-y-6">
       {/* Şeffaflık Notu */}
       <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-xl border border-blue-200 dark:border-blue-800 text-sm text-blue-800 dark:text-blue-200 flex items-start gap-3">
         <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
-        <p>
-          <strong>TDİ (Tahmini Damızlık İndeksi) Nedir?</strong> Bu değerler, ham ölçüm üzerine çevre düzeltmesi (mevsim, vb.) uygulandıktan sonra kalıtım derecesi (h²) ile ölçeklendirilmiş bir <strong>tahmindir</strong>. (Süt h²=0.30, Büyüme h²=0.40)
-        </p>
+        <div className="space-y-2">
+          <p>
+            <strong>TDİ (Tahmini Damızlık İndeksi) Nedir?</strong> Bu değerler, ham ölçümlerin sürü ortalamasına göre sapmaları bulunup kalıtım derecesi (h²) ile ölçeklendirilmesiyle elde edilen bir <strong>genetik tahmindir</strong>.
+          </p>
+          <ul className="list-disc list-inside text-xs space-y-1 ml-1 text-blue-700 dark:text-blue-300">
+            <li><strong>Dişiler (İnek/Düve):</strong> Süt, Büyüme ve Sağlık skorları doğrudan hayvanın <strong>kendi verileri</strong> üzerinden sürü ortalamasına kıyasla hesaplanır.</li>
+            <li><strong>Erkekler (Boğa/Tosun):</strong> Erkeklerin kendi süt verimi olmadığı için <strong>Süt Skoru nötr (50)</strong> kabul edilir. Bir boğanın asıl süt aktarım gücü <strong>"Boğa Kataloğu"</strong> sekmesindeki Yavru Testi (kızlarının verimi) ile ölçülür. Büyüme ve Sağlık skorları ise kendi verilerinden hesaplanır.</li>
+          </ul>
+        </div>
       </div>
 
       <div className="max-w-xl mx-auto space-y-2 relative">
