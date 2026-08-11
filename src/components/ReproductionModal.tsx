@@ -120,7 +120,7 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
         const yeniHayvanId = uuidv4();
         const yeniHayvan: Hayvan = {
           id: yeniHayvanId,
-          ciftlikId: activeCiftlikId,
+          ciftlikId: activeCiftlikId || undefined,
           kupeNo: yeniBuzagiKupeNo,
           tur: 'Buzağı',
           cinsiyet: yeniBuzagiCinsiyet,
@@ -141,7 +141,7 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
 
         const yeniBuzagiKaydi: BuzagiKaydi = {
           id: uuidv4(),
-          ciftlikId: activeCiftlikId,
+          ciftlikId: activeCiftlikId || undefined,
           hayvanId: yeniHayvanId,
           agizSutuVerildi: false,
           dogumAgirligiKg: yeniBuzagiDogumAgirligi ? Number(yeniBuzagiDogumAgirligi) : undefined,
@@ -162,7 +162,7 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
       if (tur === 'Kızgınlık') {
         todosToAdd.push({
           id: uuidv4(),
-          ciftlikId: activeCiftlikId,
+          ciftlikId: activeCiftlikId || undefined,
           metin: `${disiHayvan?.kupeNo || ''} için tekrar kızgınlık kontrolü`,
           yapildiMi: false,
           olusturulmaTarihi: Date.now(),
@@ -175,7 +175,7 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
       } else if (tur === 'Tohumlama/Aşım') {
         todosToAdd.push({
           id: uuidv4(),
-          ciftlikId: activeCiftlikId,
+          ciftlikId: activeCiftlikId || undefined,
           metin: `${disiHayvan?.kupeNo || ''} için gebelik muayenesi`,
           yapildiMi: false,
           olusturulmaTarihi: Date.now(),
@@ -196,7 +196,7 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
         
         todosToAdd.push({
           id: uuidv4(),
-          ciftlikId: activeCiftlikId,
+          ciftlikId: activeCiftlikId || undefined,
           metin: `${disiHayvan?.kupeNo || ''} kuruya çıkarma zamanı`,
           yapildiMi: false,
           olusturulmaTarihi: Date.now(),
@@ -209,7 +209,7 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
         
         todosToAdd.push({
           id: uuidv4(),
-          ciftlikId: activeCiftlikId,
+          ciftlikId: activeCiftlikId || undefined,
           metin: `${disiHayvan?.kupeNo || ''} için Close-up (Doğum Öncesi) beslemesine geçiş`,
           yapildiMi: false,
           olusturulmaTarihi: Date.now(),
@@ -222,7 +222,7 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
         
         todosToAdd.push({
           id: uuidv4(),
-          ciftlikId: activeCiftlikId,
+          ciftlikId: activeCiftlikId || undefined,
           metin: `${disiHayvan?.kupeNo || ''} için beklenen doğum zamanı`,
           yapildiMi: false,
           olusturulmaTarihi: Date.now(),
@@ -246,7 +246,7 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
         // Erkeğe de Doğal Aşım kaydı ekle
         const erkekKayit: UremeKaydi = {
           id: uuidv4(),
-          ciftlikId: activeCiftlikId,
+          ciftlikId: activeCiftlikId || undefined,
           hayvanId: erkekHayvan.id,
           tarih,
           tur: 'Doğal Aşım',
