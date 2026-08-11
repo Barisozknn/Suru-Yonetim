@@ -4,36 +4,39 @@ import type { Hayvan, UremeKaydiTur } from '../types';
 import { db } from '../lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
+import { useStore } from '../store/useStore';
 
 interface Props {
   hayvan: Hayvan;
   onClose: () => void;
+  existing?: any;
 }
 
-const MaleReproductionModal: React.FC<Props> = ({ hayvan, onClose }) => {
+const MaleReproductionModal: React.FC<Props> = ({ hayvan, onClose, existing }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [tur, setTur] = useState<UremeKaydiTur>('Doğal Aşım');
-  const [tarih, setTarih] = useState(new Date().toISOString().split('T')[0]);
-  const [notlar, setNotlar] = useState('');
-  const [maliyet, setMaliyet] = useState('');
+  const [tur, setTur] = useState<UremeKaydiTur>(existing?.tur || 'Doğal Aşım');
+  const [tarih, setTarih] = useState(existing?.tarih || new Date().toISOString().split('T')[0]);
+  const [notlar, setNotlar] = useState(existing?.notlar || '');
+  const [maliyet, setMaliyet] = useState(existing?.maliyet?.toString() || '');
 
   // Doğal Aşım alanları
-  const [selectedDişiId, setSelectedDişiId] = useState('');
-  const [elleGirisDisi, setElleGirisDisi] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDişiId, setSelectedDişiId] = useState(existing?.detaylar?.eslesilenDişiId || '');
+  const [elleGirisDisi, setElleGirisDisi] = useState(existing?.detaylar?.eslesilenInek || '');
+  const [searchTerm, setSearchTerm] = useState(existing?.detaylar?.eslesilenInek || '');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Sperma Alımı alanları
-  const [miktarMl, setMiktarMl] = useState('');
-  const [motiliteYuzde, setMotiliteYuzde] = useState('');
-  const [payetSayisi, setPayetSayisi] = useState('');
+  const [miktarMl, setMiktarMl] = useState(existing?.detaylar?.miktarMl?.toString() || '');
+  const [motiliteYuzde, setMotiliteYuzde] = useState(existing?.detaylar?.motiliteYuzde?.toString() || '');
+  const [payetSayisi, setPayetSayisi] = useState(existing?.detaylar?.payetSayisi?.toString() || '');
 
   // Damızlık Muayenesi alanları
-  const [skrotumCevresiCm, setSkrotumCevresiCm] = useState('');
+  const [skrotumCevresiCm, setSkrotumCevresiCm] = useState(existing?.detaylar?.skrotumCevresiCm?.toString() || '');
 
   const disiHayvanlar = useLiveFarmQuery(() => 
     db.hayvanlar.filter(h => h.cinsiyet === 'Dişi' && h.durum === 'Aktif' && (h.tur === 'İnek' || h.tur === 'Düve')).toArray()
   ) || [];
+  const { activeCiftlikId } = useStore();
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +64,8 @@ const MaleReproductionModal: React.FC<Props> = ({ hayvan, onClose }) => {
       }
 
       const yeniKayit = {
-        id: uuidv4(),
+        id: existing?.id || uuidv4(),
+        ciftlikId: existing?.ciftlikId || hayvan.ciftlikId, // Fallback to animal's farm ID
         hayvanId: hayvan.id,
         tarih,
         tur,
@@ -70,19 +74,26 @@ const MaleReproductionModal: React.FC<Props> = ({ hayvan, onClose }) => {
         detaylar
       };
 
-      await db.uremeKayitlari.add(yeniKayit);
-      await db.syncQueue.add({ table: 'uremeKayitlari', action: 'INSERT', payload: yeniKayit, created_at: Date.now() });
+      const action = existing ? 'UPDATE' : 'INSERT';
+      if (existing) {
+        await db.uremeKayitlari.put(yeniKayit);
+      } else {
+        await db.uremeKayitlari.add(yeniKayit);
+      }
+      await db.syncQueue.add({ table: 'uremeKayitlari', action, payload: yeniKayit, created_at: Date.now() });
 
-      if (tur === 'Doğal Aşım' && selectedDişiId) {
+      if (tur === 'Doğal Aşım' && selectedDişiId && !existing) {
         const disiKayit = {
           id: uuidv4(),
+          ciftlikId: activeCiftlikId,
           hayvanId: selectedDişiId,
           tarih,
           tur: 'Tohumlama/Aşım' as UremeKaydiTur,
-          notlar: `Doğal Aşım (Boğa: ${hayvan.kupeNo}) ${notlar ? '- ' + notlar : ''}`,
+          notlar: notlar || undefined,
           detaylar: {
-            spermaBogaBilgisi: hayvan.kupeNo,
-            teknisyen: 'Doğal Aşım'
+            tohumlamaYontemi: 'Elde',
+            eldeAsimBogaId: hayvan.id,
+            spermaBogaBilgisi: `${hayvan.kupeNo} (${hayvan.tur} - ${hayvan.irk})`
           }
         };
         await db.uremeKayitlari.add(disiKayit);
@@ -114,7 +125,10 @@ const MaleReproductionModal: React.FC<Props> = ({ hayvan, onClose }) => {
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-800 w-full max-w-lg rounded-2xl shadow-xl flex flex-col max-h-[90vh]">
         <div className="flex justify-between items-center p-6 border-b border-earth-100 dark:border-gray-700">
-          <h2 className="text-xl font-black text-earth-900 dark:text-gray-100">Yeni Üreme İşlemi (Erkek)</h2>
+          <div>
+            <h2 className="text-xl font-black text-earth-900 dark:text-gray-100">Erkek Üreme Olayı</h2>
+            <p className="text-sm text-earth-500 dark:text-gray-400">{existing ? 'Kaydı Düzenle' : 'Yeni Kayıt Ekle'}</p>
+          </div>
           <button onClick={onClose} className="text-earth-400 hover:text-earth-600 transition">
             <X className="w-6 h-6" />
           </button>

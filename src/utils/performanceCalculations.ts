@@ -169,8 +169,9 @@ export const calculateFemalePerformance = (
 export const calculateMalePerformance = (
   hayvan: Hayvan,
   uremeKayitlari: UremeKaydi[],
+  agirlikKayitlari: AgirlikKaydi[],
   buzagiKaydi?: BuzagiKaydi,
-  agirlikKayitlari?: AgirlikKaydi[]
+  allUremeKayitlari?: UremeKaydi[]
 ) => {
   const sortedUreme = [...uremeKayitlari].sort(
     (a, b) => new Date(a.tarih).getTime() - new Date(b.tarih).getTime()
@@ -211,8 +212,56 @@ export const calculateMalePerformance = (
     }
   }
 
+  // Aşım Başarısı / Gebelik Oranı Hesaplama
+  let asimBasarisiYuzde: number | null = null;
+  let degerlendirilenAsimSayisi = 0;
+
+  if (allUremeKayitlari) {
+    const formattedSperma = `${hayvan.kupeNo} (${hayvan.tur} - ${hayvan.irk})`;
+
+    const relatedInseminations = allUremeKayitlari.filter(k => 
+      k.tur === 'Tohumlama/Aşım' && 
+      (
+        k.detaylar?.eldeAsimBogaId === hayvan.id ||
+        k.detaylar?.spermaBogaBilgisi === hayvan.kupeNo ||
+        k.detaylar?.spermaBogaBilgisi === formattedSperma
+      )
+    );
+
+    let basarili = 0;
+    let sonucBilinen = 0;
+
+    relatedInseminations.forEach(ins => {
+      const femaleEvents = allUremeKayitlari.filter(k => k.hayvanId === ins.hayvanId && new Date(k.tarih).getTime() > new Date(ins.tarih).getTime());
+      femaleEvents.sort((a, b) => new Date(a.tarih).getTime() - new Date(b.tarih).getTime());
+      
+      const outcomeEvent = femaleEvents.find(e => 
+        ['Gebelik Kontrolü', 'Doğum', 'Tohumlama/Aşım', 'Kızgınlık'].includes(e.tur)
+      );
+
+      if (outcomeEvent) {
+        if (outcomeEvent.tur === 'Gebelik Kontrolü') {
+          sonucBilinen++;
+          if (outcomeEvent.durum === 'Gebe') basarili++;
+        } else if (outcomeEvent.tur === 'Doğum') {
+          sonucBilinen++;
+          basarili++;
+        } else if (outcomeEvent.tur === 'Tohumlama/Aşım' || outcomeEvent.tur === 'Kızgınlık') {
+          sonucBilinen++;
+        }
+      }
+    });
+
+    degerlendirilenAsimSayisi = sonucBilinen;
+    if (sonucBilinen > 0) {
+      asimBasarisiYuzde = Math.round((basarili / sonucBilinen) * 100);
+    }
+  }
+
   return {
     ilkDamizlikYasiGun,
-    gunlukAgirlikArtisiKg
+    gunlukAgirlikArtisiKg,
+    asimBasarisiYuzde,
+    degerlendirilenAsimSayisi
   };
 };

@@ -80,6 +80,10 @@ interface StoreState {
   // Görünüm / Tema
   theme: 'light' | 'dark';
   setTheme: (theme: 'light' | 'dark') => void;
+
+  // Gizlenen Boğalar (Bulls Catalog)
+  hiddenBulls: string[];
+  setHiddenBulls: (bulls: string[]) => void;
 }
 
 export const useStore = create<StoreState>()(
@@ -155,6 +159,9 @@ export const useStore = create<StoreState>()(
       // Tema
       theme: 'light',
       setTheme: (theme) => set({ theme }),
+
+      hiddenBulls: [],
+      setHiddenBulls: (bulls) => set({ hiddenBulls: bulls }),
     }),
     {
       name: 'suru-yonetimi-store', // localStorage key
@@ -182,6 +189,7 @@ export const useStore = create<StoreState>()(
         konum: state.konum,
         isGuest: state.isGuest,
         theme: state.theme,
+        hiddenBulls: state.hiddenBulls,
       }),
     }
   )
@@ -208,7 +216,8 @@ useStore.subscribe((state, prevState) => {
     rationMinKabaOran: state.rationMinKabaOran,
     rationMaxKabaOran: state.rationMaxKabaOran,
     rationListesi: state.rationListesi, 
-    uremeAyarlari: state.uremeAyarlari 
+    uremeAyarlari: state.uremeAyarlari,
+    hiddenBulls: state.hiddenBulls
   };
   
   const prevAyarlar = { 
@@ -227,7 +236,8 @@ useStore.subscribe((state, prevState) => {
     rationMinKabaOran: prevState.rationMinKabaOran,
     rationMaxKabaOran: prevState.rationMaxKabaOran,
     rationListesi: prevState.rationListesi, 
-    uremeAyarlari: prevState.uremeAyarlari 
+    uremeAyarlari: prevState.uremeAyarlari,
+    hiddenBulls: prevState.hiddenBulls
   };
   
   if (JSON.stringify(ayarlar) !== JSON.stringify(prevAyarlar)) {

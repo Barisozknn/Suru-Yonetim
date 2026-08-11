@@ -24,7 +24,7 @@ const GroupMilkModal: React.FC<Props> = ({ grup, onClose }) => {
   }
 
   const [tarih, setTarih] = useState(new Date().toISOString().split('T')[0]);
-  const [ogun, setOgun] = useState<'Sabah' | 'Akşam' | 'Gece' | ''>('');
+  const [ogun, setOgun] = useState<'Sabah' | 'Öğle' | 'Akşam' | 'Gece' | ''>('');
   const [kayitlar, setKayitlar] = useState<Record<string, SutVeri>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -120,6 +120,7 @@ const GroupMilkModal: React.FC<Props> = ({ grup, onClose }) => {
               >
                  <option value="">-- Seçin --</option>
                  <option value="Sabah">Sabah</option>
+                 <option value="Öğle">Öğle</option>
                  <option value="Akşam">Akşam</option>
                  <option value="Gece">Gece</option>
               </select>

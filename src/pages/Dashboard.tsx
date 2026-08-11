@@ -20,7 +20,8 @@ import {
   calculateTotalDailyFeedCost,
   getUpcomingHeatChecks,
   getUpcomingReInseminations,
-  calculateHerdAveragePerformance
+  calculateHerdAveragePerformance,
+  calculateHerdAverageADG
 } from '../utils/dashboardCalculations';
 import { Link } from 'react-router-dom';
 import { SmartCalendar } from '../components/SmartCalendar';
@@ -41,6 +42,7 @@ const Dashboard: React.FC = () => {
   const yemler = useLiveFarmQuery(() => db.yemler.toArray()) || [];
   const gruplar = useLiveFarmQuery(() => db.gruplar.toArray()) || [];
   const saglikOlaylari = useLiveFarmQuery(() => db.saglikOlaylari.toArray()) || [];
+  const agirlikKayitlari = useLiveFarmQuery(() => db.agirlikKayitlari.toArray()) || [];
   const { uremeAyarlari, activeCiftlikId, sutLitreFiyati, isletmeTipi: storeIsletmeTipi, canliKiloFiyati } = useStore();
   const isletmeTipi = storeIsletmeTipi || 'Karma';
   const anomalyUyarilar = useAnomalyDetection();
@@ -139,6 +141,7 @@ const Dashboard: React.FC = () => {
   const feedCost = calculateEstimatedFeedCostPerLiter(yemler, gruplar, sutKayitlari, hayvanlar);
   const totalFeedCost = calculateTotalDailyFeedCost(yemler, gruplar, hayvanlar);
   const herdPerformance = calculateHerdAveragePerformance(hayvanlar, uremeKayitlari);
+  const herdADG = calculateHerdAverageADG(hayvanlar, agirlikKayitlari, true);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -149,8 +152,8 @@ const Dashboard: React.FC = () => {
 
   const yaklasanDogumlar = getUpcomingBirths(uremeKayitlari, hayvanlar, 30).slice(0, 3);
 
-  const finProj = calculate30DayProjection(hayvanlar, sutKayitlari, uremeKayitlari, yemler, gruplar, saglikOlaylari, sutLitreFiyati, isletmeTipi, canliKiloFiyati);
-  const herdScoreData = calculateHerdScore(hayvanlar, sutKayitlari, uremeKayitlari, yemler, gruplar, saglikOlaylari, sutLitreFiyati, isletmeTipi, canliKiloFiyati);
+  const finProj = calculate30DayProjection(hayvanlar, sutKayitlari, uremeKayitlari, yemler, gruplar, saglikOlaylari, agirlikKayitlari, sutLitreFiyati, isletmeTipi, canliKiloFiyati);
+  const herdScoreData = calculateHerdScore(hayvanlar, sutKayitlari, uremeKayitlari, yemler, gruplar, saglikOlaylari, agirlikKayitlari, sutLitreFiyati, isletmeTipi, canliKiloFiyati);
 
   return (
     <div className="w-full flex flex-col space-y-6">
@@ -167,7 +170,7 @@ const Dashboard: React.FC = () => {
       <WeatherWidget />
 
       {/* KPI Kartları */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex items-center space-x-4">
           <div className="p-4 bg-earth-100 dark:bg-gray-800 text-earth-600 dark:text-gray-400 rounded-xl">
             <GiCow className="w-8 h-8" />
@@ -185,6 +188,19 @@ const Dashboard: React.FC = () => {
           <div>
             <p className="text-sm font-bold text-earth-500 dark:text-gray-400 uppercase">İnek Başı Ort. Süt (Son 7 Gün)</p>
             <p className="text-3xl font-black text-earth-900 dark:text-gray-100">{avgMilk.toFixed(1)} <span className="text-base">Lt/Gün</span></p>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700 flex items-center space-x-4">
+          <div className="p-4 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-xl">
+            <TrendingUp className="w-8 h-8" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-earth-500 dark:text-gray-400 uppercase flex flex-col">
+              Sürü Ort. GCAA
+              <span className="text-[10px] font-normal lowercase capitalize-first">(Buzağılar hariç)</span>
+            </p>
+            <p className="text-3xl font-black text-earth-900 dark:text-gray-100">{herdADG} <span className="text-base">kg/Gün</span></p>
           </div>
         </div>
 
@@ -464,7 +480,7 @@ const Dashboard: React.FC = () => {
 
             {/* Görevler Listesi */}
             {todos.length > 0 && (
-              <div className="space-y-2 mb-6">
+              <div className="space-y-2 mb-6 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
                 {todos.map(todo => {
                   const bgClass = todo.yapildiMi
                     ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-700 opacity-60'

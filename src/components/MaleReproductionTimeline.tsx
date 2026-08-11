@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
-import { Plus, TestTube, Activity, Heart, Info, CalendarDays } from 'lucide-react';
+import { Plus, TestTube, Activity, Heart, Info, CalendarDays, Trash2 } from 'lucide-react';
 import MaleReproductionModal from './MaleReproductionModal';
 import type { Hayvan } from '../types';
 
@@ -11,6 +11,7 @@ interface Props {
 
 const MaleReproductionTimeline: React.FC<Props> = ({ hayvan }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<any>(null);
 
   const uremeKayitlari = useLiveFarmQuery(() =>
     db.uremeKayitlari
@@ -57,6 +58,18 @@ const MaleReproductionTimeline: React.FC<Props> = ({ hayvan }) => {
     }
   };
 
+  const handleSil = async (id: string) => {
+    if (window.confirm('Bu kaydı silmek istediğinize emin misiniz?')) {
+      const kayit = await db.uremeKayitlari.get(id);
+      if (kayit) {
+        await db.uremeKayitlari.delete(id);
+        await db.syncQueue.add({ table: 'uremeKayitlari', action: 'DELETE', payload: kayit, created_at: Date.now() });
+        
+        // Eğer bu doğal aşımsa ve dişi kaydı varsa onu da bulup silebiliriz ama şimdilik sadece erkeği silelim
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Boğa İstatistikleri */}
@@ -95,7 +108,7 @@ const MaleReproductionTimeline: React.FC<Props> = ({ hayvan }) => {
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-black text-earth-900 dark:text-gray-100">Üreme Geçmişi</h3>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => { setEditTarget(null); setIsModalOpen(true); }}
           className="flex items-center space-x-2 bg-nature-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-nature-700 transition"
         >
           <Plus className="w-5 h-5" />
@@ -120,7 +133,7 @@ const MaleReproductionTimeline: React.FC<Props> = ({ hayvan }) => {
                   </div>
                 </div>
 
-                <div className={`flex-1 bg-white dark:bg-gray-800 p-4 rounded-xl border shadow-sm ${getBgColor(kayit.tur)}`}>
+                <div className={`flex-1 bg-white dark:bg-gray-800 p-4 rounded-xl border shadow-sm group ${getBgColor(kayit.tur)}`}>
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <h4 className="font-bold text-earth-900 dark:text-gray-100 text-lg flex items-center space-x-2">
@@ -128,6 +141,12 @@ const MaleReproductionTimeline: React.FC<Props> = ({ hayvan }) => {
                         <span>{kayit.tur}</span>
                       </h4>
                       <p className="text-sm text-earth-500 dark:text-gray-400">{new Date(kayit.tarih).toLocaleDateString('tr-TR')}</p>
+                    </div>
+                    <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition">
+                      <button onClick={() => { setEditTarget(kayit); setIsModalOpen(true); }} className="p-1 text-earth-400 hover:text-earth-700 transition text-sm">✏️</button>
+                      <button onClick={() => handleSil(kayit.id)} className="p-1 text-earth-400 hover:text-red-500 transition">
+                        <Trash2 className="w-5 h-5" />
+                      </button>
                     </div>
                   </div>
 
@@ -179,7 +198,8 @@ const MaleReproductionTimeline: React.FC<Props> = ({ hayvan }) => {
       {isModalOpen && (
         <MaleReproductionModal
           hayvan={hayvan}
-          onClose={() => setIsModalOpen(false)}
+          existing={editTarget}
+          onClose={() => { setIsModalOpen(false); setEditTarget(null); }}
         />
       )}
     </div>

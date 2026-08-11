@@ -1,5 +1,5 @@
-import type { Hayvan, SutKaydi, UremeKaydi, Yem, Grup, SaglikOlayi } from '../types';
-import { calculateTotalDailyFeedCost, calculateHerdAveragePerformance } from './dashboardCalculations';
+import type { Hayvan, SutKaydi, UremeKaydi, Yem, Grup, SaglikOlayi, AgirlikKaydi } from '../types';
+import { calculateTotalDailyFeedCost, calculateHerdAveragePerformance, calculateHerdAverageADG } from './dashboardCalculations';
 
 export interface HerdScoreResult {
   totalScore: number; // 0-100
@@ -23,6 +23,7 @@ export function calculateHerdScore(
   yemler: Yem[],
   gruplar: Grup[],
   saglikOlaylari: SaglikOlayi[],
+  agirlikKayitlari: AgirlikKaydi[],
   sutFiyati: number,
   isletmeTipi: 'Süt' | 'Besi' | 'Karma' = 'Karma',
   canliKiloFiyati: number = 300
@@ -82,7 +83,11 @@ export function calculateHerdScore(
   // Yem Hesaplaması (Tümü için)
   const dailyFeedCost = calculateTotalDailyFeedCost(yemler, gruplar, hayvanlar);
   const dailyMilkRevenue = gunlukToplamSuruSutu * sutFiyati;
-  const expectedDailyGainTotal = hayvanlar.length * 1.2; 
+  
+  const nonCalfAnimals = hayvanlar.filter(h => h.tur !== 'Buzağı' && h.durum === 'Aktif');
+  let realADG = calculateHerdAverageADG(hayvanlar, agirlikKayitlari, true);
+  if (realADG === 0) realADG = 1.2;
+  const expectedDailyGainTotal = nonCalfAnimals.length * realADG; 
   const dailyMeatRevenue = expectedDailyGainTotal * canliKiloFiyati;
 
 

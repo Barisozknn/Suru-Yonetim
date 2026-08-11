@@ -47,7 +47,7 @@ const schema = z.object({
   satisFiyati: z.number().or(z.nan()).optional(),
   satisTarihi: z.string().optional(),
   olumTarihi: z.string().optional(),
-  olumNedeniTipi: z.enum(['Hastalık', 'Diğer']).optional(),
+  olumNedeniTipi: z.enum(['Hastalık', 'Kaza / Travma', 'Zehirlenme', 'Güç Doğum', 'Yaşlılık', 'Diğer']).optional(),
   olumNedeniDetay: z.string().optional(),
 });
 
@@ -110,7 +110,7 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
   const currentDurum = watch('durum');
   
   const [olumTarihi, setOlumTarihi] = useState(initialData?.olumTarihi || new Date().toISOString().split('T')[0]);
-  const [olumNedeniTipi, setOlumNedeniTipi] = useState<'Hastalık' | 'Diğer'>(initialData?.olumNedeniTipi || 'Hastalık');
+  const [olumNedeniTipi, setOlumNedeniTipi] = useState<'Hastalık' | 'Kaza / Travma' | 'Zehirlenme' | 'Güç Doğum' | 'Yaşlılık' | 'Diğer'>(initialData?.olumNedeniTipi || 'Hastalık');
   const [olumNedeniDetay, setOlumNedeniDetay] = useState(initialData?.olumNedeniDetay || '');
   const [showHastalikDropdown, setShowHastalikDropdown] = useState(false);
 
@@ -424,6 +424,10 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
                       className="w-full p-2 border border-red-300 dark:border-red-600 rounded-lg focus:ring-2 focus:ring-red-500 bg-white dark:bg-gray-800"
                     >
                       <option value="Hastalık">Hastalık</option>
+                      <option value="Kaza / Travma">Kaza / Travma</option>
+                      <option value="Zehirlenme">Zehirlenme</option>
+                      <option value="Güç Doğum">Güç Doğum</option>
+                      <option value="Yaşlılık">Yaşlılık</option>
                       <option value="Diğer">Diğer Nedenler</option>
                     </select>
                   </div>
@@ -447,7 +451,7 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
                         />
                         {showHastalikDropdown && (
                           <ul className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-red-200 dark:border-gray-700 rounded-lg shadow-xl max-h-48 overflow-y-auto">
-                            {COMMON_DISEASES.filter(d => d.toLowerCase().includes(olumNedeniDetay.toLowerCase())).map(d => (
+                            {COMMON_DISEASES.filter(d => d.toLocaleLowerCase('tr-TR').includes(olumNedeniDetay.toLocaleLowerCase('tr-TR'))).map(d => (
                               <li 
                                 key={d} 
                                 onMouseDown={() => { setOlumNedeniDetay(d); setShowHastalikDropdown(false); }}
@@ -456,7 +460,7 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
                                 {d}
                               </li>
                             ))}
-                            {olumNedeniDetay && !COMMON_DISEASES.some(d => d.toLowerCase() === olumNedeniDetay.toLowerCase()) && (
+                            {olumNedeniDetay && !COMMON_DISEASES.some(d => d.toLocaleLowerCase('tr-TR') === olumNedeniDetay.toLocaleLowerCase('tr-TR')) && (
                               <li 
                                 onMouseDown={() => setShowHastalikDropdown(false)}
                                 className="px-3 py-2 text-sm text-red-600 dark:text-red-400 italic bg-red-50/50 dark:bg-red-900/10 cursor-pointer"

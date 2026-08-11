@@ -3,21 +3,31 @@ import { useLiveFarmQuery } from '../../hooks/useLiveFarmQuery';
 import { db } from '../../lib/db';
 import { generateBullsCatalog } from '../../utils/progenyTesting';
 import { calcHerdMilkAvg, calcHerdADGAvg } from '../../utils/geneticScoring';
-import { ShieldCheck, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, Trash2 } from 'lucide-react';
+import { useStore } from '../../store/useStore';
 
 const BullsCatalog: React.FC = () => {
   const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
   const uremeKayitlari = useLiveFarmQuery(() => db.uremeKayitlari.toArray()) || [];
   const sutKayitlari = useLiveFarmQuery(() => db.sutKayitlari.toArray()) || [];
   const agirlikKayitlari = useLiveFarmQuery(() => db.agirlikKayitlari.toArray()) || [];
+  const { hiddenBulls, setHiddenBulls } = useStore();
 
   const catalog = useMemo(() => {
     if (hayvanlar.length === 0) return [];
     
     const sutS = calcHerdMilkAvg(sutKayitlari);
     const agS = calcHerdADGAvg(agirlikKayitlari, hayvanlar);
-    return generateBullsCatalog(hayvanlar, uremeKayitlari, sutKayitlari, agirlikKayitlari, sutS, agS);
-  }, [hayvanlar, uremeKayitlari, sutKayitlari, agirlikKayitlari]);
+    const fullCatalog = generateBullsCatalog(hayvanlar, uremeKayitlari, sutKayitlari, agirlikKayitlari, sutS, agS);
+    
+    return fullCatalog.filter(b => !hiddenBulls.includes(b.bogaId));
+  }, [hayvanlar, uremeKayitlari, sutKayitlari, agirlikKayitlari, hiddenBulls]);
+
+  const handleHide = (bogaId: string) => {
+    if (window.confirm('Bu boğayı katalogdan gizlemek istediğinize emin misiniz? (Gerçek veriler silinmez, sadece katalogda görünmez)')) {
+      setHiddenBulls([...hiddenBulls, bogaId]);
+    }
+  };
 
   if (catalog.length === 0) {
     return <div className="text-center p-8 text-earth-500">Katalog oluşturmak için yeterli boğa ve yavru verisi bulunamadı.</div>;
@@ -40,9 +50,18 @@ const BullsCatalog: React.FC = () => {
                 </h3>
                 <p className="text-sm text-earth-500 dark:text-gray-400">{boga.irk}</p>
               </div>
-              <div className={`flex items-center space-x-1 px-2 py-1 rounded-lg text-xs font-bold ${boga.guvenilirlik >= 70 ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
-                {boga.guvenilirlik >= 70 ? <ShieldCheck className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
-                <span>%{boga.guvenilirlik} Güven</span>
+              <div className="flex items-center space-x-3">
+                <div className={`flex items-center space-x-1 px-2 py-1 rounded-lg text-xs font-bold ${boga.guvenilirlik >= 70 ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                  {boga.guvenilirlik >= 70 ? <ShieldCheck className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+                  <span>%{boga.guvenilirlik} Güven</span>
+                </div>
+                <button 
+                  onClick={() => handleHide(boga.bogaId)} 
+                  className="text-earth-400 hover:text-red-500 transition"
+                  title="Katalogdan Gizle"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
               </div>
             </div>
 
@@ -58,9 +77,9 @@ const BullsCatalog: React.FC = () => {
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm font-bold text-earth-700 dark:text-gray-300">Yavru Büyüme (Canlı Ağırlık)</span>
+                <span className="text-sm font-bold text-earth-700 dark:text-gray-300">Günlük Canlı Ağırlık Artışı</span>
                 <span className={`font-bold ${boga.yavruOrtalamaCanliAgirlikSapma && boga.yavruOrtalamaCanliAgirlikSapma > 0 ? 'text-green-600' : 'text-earth-900 dark:text-white'}`}>
-                  {boga.yavruOrtalamaCanliAgirlik ? `${boga.yavruOrtalamaCanliAgirlik.toFixed(1)} Kg` : '-'}
+                  {boga.yavruOrtalamaCanliAgirlik ? `${(boga.yavruOrtalamaCanliAgirlik / 1000).toFixed(2)} kg/gün` : '-'}
                 </span>
               </div>
             </div>

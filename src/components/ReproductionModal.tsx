@@ -58,10 +58,12 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
   const [yeniBuzagiCinsiyet, setYeniBuzagiCinsiyet] = useState<'Erkek' | 'Dişi'>('Dişi');
   const [yeniBuzagiDogumAgirligi, setYeniBuzagiDogumAgirligi] = useState('');
   
-  const { uremeAyarlari: globalAyarlari } = useStore();
+  const { uremeAyarlari: globalAyarlari, activeCiftlikId } = useStore();
   const uremeAyarlari = getUremeAyarForIrk(disiHayvan?.irk, globalAyarlari);
   
-  const [erkekSearchTerm, setErkekSearchTerm] = useState('');
+  const [erkekSearchTerm, setErkekSearchTerm] = useState(
+    existing?.detaylar?.tohumlamaYontemi === 'Elde' ? (existing?.detaylar?.spermaBogaBilgisi || '') : ''
+  );
   const [isErkekDropdownOpen, setIsErkekDropdownOpen] = useState(false);
   const [dogumDegerlendirmesi, setDogumDegerlendirmesi] = useState<string>(existing?.detaylar?.dogumDegerlendirmesi || '');
   
@@ -80,6 +82,7 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
 
     const payload: UremeKaydi = {
       id: existing?.id || uuidv4(),
+      ciftlikId: existing?.ciftlikId || activeCiftlikId,
       hayvanId,
       tarih,
       tur,
@@ -101,9 +104,23 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
     if (tur === 'Doğum' && !existing && yeniBuzagiKupeNo) {
       const anne = await db.hayvanlar.get(hayvanId);
       if (anne) {
+        let expectedBabaKupeNo: string | undefined = undefined;
+        const tumOlaylar = await db.uremeKayitlari.where('hayvanId').equals(hayvanId).toArray();
+        const sonTohumlama = tumOlaylar
+          .filter(o => new Date(o.tarih) <= new Date(tarih) && (o.tur === 'Tohumlama/Aşım' || o.tur === 'Doğal Aşım' || (o.tur as string) === 'Tohumlama'))
+          .sort((a, b) => new Date(b.tarih).getTime() - new Date(a.tarih).getTime())[0];
+          
+        if (sonTohumlama && sonTohumlama.detaylar?.spermaBogaBilgisi) {
+          expectedBabaKupeNo = sonTohumlama.detaylar.spermaBogaBilgisi;
+          if (expectedBabaKupeNo && expectedBabaKupeNo.includes(' (')) {
+            expectedBabaKupeNo = expectedBabaKupeNo.split(' (')[0];
+          }
+        }
+
         const yeniHayvanId = uuidv4();
         const yeniHayvan: Hayvan = {
           id: yeniHayvanId,
+          ciftlikId: activeCiftlikId,
           kupeNo: yeniBuzagiKupeNo,
           tur: 'Buzağı',
           cinsiyet: yeniBuzagiCinsiyet,
@@ -111,6 +128,7 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
           durum: 'Aktif',
           dogumTarihi: tarih,
           anneKupeNo: anne.kupeNo,
+          babaKupeNo: expectedBabaKupeNo,
           grupId: null,
           guncelAgirlikKg: yeniBuzagiDogumAgirligi ? Number(yeniBuzagiDogumAgirligi) : 0,
           notlar: [
@@ -123,6 +141,7 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
 
         const yeniBuzagiKaydi: BuzagiKaydi = {
           id: uuidv4(),
+          ciftlikId: activeCiftlikId,
           hayvanId: yeniHayvanId,
           agizSutuVerildi: false,
           dogumAgirligiKg: yeniBuzagiDogumAgirligi ? Number(yeniBuzagiDogumAgirligi) : undefined,
@@ -143,6 +162,7 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
       if (tur === 'Kızgınlık') {
         todosToAdd.push({
           id: uuidv4(),
+          ciftlikId: activeCiftlikId,
           metin: `${disiHayvan?.kupeNo || ''} için tekrar kızgınlık kontrolü`,
           yapildiMi: false,
           olusturulmaTarihi: Date.now(),
@@ -155,6 +175,7 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
       } else if (tur === 'Tohumlama/Aşım') {
         todosToAdd.push({
           id: uuidv4(),
+          ciftlikId: activeCiftlikId,
           metin: `${disiHayvan?.kupeNo || ''} için gebelik muayenesi`,
           yapildiMi: false,
           olusturulmaTarihi: Date.now(),
@@ -175,6 +196,7 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
         
         todosToAdd.push({
           id: uuidv4(),
+          ciftlikId: activeCiftlikId,
           metin: `${disiHayvan?.kupeNo || ''} kuruya çıkarma zamanı`,
           yapildiMi: false,
           olusturulmaTarihi: Date.now(),
@@ -187,6 +209,7 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
         
         todosToAdd.push({
           id: uuidv4(),
+          ciftlikId: activeCiftlikId,
           metin: `${disiHayvan?.kupeNo || ''} için Close-up (Doğum Öncesi) beslemesine geçiş`,
           yapildiMi: false,
           olusturulmaTarihi: Date.now(),
@@ -199,6 +222,7 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
         
         todosToAdd.push({
           id: uuidv4(),
+          ciftlikId: activeCiftlikId,
           metin: `${disiHayvan?.kupeNo || ''} için beklenen doğum zamanı`,
           yapildiMi: false,
           olusturulmaTarihi: Date.now(),
@@ -222,6 +246,7 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
         // Erkeğe de Doğal Aşım kaydı ekle
         const erkekKayit: UremeKaydi = {
           id: uuidv4(),
+          ciftlikId: activeCiftlikId,
           hayvanId: erkekHayvan.id,
           tarih,
           tur: 'Doğal Aşım',
@@ -353,7 +378,9 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
                                 className="p-3 hover:bg-earth-50 dark:hover:bg-gray-700 cursor-pointer text-earth-900 dark:text-gray-100 border-b border-earth-100 dark:border-gray-700 last:border-0"
                                 onClick={() => {
                                   handleDetayChange('eldeAsimBogaId', e.id);
-                                  setErkekSearchTerm(`${e.kupeNo} (${e.tur} - ${e.irk})`);
+                                  const displayText = `${e.kupeNo} (${e.tur} - ${e.irk})`;
+                                  handleDetayChange('spermaBogaBilgisi', displayText);
+                                  setErkekSearchTerm(displayText);
                                   setIsErkekDropdownOpen(false);
                                 }}
                               >

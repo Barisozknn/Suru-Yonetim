@@ -80,17 +80,16 @@ const HealthStats: React.FC<Props> = ({ saglikOlaylari, hayvanlar }) => {
     }
 
     const olumHastaliklari: Record<string, number> = {};
-    let toplamOlenHastaliktan = 0;
-    let toplamOlenDiger = 0;
+    const olumNedenleriDagilimi: Record<string, number> = {};
 
     filteredOluHayvanlar.forEach(h => {
       if (h.olumNedeniTipi === 'Hastalık') {
-        toplamOlenHastaliktan++;
         const hAd = h.olumNedeniDetay || 'Bilinmeyen Hastalık';
         olumHastaliklari[hAd] = (olumHastaliklari[hAd] || 0) + 1;
-      } else {
-        toplamOlenDiger++;
       }
+      
+      const tip = h.olumNedeniTipi || 'Belirtilmemiş';
+      olumNedenleriDagilimi[tip] = (olumNedenleriDagilimi[tip] || 0) + 1;
     });
 
     const olumHastalikData = Object.entries(olumHastaliklari)
@@ -98,10 +97,9 @@ const HealthStats: React.FC<Props> = ({ saglikOlaylari, hayvanlar }) => {
       .slice(0, 5)
       .map(([tur, sayi]) => ({ tur, 'Ölüm Sayısı': sayi }));
 
-    const olumNedenData = [
-      { name: 'Hastalık', value: toplamOlenHastaliktan },
-      { name: 'Diğer', value: toplamOlenDiger }
-    ].filter(d => d.value > 0);
+    const olumNedenData = Object.entries(olumNedenleriDagilimi)
+      .map(([name, value]) => ({ name, value }))
+      .filter(d => d.value > 0);
 
     const aktifHayvanSayisi = hayvanlar.filter(h => h.durum === 'Aktif').length;
     const ortalamaGider = aktifHayvanSayisi > 0 ? (toplamGider / aktifHayvanSayisi) : 0;
@@ -121,7 +119,7 @@ const HealthStats: React.FC<Props> = ({ saglikOlaylari, hayvanlar }) => {
     return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(val);
   };
 
-  const COLORS = ['#ef4444', '#64748b']; // Red for Hastalık, Gray for Diğer
+  const COLORS = ['#ef4444', '#f59e0b', '#3b82f6', '#10b981', '#8b5cf6', '#64748b', '#ec4899']; // Expanded colors for multiple categories
 
   return (
     <div className="space-y-6">
@@ -168,7 +166,7 @@ const HealthStats: React.FC<Props> = ({ saglikOlaylari, hayvanlar }) => {
         <div className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-earth-200 dark:border-gray-700 shadow-sm">
           <h3 className="text-lg font-bold text-earth-800 dark:text-gray-200 mb-4 flex items-center">
              <Activity className="w-5 h-5 mr-2 text-earth-500" />
-             Aylık Sağlık Gideri Trendi (Son 6 Ay)
+             Sağlık Gideri Trendi
           </h3>
           <div className="h-64 w-full">
             {stats.aylikData.length > 0 ? (

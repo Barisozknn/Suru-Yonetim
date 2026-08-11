@@ -3,12 +3,13 @@ import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import { Flame, Syringe, CheckCircle, Droplets, Calendar, ChevronDown, ChevronRight, Activity } from 'lucide-react';
 import { PiCow } from 'react-icons/pi';
+import { GiCow } from 'react-icons/gi';
 
 const ReproductionStatusReport: React.FC = () => {
   const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
   const uremeKayitlari = useLiveFarmQuery(() => db.uremeKayitlari.toArray()) || [];
 
-  const [activeTab, setActiveTab] = useState<'Kizginlik' | 'Tohumlama' | 'Gebelik' | 'Kuru' | 'Dogum'>('Kizginlik');
+  const [activeTab, setActiveTab] = useState<'Kizginlik' | 'Tohumlama' | 'Gebelik' | 'Kuru' | 'Dogum' | 'Yenidogan'>('Kizginlik');
   const [dogumGunuFilter, setDogumGunuFilter] = useState<7 | 15 | 30>(7);
   const [expandedAnimalId, setExpandedAnimalId] = useState<string | null>(null);
 
@@ -20,9 +21,31 @@ const ReproductionStatusReport: React.FC = () => {
     const gebelikList: any[] = [];
     const kuruList: any[] = [];
     const dogumList: any[] = [];
+    const yenidoganList: any[] = [];
 
     const now = new Date();
     now.setHours(0, 0, 0, 0);
+
+    // Yeni doğan buzağıları hesapla
+    hayvanlar.forEach(h => {
+      if (h.durum === 'Aktif' && h.tur === 'Buzağı' && h.dogumTarihi) {
+        const dogumTarihi = new Date(h.dogumTarihi);
+        dogumTarihi.setHours(0, 0, 0, 0);
+        const diffDays = Math.floor((now.getTime() - dogumTarihi.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (diffDays >= 0 && diffDays <= dogumGunuFilter) {
+          yenidoganList.push({ 
+            hayvan: h, 
+            record: { 
+              tarih: h.dogumTarihi, 
+              tur: 'Yeni Doğan', 
+              notlar: `${h.cinsiyet === 'Erkek' ? 'Erkek' : 'Dişi'} Buzağı` 
+            }, 
+            diffDays 
+          });
+        }
+      }
+    });
 
     disiHayvanlar.forEach(hayvan => {
       // Hayvana ait tüm kayıtlar tarihe göre sondan başa sıralı
@@ -63,7 +86,7 @@ const ReproductionStatusReport: React.FC = () => {
       }
     });
 
-    return { kizginlikList, tohumlamaList, gebelikList, kuruList, dogumList };
+    return { kizginlikList, tohumlamaList, gebelikList, kuruList, dogumList, yenidoganList };
   }, [hayvanlar, uremeKayitlari, dogumGunuFilter]);
 
   const toggleExpand = (id: string) => {
@@ -156,13 +179,20 @@ const ReproductionStatusReport: React.FC = () => {
           onClick={() => setActiveTab('Dogum')}
           className={`flex items-center gap-2 px-4 py-3 font-bold text-sm whitespace-nowrap transition-colors ${activeTab === 'Dogum' ? 'text-nature-600 border-b-2 border-nature-600 bg-nature-50 dark:bg-nature-900/20' : 'text-earth-500 hover:text-earth-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
         >
-          <PiCow className="w-4 h-4" /> Doğum Yapan
+          <GiCow className="w-5 h-5" /> Doğum Yapan
           <span className="ml-1 bg-earth-100 dark:bg-gray-700 text-earth-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full text-xs">{lists.dogumList.length}</span>
+        </button>
+        <button 
+          onClick={() => setActiveTab('Yenidogan')}
+          className={`flex items-center gap-2 px-4 py-3 font-bold text-sm whitespace-nowrap transition-colors ${activeTab === 'Yenidogan' ? 'text-nature-600 border-b-2 border-nature-600 bg-nature-50 dark:bg-nature-900/20' : 'text-earth-500 hover:text-earth-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+        >
+          <PiCow className="w-5 h-5" /> Yeni Doğan
+          <span className="ml-1 bg-earth-100 dark:bg-gray-700 text-earth-600 dark:text-gray-300 px-1.5 py-0.5 rounded-full text-xs">{lists.yenidoganList.length}</span>
         </button>
       </div>
 
       <div className="p-4 sm:p-5 bg-earth-50/30 dark:bg-gray-900/20">
-        {activeTab === 'Dogum' && (
+        {(activeTab === 'Dogum' || activeTab === 'Yenidogan') && (
            <div className="flex items-center justify-end mb-4 bg-white dark:bg-gray-800 p-2 rounded-xl border border-earth-200 dark:border-gray-700 w-fit ml-auto">
              <Calendar className="w-4 h-4 text-earth-500 mr-2" />
              <span className="text-sm text-earth-600 dark:text-gray-300 mr-2 font-medium">Zaman Aralığı:</span>
@@ -183,6 +213,7 @@ const ReproductionStatusReport: React.FC = () => {
         {activeTab === 'Gebelik' && renderList(lists.gebelikList, "Son durumu gebelik kontrolü olan hayvan bulunmuyor.")}
         {activeTab === 'Kuru' && renderList(lists.kuruList, "Son durumu kuruya çıkarılmış olan hayvan bulunmuyor.")}
         {activeTab === 'Dogum' && renderList(lists.dogumList, `Son ${dogumGunuFilter} gün içinde doğum yapan hayvan bulunmuyor.`)}
+        {activeTab === 'Yenidogan' && renderList(lists.yenidoganList, `Son ${dogumGunuFilter} gün içinde doğan buzağı bulunmuyor.`)}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import type { Hayvan, SutKaydi, PlanlananAsi, UremeKaydi, Yem, Grup } from '../types';
+import type { Hayvan, SutKaydi, PlanlananAsi, UremeKaydi, Yem, Grup, AgirlikKaydi } from '../types';
 import { useStore } from '../store/useStore';
 import { calculateFemalePerformance } from './performanceCalculations';
 import { getUremeAyarForIrk } from './reproductionSettings';
@@ -322,4 +322,37 @@ export const calculateHerdAveragePerformance = (hayvanlar: Hayvan[], uremeKayitl
     gebelikBasinaTohumlamaOrt: tohumCount > 0 ? Number((totalTohum / tohumCount).toFixed(1)) : null,
     buzagilamaAraligiOrt: buzagilamaCount > 0 ? Math.floor(totalBuzagilama / buzagilamaCount) : null
   };
+};
+
+export const calculateHerdAverageADG = (
+  hayvanlar: Hayvan[],
+  agirlikKayitlari: AgirlikKaydi[],
+  excludeCalves: boolean = true
+): number => {
+  const targetHayvanlar = excludeCalves 
+    ? hayvanlar.filter(h => h.tur !== 'Buzağı' && h.durum === 'Aktif')
+    : hayvanlar.filter(h => h.durum === 'Aktif');
+
+  if (targetHayvanlar.length === 0) return 0;
+
+  let totalADG = 0;
+  let count = 0;
+
+  targetHayvanlar.forEach(h => {
+    const kayitlar = agirlikKayitlari.filter(k => k.hayvanId === h.id);
+    kayitlar.sort((a, b) => new Date(a.tarih).getTime() - new Date(b.tarih).getTime());
+
+    if (kayitlar.length >= 2) {
+      const enEski = kayitlar[0];
+      const enYeni = kayitlar[kayitlar.length - 1];
+      const gunFarki = Math.floor((new Date(enYeni.tarih).getTime() - new Date(enEski.tarih).getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (gunFarki > 0) {
+        totalADG += (enYeni.kg - enEski.kg) / gunFarki;
+        count++;
+      }
+    }
+  });
+
+  return count > 0 ? Number((totalADG / count).toFixed(3)) : 0;
 };

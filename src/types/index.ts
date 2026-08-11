@@ -10,7 +10,7 @@ export interface Hayvan {
   grupId: string | null;
   durum: 'Aktif' | 'Satıldı' | 'Öldü';
   olumTarihi?: string;
-  olumNedeniTipi?: 'Hastalık' | 'Diğer';
+  olumNedeniTipi?: 'Hastalık' | 'Kaza / Travma' | 'Zehirlenme' | 'Güç Doğum' | 'Yaşlılık' | 'Diğer';
   olumNedeniDetay?: string;
   anneKupeNo?: string;
   babaKupeNo?: string;
@@ -73,7 +73,7 @@ export interface SutKaydi {
   hayvanId: string;
   tarih: string;
   litre: number;
-  ogun?: 'Sabah' | 'Akşam' | 'Gece';
+  ogun?: 'Sabah' | 'Öğle' | 'Akşam' | 'Gece';
   yagYuzde?: number;
   proteinYuzde?: number;
   laktozYuzde?: number;

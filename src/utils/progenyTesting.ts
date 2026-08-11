@@ -10,18 +10,18 @@ export const generateBullsCatalog = (
 ): ProgenyTestResult[] => {
   const results: ProgenyTestResult[] = [];
 
-  // 1) Sürüdeki gerçek boğalar (SADECE tur === 'Boğa')
-  const bogalar = hayvanlar.filter(h => h.tur === 'Boğa');
+  // 1) Sürüdeki gerçek boğalar (SADECE tur === 'Boğa' ve durum === 'Aktif')
+  const bogalar = hayvanlar.filter(h => h.tur === 'Boğa' && h.durum === 'Aktif');
 
   bogalar.forEach(boga => {
     const yavrular = hayvanlar.filter(h => h.babaKupeNo === boga.kupeNo);
     const result = calculateProgenyTest(boga.id, boga.kupeNo, boga.irk, false, yavrular, sutKayitlari, agirlikKayitlari, suruOrtSut, suruOrtADG);
-    if (result.yavruSayisi > 0) results.push(result);
+    results.push(result);
   });
 
-  // 2) Üreme kayıtlarından benzersiz sperma bilgileri (Yapay Tohumlama)
+  // 2) Üreme kayıtlarından benzersiz sperma bilgileri (Suni Tohumlama olanlar)
   const spermaBilgileri = uremeKayitlari
-    .filter(k => k.tur === 'Tohumlama/Aşım' && k.detaylar?.spermaBogaBilgisi)
+    .filter(k => k.tur === 'Tohumlama/Aşım' && k.detaylar?.spermaBogaBilgisi && k.detaylar?.tohumlamaYontemi !== 'Elde')
     .map(k => k.detaylar!.spermaBogaBilgisi as string)
     .filter((v, i, a) => a.indexOf(v) === i);
 

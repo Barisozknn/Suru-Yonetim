@@ -33,6 +33,7 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
   const buzagiKaydi = useLiveFarmQuery(() => db.buzagiKayitlari.where('hayvanId').equals(id).first(), [id]);
   const uremeKayitlari = useLiveFarmQuery(() => db.uremeKayitlari.where('hayvanId').equals(id).toArray(), [id]) || [];
   const agirlikKayitlari = useLiveFarmQuery(() => db.agirlikKayitlari.where('hayvanId').equals(id).toArray(), [id]) || [];
+  const allUremeKayitlari = useLiveFarmQuery(() => db.uremeKayitlari.toArray(), []) || [];
 
   const [activeTab, setActiveTab] = useState<'ozet' | 'verim' | 'soy' | 'saglik' | 'ureme' | 'notlar' | 'ekonomi'>('ozet');
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
@@ -125,7 +126,7 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
   const isMale = ['Tosun', 'Boğa'].includes(hayvan.tur);
 
   const femalePerf = isFemale ? calculateFemalePerformance(hayvan, uremeKayitlari) : null;
-  const malePerf = isMale ? calculateMalePerformance(hayvan, uremeKayitlari, buzagiKaydi, agirlikKayitlari) : null;
+  const malePerf = isMale ? calculateMalePerformance(hayvan, uremeKayitlari, agirlikKayitlari, buzagiKaydi, allUremeKayitlari) : null;
 
   return (
     <div className="space-y-6">
@@ -265,9 +266,22 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
                     <p className="font-bold text-earth-900 dark:text-gray-100">{formatDaysToText(malePerf.ilkDamizlikYasiGun)}</p>
                   </div>
                   <div className="bg-white dark:bg-gray-800 p-3 rounded-xl border border-indigo-100">
-                    <p className="text-xs font-bold text-earth-500 dark:text-gray-400 mb-1">Günlük Canlı Ağırlık Artışı</p>
+                    <p className="text-xs font-bold text-earth-500 dark:text-gray-400 mb-1">
+                      Genel Canlı Ağırlık Artışı <span className="font-normal text-[10px]">(Tüm tartımlar)</span>
+                    </p>
                     <p className="font-bold text-earth-900 dark:text-gray-100">
                       {malePerf.gunlukAgirlikArtisiKg !== null ? `${malePerf.gunlukAgirlikArtisiKg} kg/gün` : '-'}
+                    </p>
+                  </div>
+                  <div className="bg-white dark:bg-gray-800 p-3 rounded-xl border border-indigo-100">
+                    <p className="text-xs font-bold text-earth-500 dark:text-gray-400 mb-1">Aşım Başarısı / Gebelik Oranı</p>
+                    <p className="font-bold text-earth-900 dark:text-gray-100 flex items-baseline space-x-1">
+                      <span>{malePerf.asimBasarisiYuzde !== null ? `%${malePerf.asimBasarisiYuzde}` : '-'}</span>
+                      {malePerf.degerlendirilenAsimSayisi > 0 && (
+                        <span className="text-[10px] text-earth-500 font-normal">
+                          ({malePerf.degerlendirilenAsimSayisi} işlem baz alındı)
+                        </span>
+                      )}
                     </p>
                   </div>
                 </div>

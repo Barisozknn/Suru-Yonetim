@@ -1,5 +1,5 @@
-import type { Hayvan, SutKaydi, UremeKaydi, Yem, Grup, SaglikOlayi } from '../types';
-import { calculateTotalDailyFeedCost, getUpcomingBirths } from './dashboardCalculations';
+import type { Hayvan, SutKaydi, UremeKaydi, Yem, Grup, SaglikOlayi, AgirlikKaydi } from '../types';
+import { calculateTotalDailyFeedCost, getUpcomingBirths, calculateHerdAverageADG } from './dashboardCalculations';
 
 export interface FinancialProjectionResult {
   expectedMilkRevenue: number;
@@ -22,6 +22,7 @@ export function calculate30DayProjection(
   yemler: Yem[],
   gruplar: Grup[],
   saglikOlaylari: SaglikOlayi[],
+  agirlikKayitlari: AgirlikKaydi[],
   sutFiyati: number,
   isletmeTipi: 'Süt' | 'Besi' | 'Karma' = 'Karma',
   canliKiloFiyati: number = 300
@@ -80,8 +81,17 @@ export function calculate30DayProjection(
   }
   
   if (isletmeTipi === 'Besi' || isletmeTipi === 'Karma') {
-    // Etçi / Karma İşletme Gelir Tahmini
-    const expectedDailyGainTotal = hayvanlar.length * 1.2; // 1.2 kg ortalama ADG varsayımı
+    // Etçi / Karma İşletme Gelir Tahmini (Gerçek tartım verilerine göre)
+    // Sadece yetişkin/genç hayvanlar (buzağılar hariç) baz alınır
+    const nonCalfAnimals = hayvanlar.filter(h => h.tur !== 'Buzağı' && h.durum === 'Aktif');
+    let realADG = calculateHerdAverageADG(hayvanlar, agirlikKayitlari, true);
+    
+    // Eğer sürüde hiç tartım kaydı yoksa varsayılan olarak 1.2 kg alınır
+    if (realADG === 0) {
+      realADG = 1.2;
+    }
+
+    const expectedDailyGainTotal = nonCalfAnimals.length * realADG;
     expectedMeatRevenue = expectedDailyGainTotal * 30 * canliKiloFiyati;
   }
 

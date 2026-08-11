@@ -17,7 +17,7 @@ const MilkRecords: React.FC<Props> = ({ hayvan }) => {
 
   const [tarih, setTarih] = useState(new Date().toISOString().split('T')[0]);
   const [litre, setLitre] = useState<number | ''>('');
-  const [ogun, setOgun] = useState<'Sabah' | 'Akşam' | 'Gece' | ''>('');
+  const [ogun, setOgun] = useState<'Sabah' | 'Öğle' | 'Akşam' | 'Gece' | ''>('');
   const [yagYuzde, setYagYuzde] = useState<number | ''>('');
   const [proteinYuzde, setProteinYuzde] = useState<number | ''>('');
   const [laktozYuzde, setLaktozYuzde] = useState<number | ''>('');
@@ -150,6 +150,7 @@ const MilkRecords: React.FC<Props> = ({ hayvan }) => {
             <select value={ogun} onChange={e => setOgun(e.target.value as any)} className="w-full p-2 border border-blue-200 dark:border-blue-800/50 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white dark:bg-gray-800">
                <option value="">-- Seçin --</option>
                <option value="Sabah">Sabah</option>
+               <option value="Öğle">Öğle</option>
                <option value="Akşam">Akşam</option>
                <option value="Gece">Gece</option>
             </select>
@@ -266,6 +267,7 @@ const MilkRecords: React.FC<Props> = ({ hayvan }) => {
                         <select value={editForm.ogun || ''} onChange={e => setEditForm({...editForm, ogun: (e.target.value || undefined) as any})} className="w-full p-1 border rounded text-xs outline-none bg-white">
                           <option value="">-</option>
                           <option value="Sabah">Sabah</option>
+                          <option value="Öğle">Öğle</option>
                           <option value="Akşam">Akşam</option>
                           <option value="Gece">Gece</option>
                         </select>
