@@ -25,7 +25,7 @@ export function calculate30DayProjection(
   agirlikKayitlari: AgirlikKaydi[],
   sutFiyati: number,
   isletmeTipi: 'Süt' | 'Besi' | 'Karma' = 'Karma',
-  canliKiloFiyati: number = 300
+  canliKiloFiyatlari: Record<string, number> = {}
 ): FinancialProjectionResult {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
@@ -91,8 +91,11 @@ export function calculate30DayProjection(
       realADG = 1.2;
     }
 
-    const expectedDailyGainTotal = nonCalfAnimals.length * realADG;
-    expectedMeatRevenue = expectedDailyGainTotal * 30 * canliKiloFiyati;
+    const expectedMeatRevenueDaily = nonCalfAnimals.reduce((sum, h) => {
+      const price = canliKiloFiyatlari[h.tur] || 300;
+      return sum + (realADG * price);
+    }, 0);
+    expectedMeatRevenue = expectedMeatRevenueDaily * 30;
   }
 
   expectedTotalRevenue = expectedMilkRevenue + expectedMeatRevenue;

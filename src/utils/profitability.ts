@@ -9,10 +9,12 @@ export interface ProfitabilityResult {
   details: {
     milkRevenue: number;
     calfRevenue: number;
+    meatRevenue: number;
     feedCost: number;
     healthCost: number;
     reproCost: number;
     totalMilkLt: number;
+    weightGainKg: number;
   };
 }
 
@@ -21,69 +23,72 @@ export function calculateAnimalProfitability(
   sutKayitlari: SutKaydi[],
   saglikOlaylari: SaglikOlayi[],
   uremeKayitlari: UremeKaydi[],
+
   yemler: Yem[],
   gruplar: Grup[],
-  sutFiyati: number,
+  sutLitreFiyati: number,
   buzagiFiyati: number,
+  canliKiloFiyatlari: Record<string, number>,
   hayvanGunlukYemMaliyetleri: HayvanGunlukYemMaliyeti[] = []
 ): ProfitabilityResult {
   const now = new Date();
-  const twelveMonthsAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
 
-  // 1. Son 12 ayın Süt Geliri
+  // 1. Ömür Boyu Süt Geliri
   const animalMilkRecords = sutKayitlari.filter(
-    k => k.hayvanId === hayvan.id && new Date(k.tarih) >= twelveMonthsAgo
+    k => k.hayvanId === hayvan.id
   );
   const totalMilkLt = animalMilkRecords.reduce((sum, k) => sum + k.litre, 0);
-  const milkRevenue = totalMilkLt * sutFiyati;
+  const milkRevenue = totalMilkLt * sutLitreFiyati;
 
-  // 2. Son 12 ayın Buzağı Geliri
+  // 2. Ömür Boyu Buzağı Geliri
   const animalBirths = uremeKayitlari.filter(
-    k => k.hayvanId === hayvan.id && k.tur === 'Doğum' && new Date(k.tarih) >= twelveMonthsAgo
+    k => k.hayvanId === hayvan.id && k.tur === 'Doğum'
   );
   const calfRevenue = animalBirths.length * buzagiFiyati;
 
-  const totalRevenue = milkRevenue + calfRevenue;
+  // 5. Güncel Et Değeri
+  const weightGainKg = hayvan.guncelAgirlikKg || 0;
+  const currentTurPrice = canliKiloFiyatlari[hayvan.tur] || 300;
+  const meatRevenue = weightGainKg * currentTurPrice;
 
-  // 3. Son 12 ayın Sağlık ve Üreme (Tohumlama vs.) Maliyetleri
+  const totalRevenue = milkRevenue + calfRevenue + meatRevenue;
+
+  // 3. Ömür Boyu Sağlık ve Üreme (Tohumlama vs.) Maliyetleri
   const animalHealthRecords = saglikOlaylari.filter(
-    k => k.hayvanId === hayvan.id && new Date(k.tarih) >= twelveMonthsAgo
+    k => k.hayvanId === hayvan.id
   );
   const healthCost = animalHealthRecords.reduce((sum, k) => sum + (k.maliyet || 0), 0);
 
   const animalReproRecords = uremeKayitlari.filter(
-    k => k.hayvanId === hayvan.id && new Date(k.tarih) >= twelveMonthsAgo
+    k => k.hayvanId === hayvan.id
   );
   const reproCost = animalReproRecords.reduce((sum, k) => sum + (k.maliyet || 0), 0);
 
-  // 4. Son 12 Ayın Yem Maliyeti
-  let feedCost = 0;
+  // 4. Ömür Boyu Yem Maliyeti
+  const animalFeedRecords = hayvanGunlukYemMaliyetleri.filter(k => k.hayvanId === hayvan.id);
+  const recordedFeedCost = animalFeedRecords.reduce((sum, k) => sum + (k.maliyet || 0), 0);
+  const recordedDays = animalFeedRecords.length;
 
-  if (hayvan.tur === 'İnek') {
-    // İnekler için veritabanındaki günlük maliyet kayıtlarını topla
-    const animalFeedRecords = hayvanGunlukYemMaliyetleri.filter(
-      k => k.hayvanId === hayvan.id && new Date(k.tarih) >= twelveMonthsAgo
-    );
-    feedCost = animalFeedRecords.reduce((sum, k) => sum + (k.maliyet || 0), 0);
-  } else {
-    // İnek olmayanlar için (veya kayıt bulunamadıysa fallback olarak) mevcut rasyon * gün hesabı yap
-    let dailyFeedCost = 0;
+  let daysInFarm = 365;
+  if (hayvan.dogumTarihi) {
+    const birthDate = new Date(hayvan.dogumTarihi);
+    const diffTime = Math.abs(now.getTime() - birthDate.getTime());
+    daysInFarm = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  let feedCost = recordedFeedCost;
+  
+  // Eksik günler için tahmini rasyon maliyeti ekle (geriye dönük veri eksikliği için)
+  if (recordedDays < daysInFarm) {
+    let currentDailyFeedCost = 0;
     if (hayvan.grupId) {
       const grup = gruplar.find(g => g.id === hayvan.grupId);
       if (grup && grup.rasyonOzet) {
-        dailyFeedCost = parseRasyonCost(grup.rasyonOzet, yemler);
+        currentDailyFeedCost = parseRasyonCost(grup.rasyonOzet, yemler);
       }
     }
-
-    let daysInFarm = 365;
-    if (hayvan.dogumTarihi) {
-      const birthDate = new Date(hayvan.dogumTarihi);
-      if (birthDate > twelveMonthsAgo) {
-        const diffTime = Math.abs(now.getTime() - birthDate.getTime());
-        daysInFarm = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      }
-    }
-    feedCost = dailyFeedCost * daysInFarm;
+    const missingDays = daysInFarm - recordedDays;
+    feedCost += missingDays * currentDailyFeedCost;
   }
 
   const totalCost = feedCost + healthCost + reproCost;
@@ -101,10 +106,12 @@ export function calculateAnimalProfitability(
     details: {
       milkRevenue,
       calfRevenue,
+      meatRevenue,
       feedCost,
       healthCost,
       reproCost,
-      totalMilkLt
+      totalMilkLt,
+      weightGainKg
     }
   };
 }

@@ -9,13 +9,20 @@ import { STANDART_IRKLAR } from '../components/AnimalForm';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
-  const { user, uremeAyarlari, setUremeAyarlari, theme, setTheme, sutLitreFiyati, setSutLitreFiyati, buzagiFiyati, setBuzagiFiyati, canliKiloFiyati, setCanliKiloFiyati, isletmeTipi, setIsletmeTipi, konum, setKonum } = useStore();
+  const { user, uremeAyarlari, setUremeAyarlari, theme, setTheme, sutLitreFiyati, setSutLitreFiyati, buzagiFiyati, setBuzagiFiyati, canliKiloFiyatlari, setCanliKiloFiyatlari, isletmeTipi, setIsletmeTipi, konum, setKonum } = useStore();
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [localUremeAyarlari, setLocalUremeAyarlari] = useState(uremeAyarlari);
   const [localSutFiyati, setLocalSutFiyati] = useState(sutLitreFiyati.toString());
   const [localBuzagiFiyati, setLocalBuzagiFiyati] = useState(buzagiFiyati.toString());
-  const [localCanliKiloFiyati, setLocalCanliKiloFiyati] = useState(canliKiloFiyati?.toString() || '300');
+  const [localCanliKiloFiyatlari, setLocalCanliKiloFiyatlari] = useState<Record<string, string>>({
+    'Dana': canliKiloFiyatlari?.['Dana']?.toString() || '300',
+    'Düve': canliKiloFiyatlari?.['Düve']?.toString() || '300',
+    'İnek': canliKiloFiyatlari?.['İnek']?.toString() || '300',
+    'Tosun': canliKiloFiyatlari?.['Tosun']?.toString() || '300',
+    'Boğa': canliKiloFiyatlari?.['Boğa']?.toString() || '300',
+    'Öküz': canliKiloFiyatlari?.['Öküz']?.toString() || '300',
+  });
   const [localIsletmeTipi, setLocalIsletmeTipi] = useState<'Süt' | 'Besi' | 'Karma'>(isletmeTipi || 'Karma');
   const [selectedIrk, setSelectedIrk] = useState<string>('Varsayılan');
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -208,15 +215,26 @@ const Settings: React.FC = () => {
   const handleSaveEkonomikAyarlar = () => {
     const valSut = parseFloat(localSutFiyati);
     const valBuzagi = parseFloat(localBuzagiFiyati);
-    const valCanliKilo = parseFloat(localCanliKiloFiyati);
-    if (!isNaN(valSut) && valSut >= 0 && !isNaN(valBuzagi) && valBuzagi >= 0 && !isNaN(valCanliKilo) && valCanliKilo >= 0) {
+    
+    let pricesValid = true;
+    const parsedPrices: Record<string, number> = {};
+    for (const [tur, val] of Object.entries(localCanliKiloFiyatlari)) {
+      const numVal = parseFloat(val);
+      if (isNaN(numVal) || numVal < 0) {
+        pricesValid = false;
+        break;
+      }
+      parsedPrices[tur] = numVal;
+    }
+
+    if (!isNaN(valSut) && valSut >= 0 && !isNaN(valBuzagi) && valBuzagi >= 0 && pricesValid) {
       setSutLitreFiyati(valSut);
       setBuzagiFiyati(valBuzagi);
-      setCanliKiloFiyati(valCanliKilo);
+      setCanliKiloFiyatlari(parsedPrices);
       setIsletmeTipi(localIsletmeTipi);
       alert('İşletme ve Ekonomik ayarlar başarıyla kaydedildi.');
     } else {
-      alert('Lütfen geçerli bir fiyat giriniz.');
+      alert('Lütfen tüm alanlara geçerli fiyatlar giriniz.');
     }
   };
 
@@ -486,15 +504,22 @@ const Settings: React.FC = () => {
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-earth-700 dark:text-gray-300">Canlı Kilo (Baskül) Fiyatı (₺)</label>
-              <input 
-                type="number" 
-                step="1"
-                value={localCanliKiloFiyati}
-                onChange={e => setLocalCanliKiloFiyati(e.target.value)}
-                className="w-full p-3 border-2 border-earth-200 dark:border-gray-700 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-nature-500 outline-none"
-              />
+            <div className="space-y-3 col-span-1 sm:col-span-2 lg:col-span-4 mt-2">
+              <label className="text-xs font-bold text-earth-700 dark:text-gray-300">Türe Özel Canlı Kilo (Baskül) Fiyatları (₺)</label>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                {Object.keys(localCanliKiloFiyatlari).map((tur) => (
+                  <div key={tur} className="space-y-1">
+                    <label className="text-[10px] font-bold text-earth-600 dark:text-gray-400 uppercase tracking-wider">{tur}</label>
+                    <input 
+                      type="number" 
+                      step="1"
+                      value={localCanliKiloFiyatlari[tur]}
+                      onChange={e => setLocalCanliKiloFiyatlari({...localCanliKiloFiyatlari, [tur]: e.target.value})}
+                      className="w-full p-2 border border-earth-200 dark:border-gray-700 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-nature-500 outline-none text-sm"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
             
             <div className="w-full sm:w-auto">

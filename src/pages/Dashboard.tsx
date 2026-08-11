@@ -43,7 +43,7 @@ const Dashboard: React.FC = () => {
   const gruplar = useLiveFarmQuery(() => db.gruplar.toArray()) || [];
   const saglikOlaylari = useLiveFarmQuery(() => db.saglikOlaylari.toArray()) || [];
   const agirlikKayitlari = useLiveFarmQuery(() => db.agirlikKayitlari.toArray()) || [];
-  const { uremeAyarlari, activeCiftlikId, sutLitreFiyati, isletmeTipi: storeIsletmeTipi, canliKiloFiyati } = useStore();
+  const { uremeAyarlari, activeCiftlikId, sutLitreFiyati, canliKiloFiyatlari, isletmeTipi: storeIsletmeTipi } = useStore();
   const isletmeTipi = storeIsletmeTipi || 'Karma';
   const anomalyUyarilar = useAnomalyDetection();
 
@@ -152,8 +152,8 @@ const Dashboard: React.FC = () => {
 
   const yaklasanDogumlar = getUpcomingBirths(uremeKayitlari, hayvanlar, 30).slice(0, 3);
 
-  const finProj = calculate30DayProjection(hayvanlar, sutKayitlari, uremeKayitlari, yemler, gruplar, saglikOlaylari, agirlikKayitlari, sutLitreFiyati, isletmeTipi, canliKiloFiyati);
-  const herdScoreData = calculateHerdScore(hayvanlar, sutKayitlari, uremeKayitlari, yemler, gruplar, saglikOlaylari, agirlikKayitlari, sutLitreFiyati, isletmeTipi, canliKiloFiyati);
+  const finProj = calculate30DayProjection(hayvanlar, sutKayitlari, uremeKayitlari, yemler, gruplar, saglikOlaylari, agirlikKayitlari, sutLitreFiyati, isletmeTipi, canliKiloFiyatlari);
+  const herdScoreData = calculateHerdScore(hayvanlar, sutKayitlari, uremeKayitlari, yemler, gruplar, saglikOlaylari, agirlikKayitlari, sutLitreFiyati, isletmeTipi, canliKiloFiyatlari);
 
   return (
     <div className="w-full flex flex-col space-y-6">
@@ -546,18 +546,6 @@ const Dashboard: React.FC = () => {
                       </div>
                     )}
                     <Link to="/saglik" className="mt-3 ml-12 inline-block text-red-600 dark:text-red-400 font-bold text-sm hover:underline">Tümünü Gör &rarr;</Link>
-                  </div>
-                )}
-
-                {anomalyUyarilar.filter(u => u.siddet === 'KRITIK').length > 0 && (
-                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 p-4 rounded-xl">
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-white dark:bg-gray-800 p-2 rounded-lg"><AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" /></div>
-                      <div>
-                        <p className="font-bold text-amber-900">Kritik Akıllı Uyarılar</p>
-                        <p className="text-sm text-amber-700 dark:text-amber-400">Akıllı Uyarılar panelinden detayları inceleyin.</p>
-                      </div>
-                    </div>
                   </div>
                 )}
 

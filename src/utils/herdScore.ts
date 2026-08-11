@@ -26,7 +26,7 @@ export function calculateHerdScore(
   agirlikKayitlari: AgirlikKaydi[],
   sutFiyati: number,
   isletmeTipi: 'Süt' | 'Besi' | 'Karma' = 'Karma',
-  canliKiloFiyati: number = 300
+  canliKiloFiyatlari: Record<string, number> = {}
 ): HerdScoreResult {
   let milkScore = 0;
   let growthScore = 0;
@@ -87,8 +87,11 @@ export function calculateHerdScore(
   const nonCalfAnimals = hayvanlar.filter(h => h.tur !== 'Buzağı' && h.durum === 'Aktif');
   let realADG = calculateHerdAverageADG(hayvanlar, agirlikKayitlari, true);
   if (realADG === 0) realADG = 1.2;
-  const expectedDailyGainTotal = nonCalfAnimals.length * realADG; 
-  const dailyMeatRevenue = expectedDailyGainTotal * canliKiloFiyati;
+  
+  const dailyMeatRevenue = nonCalfAnimals.reduce((sum, h) => {
+    const price = canliKiloFiyatlari[h.tur] || 300;
+    return sum + (realADG * price);
+  }, 0);
 
 
   // --- İŞLETME TİPİNE GÖRE PUANLAMA (TOPLAM 100) ---

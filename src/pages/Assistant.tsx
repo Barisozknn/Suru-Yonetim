@@ -579,7 +579,7 @@ const gatherFarmContext = async (akilliUyarilar: any[] = []) => {
     return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
   };
 
-  const { sutLitreFiyati, buzagiFiyati } = useStore.getState();
+  const { sutLitreFiyati, buzagiFiyati, canliKiloFiyatlari } = useStore.getState();
 
   // 1. Süt Geliri
   const buAySut = sutKayitlari.filter(k => isInThisMonth(k.tarih));
@@ -665,7 +665,8 @@ const gatherFarmContext = async (akilliUyarilar: any[] = []) => {
             yemler,
             gruplar,
             sutLitreFiyati,
-            buzagiFiyati || 50000
+            buzagiFiyati || 50000,
+            canliKiloFiyatlari || {}
           );
           return {
             id: h.id,

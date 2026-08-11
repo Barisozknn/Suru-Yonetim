@@ -36,14 +36,14 @@ interface StoreState {
   durumFiltresi: string;
   sutLitreFiyati: number;
   buzagiFiyati: number;
-  canliKiloFiyati: number;
+  canliKiloFiyatlari: Record<string, number>;
   isletmeTipi: 'Süt' | 'Besi' | 'Karma';
   setAramaMetni: (metin: string) => void;
   setTurFiltresi: (tur: string) => void;
   setDurumFiltresi: (durum: string) => void;
   setSutLitreFiyati: (fiyat: number) => void;
   setBuzagiFiyati: (fiyat: number) => void;
-  setCanliKiloFiyati: (fiyat: number) => void;
+  setCanliKiloFiyatlari: (fiyatlar: Record<string, number>) => void;
   setIsletmeTipi: (tip: 'Süt' | 'Besi' | 'Karma') => void;
 
   // Ration Calculator State
@@ -106,7 +106,14 @@ export const useStore = create<StoreState>()(
       durumFiltresi: 'Aktif',
       sutLitreFiyati: 15.0,
       buzagiFiyati: 50000.0,
-      canliKiloFiyati: 300.0,
+      canliKiloFiyatlari: {
+        'Dana': 300,
+        'Düve': 300,
+        'İnek': 300,
+        'Tosun': 300,
+        'Boğa': 300,
+        'Öküz': 300
+      },
       isletmeTipi: 'Karma',
 
       setAramaMetni: (metin) => set({ aramaMetni: metin }),
@@ -114,7 +121,7 @@ export const useStore = create<StoreState>()(
       setDurumFiltresi: (durum) => set({ durumFiltresi: durum }),
       setSutLitreFiyati: (fiyat) => set({ sutLitreFiyati: fiyat }),
       setBuzagiFiyati: (fiyat) => set({ buzagiFiyati: fiyat }),
-      setCanliKiloFiyati: (fiyat) => set({ canliKiloFiyati: fiyat }),
+      setCanliKiloFiyatlari: (fiyatlar) => set({ canliKiloFiyatlari: fiyatlar }),
       setIsletmeTipi: (tip) => set({ isletmeTipi: tip }),
 
       // Ration Calculator
@@ -173,7 +180,7 @@ export const useStore = create<StoreState>()(
         ciftlikler: state.ciftlikler,
         sutLitreFiyati: state.sutLitreFiyati,
         buzagiFiyati: state.buzagiFiyati,
-        canliKiloFiyati: state.canliKiloFiyati,
+        canliKiloFiyatlari: state.canliKiloFiyatlari,
         isletmeTipi: state.isletmeTipi,
         rationSelectedGrupId: state.rationSelectedGrupId,
         rationVerimYonu: state.rationVerimYonu,
@@ -204,7 +211,7 @@ useStore.subscribe((state, prevState) => {
     activeCiftlikId: state.activeCiftlikId,
     sutLitreFiyati: state.sutLitreFiyati, 
     buzagiFiyati: state.buzagiFiyati,
-    canliKiloFiyati: state.canliKiloFiyati,
+    canliKiloFiyatlari: state.canliKiloFiyatlari,
     isletmeTipi: state.isletmeTipi,
     rationSelectedGrupId: state.rationSelectedGrupId, 
     rationVerimYonu: state.rationVerimYonu, 
@@ -224,7 +231,7 @@ useStore.subscribe((state, prevState) => {
     activeCiftlikId: prevState.activeCiftlikId,
     sutLitreFiyati: prevState.sutLitreFiyati, 
     buzagiFiyati: prevState.buzagiFiyati,
-    canliKiloFiyati: prevState.canliKiloFiyati,
+    canliKiloFiyatlari: prevState.canliKiloFiyatlari,
     isletmeTipi: prevState.isletmeTipi,
     rationSelectedGrupId: prevState.rationSelectedGrupId, 
     rationVerimYonu: prevState.rationVerimYonu, 

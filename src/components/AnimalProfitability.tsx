@@ -13,7 +13,7 @@ interface Props {
 }
 
 const AnimalProfitability: React.FC<Props> = ({ hayvan }) => {
-  const { sutLitreFiyati, buzagiFiyati } = useStore();
+  const { sutLitreFiyati, buzagiFiyati, canliKiloFiyatlari } = useStore();
   
   const sutKayitlari = useLiveFarmQuery(() => db.sutKayitlari.where('hayvanId').equals(hayvan.id).toArray(), [hayvan.id]) || [];
   const saglikOlaylari = useLiveFarmQuery(() => db.saglikOlaylari.where('hayvanId').equals(hayvan.id).toArray(), [hayvan.id]) || [];
@@ -37,6 +37,7 @@ const AnimalProfitability: React.FC<Props> = ({ hayvan }) => {
     gruplar,
     sutLitreFiyati,
     buzagiFiyati,
+    canliKiloFiyatlari,
     hayvanGunlukYemMaliyetleri
   );
 
@@ -51,22 +52,23 @@ const AnimalProfitability: React.FC<Props> = ({ hayvan }) => {
   let herdAvgCost = 0;
   let herdAvgProfit = 0;
 
-  const activeInekler = tumHayvanlar.filter(h => h.tur === 'İnek' && h.durum === 'Aktif');
-  if (activeInekler.length > 0 && tumSutKayitlari.length > 0) { // Sadece veri varsa hesapla
+  const activeAnimalsOfSameType = tumHayvanlar.filter(h => h.tur === hayvan.tur && h.durum === 'Aktif');
+  if (activeAnimalsOfSameType.length > 0) { 
     let totalRev = 0;
     let totalCost = 0;
     let totalProfit = 0;
 
-    activeInekler.forEach(inek => {
+    activeAnimalsOfSameType.forEach(otherAnimal => {
       const p = calculateAnimalProfitability(
-        inek,
-        tumSutKayitlari.filter(s => s.hayvanId === inek.id),
-        tumSaglikOlaylari.filter(s => s.hayvanId === inek.id),
-        tumUremeKayitlari.filter(u => u.hayvanId === inek.id),
+        otherAnimal,
+        tumSutKayitlari.filter(s => s.hayvanId === otherAnimal.id),
+        tumSaglikOlaylari.filter(s => s.hayvanId === otherAnimal.id),
+        tumUremeKayitlari.filter(u => u.hayvanId === otherAnimal.id),
         yemler,
         gruplar,
         sutLitreFiyati,
         buzagiFiyati,
+        canliKiloFiyatlari,
         hayvanGunlukYemMaliyetleri
       );
       totalRev += p.totalRevenue;
@@ -74,9 +76,9 @@ const AnimalProfitability: React.FC<Props> = ({ hayvan }) => {
       totalProfit += p.netProfit;
     });
 
-    herdAvgRevenue = totalRev / activeInekler.length;
-    herdAvgCost = totalCost / activeInekler.length;
-    herdAvgProfit = totalProfit / activeInekler.length;
+    herdAvgRevenue = totalRev / activeAnimalsOfSameType.length;
+    herdAvgCost = totalCost / activeAnimalsOfSameType.length;
+    herdAvgProfit = totalProfit / activeAnimalsOfSameType.length;
   }
 
   // Grafik Verisi
@@ -84,17 +86,17 @@ const AnimalProfitability: React.FC<Props> = ({ hayvan }) => {
     {
       name: 'Gelir',
       'Bu Hayvan': profitData.totalRevenue,
-      'Sürü Ortalaması': herdAvgRevenue,
+      'Tür Ortalaması': herdAvgRevenue,
     },
     {
       name: 'Gider',
       'Bu Hayvan': profitData.totalCost,
-      'Sürü Ortalaması': herdAvgCost,
+      'Tür Ortalaması': herdAvgCost,
     },
     {
       name: 'Net Kâr',
       'Bu Hayvan': profitData.netProfit,
-      'Sürü Ortalaması': herdAvgProfit,
+      'Tür Ortalaması': herdAvgProfit,
     },
   ];
 
@@ -151,26 +153,43 @@ const AnimalProfitability: React.FC<Props> = ({ hayvan }) => {
              Gelir Kalemleri
           </h4>
           <div className="space-y-4">
-             <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+             {hayvan.tur === 'İnek' && (
+               <>
+                 <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                    <div className="flex items-center space-x-3">
+                       <Droplets className="w-5 h-5 text-blue-500" />
+                       <div>
+                          <div className="font-bold text-earth-800 dark:text-gray-200">Süt Geliri</div>
+                          <div className="text-xs text-earth-500 dark:text-gray-400">{profitData.details.totalMilkLt.toFixed(0)} Litre x {sutLitreFiyati}₺</div>
+                       </div>
+                    </div>
+                    <div className="font-black text-blue-600">{formatMoney(profitData.details.milkRevenue)}</div>
+                 </div>
+                 
+                 <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
+                    <div className="flex items-center space-x-3">
+                       <PiCow className="w-5 h-5 text-purple-500" />
+                       <div>
+                          <div className="font-bold text-earth-800 dark:text-gray-200">Buzağı Geliri</div>
+                          <div className="text-xs text-earth-500 dark:text-gray-400">Tahmini Değer</div>
+                       </div>
+                    </div>
+                    <div className="font-black text-purple-600">{formatMoney(profitData.details.calfRevenue)}</div>
+                 </div>
+               </>
+             )}
+
+             <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
                 <div className="flex items-center space-x-3">
-                   <Droplets className="w-5 h-5 text-blue-500" />
+                   <TrendingUp className="w-5 h-5 text-green-500" />
                    <div>
-                      <div className="font-bold text-earth-800 dark:text-gray-200">Süt Geliri</div>
-                      <div className="text-xs text-earth-500 dark:text-gray-400">{profitData.details.totalMilkLt.toFixed(0)} Litre x {sutLitreFiyati}₺</div>
+                      <div className="font-bold text-earth-800 dark:text-gray-200">Et Değer Artışı</div>
+                      <div className="text-xs text-earth-500 dark:text-gray-400">
+                        Güncel Ağırlık: {profitData.details.weightGainKg.toFixed(1)} kg x {canliKiloFiyatlari?.[hayvan.tur] || 300}₺
+                      </div>
                    </div>
                 </div>
-                <div className="font-black text-blue-600">{formatMoney(profitData.details.milkRevenue)}</div>
-             </div>
-             
-             <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
-                <div className="flex items-center space-x-3">
-                   <PiCow className="w-5 h-5 text-purple-500" />
-                   <div>
-                      <div className="font-bold text-earth-800 dark:text-gray-200">Buzağı Geliri</div>
-                      <div className="text-xs text-earth-500 dark:text-gray-400">Tahmini Değer</div>
-                   </div>
-                </div>
-                <div className="font-black text-purple-600">{formatMoney(profitData.details.calfRevenue)}</div>
+                <div className="font-black text-green-600">{formatMoney(profitData.details.meatRevenue)}</div>
              </div>
           </div>
         </div>
@@ -203,16 +222,18 @@ const AnimalProfitability: React.FC<Props> = ({ hayvan }) => {
                 <div className="font-black text-red-500">{formatMoney(profitData.details.healthCost)}</div>
              </div>
              
-             <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
-                <div className="flex items-center space-x-3">
-                   <Trophy className="w-5 h-5 text-pink-500" />
-                   <div>
-                      <div className="font-bold text-earth-800 dark:text-gray-200">Üreme Maliyeti</div>
-                      <div className="text-xs text-earth-500 dark:text-gray-400">Tohumlama vb. işlemler</div>
-                   </div>
-                </div>
-                <div className="font-black text-red-500">{formatMoney(profitData.details.reproCost)}</div>
-             </div>
+             {hayvan.tur !== 'Dana' && (
+               <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
+                  <div className="flex items-center space-x-3">
+                     <Trophy className="w-5 h-5 text-pink-500" />
+                     <div>
+                        <div className="font-bold text-earth-800 dark:text-gray-200">Üreme Maliyeti</div>
+                        <div className="text-xs text-earth-500 dark:text-gray-400">Tohumlama vb. işlemler</div>
+                     </div>
+                  </div>
+                  <div className="font-black text-red-500">{formatMoney(profitData.details.reproCost)}</div>
+               </div>
+             )}
           </div>
         </div>
       </div>
@@ -223,18 +244,17 @@ const AnimalProfitability: React.FC<Props> = ({ hayvan }) => {
             <div>
                <h4 className="font-bold text-orange-800 dark:text-orange-300">Bu Hayvan Zarar Ediyor</h4>
                <p className="text-sm text-orange-700 dark:text-orange-400 mt-1">
-                  Son 12 aylık verilere göre bu hayvanın giderleri, getirdiği gelirin üzerindedir. Sürüden çıkarma (culling) kararı almayı değerlendirebilirsiniz. Zooteknik nedenler ve yaş faktörünü de göz önünde bulundurmayı unutmayın.
+                  Bu hayvanın ömür boyu giderleri, getirdiği toplam gelirin üzerindedir. Sürüden çıkarma (culling) kararı almayı değerlendirebilirsiniz. Zooteknik nedenler ve yaş faktörünü de göz önünde bulundurmayı unutmayın.
                </p>
             </div>
          </div>
       )}
 
-      {/* Sürü Ortalaması ile Karşılaştırma Grafiği */}
-      <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-earth-200 dark:border-gray-700 shadow-sm mt-6">
-        <h4 className="font-bold text-earth-800 dark:text-gray-200 mb-6 flex items-center text-lg">
-           <BarChart3 className="w-5 h-5 mr-2 text-purple-500" />
-           Sürü Ortalaması ile Karşılaştırma (Son 12 Ay)
-        </h4>
+        <div className="mt-8 bg-white dark:bg-earth-800 p-6 rounded-2xl shadow-sm border border-earth-100 dark:border-earth-700">
+           <h3 className="text-lg font-bold text-earth-900 dark:text-white mb-6 flex items-center space-x-2">
+             <BarChart3 className="w-5 h-5 text-purple-500" />
+             <span>{hayvan.tur} Ortalaması ile Karşılaştırma (Genel)</span>
+           </h3>
         
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
@@ -251,7 +271,7 @@ const AnimalProfitability: React.FC<Props> = ({ hayvan }) => {
               />
               <Legend wrapperStyle={{ paddingTop: '20px' }} />
               <Bar dataKey="Bu Hayvan" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={40} />
-              <Bar dataKey="Sürü Ortalaması" fill="#10b981" radius={[4, 4, 0, 0]} barSize={40} />
+              <Bar dataKey="Tür Ortalaması" fill="#10b981" radius={[4, 4, 0, 0]} barSize={40} />
             </BarChart>
           </ResponsiveContainer>
         </div>

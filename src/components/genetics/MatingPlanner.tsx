@@ -172,11 +172,17 @@ const MatingPlanner: React.FC = () => {
             {fCoeff > 0.0625 ? <AlertTriangle className="w-6 h-6 flex-shrink-0" /> : <Info className="w-6 h-6 flex-shrink-0" />}
             <div>
               <p className="font-bold">Akrabalık (Inbreeding) Oranı: %{(fCoeff * 100).toFixed(2)}</p>
-              <p className="text-sm mt-1">
+              <p className="text-sm mt-1 mb-2">
                 {fCoeff > 0.0625 
                   ? 'DİKKAT: Bu eşleşme yüksek akrabalık riski taşıyor. Yavrularda genetik kusur veya düşük verim görülme ihtimali yüksektir. Başka bir boğa seçmeniz önerilir.'
                   : 'Bu eşleşme güvenlidir. İki hayvan arasında yakın bir akrabalık tespit edilmedi.'}
               </p>
+              
+              {fCoeff >= 0.25 && (
+                <div className="text-xs bg-white/50 dark:bg-black/20 p-2 rounded-lg border border-red-200 dark:border-red-800/50">
+                  <span className="font-bold">Bilgi:</span> Baba-kız veya anne-oğul gibi birinci derece akrabalıkların genetik benzerliği %50'dir. Doğacak yavrunun inbreeding (akrabalı yetiştirme) katsayısı ise bu benzerliğin tam yarısı olan <span className="font-bold">%25</span> olarak hesaplanır.
+                </div>
+              )}
             </div>
           </div>
 

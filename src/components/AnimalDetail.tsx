@@ -35,6 +35,21 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
   const agirlikKayitlari = useLiveFarmQuery(() => db.agirlikKayitlari.where('hayvanId').equals(id).toArray(), [id]) || [];
   const allUremeKayitlari = useLiveFarmQuery(() => db.uremeKayitlari.toArray(), []) || [];
 
+  const dogumSekliDagilimi = React.useMemo(() => {
+    if (hayvan?.cinsiyet !== 'Dişi') return null;
+    const dagilim = { 'Sağlıklı': 0, 'Güç Doğum': 0, 'Ölü Doğum': 0, 'Düşük': 0 };
+    let total = 0;
+    const dogumlar = uremeKayitlari.filter(u => u.tur === 'Doğum');
+    dogumlar.forEach(d => {
+      const degerlendirme = d.detaylar?.dogumDegerlendirmesi;
+      if (degerlendirme && dagilim[degerlendirme as keyof typeof dagilim] !== undefined) {
+        dagilim[degerlendirme as keyof typeof dagilim]++;
+        total++;
+      }
+    });
+    return { dagilim, total };
+  }, [hayvan?.cinsiyet, uremeKayitlari]);
+
   const [activeTab, setActiveTab] = useState<'ozet' | 'verim' | 'soy' | 'saglik' | 'ureme' | 'notlar' | 'ekonomi'>('ozet');
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [isCalfFormOpen, setIsCalfFormOpen] = useState(false);
@@ -118,7 +133,7 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
     { id: 'soy', label: 'Soy Ağacı', icon: <GitMerge className="w-4 h-4" /> },
     { id: 'saglik', label: 'Sağlık', icon: <Activity className="w-4 h-4" /> },
     ...(['Buzağı', 'Dana', 'Öküz'].includes(hayvan.tur) ? [] : [{ id: 'ureme', label: 'Üreme', icon: <CalendarDays className="w-4 h-4" /> }]),
-    ...(hayvan.tur === 'İnek' ? [{ id: 'ekonomi', label: 'Ekonomi', icon: <Banknote className="w-4 h-4" /> }] : []),
+    ...(hayvan.tur !== 'Buzağı' ? [{ id: 'ekonomi', label: 'Ekonomi', icon: <Banknote className="w-4 h-4" /> }] : []),
     { id: 'notlar', label: 'Notlar', icon: <FileText className="w-4 h-4" /> },
   ];
 
@@ -250,6 +265,57 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
                     <p className="font-bold text-earth-900 dark:text-gray-100">{femalePerf.gebelikBasinaTohumlama !== null ? femalePerf.gebelikBasinaTohumlama : '-'}</p>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Doğum Şekli Dağılımı Kartı (Sadece Dişiler) */}
+            {isFemale && dogumSekliDagilimi && (
+              <div className="sm:col-span-2 bg-pink-50 dark:bg-pink-900/20 p-5 rounded-2xl border border-pink-200 dark:border-pink-800/50 mt-2">
+                <div className="flex items-center space-x-2 text-pink-800 mb-4">
+                  <PiCow className="w-6 h-6" />
+                  <h3 className="text-lg font-black">Yavru Doğum Şekli Analizi</h3>
+                </div>
+                {dogumSekliDagilimi.total > 0 ? (
+                  <div className="flex flex-col sm:flex-row gap-4 items-center">
+                    <div className="flex-1 w-full flex bg-gray-200 dark:bg-gray-700 h-6 rounded-full overflow-hidden">
+                      {dogumSekliDagilimi.dagilim['Sağlıklı'] > 0 && (
+                        <div style={{ width: `${(dogumSekliDagilimi.dagilim['Sağlıklı'] / dogumSekliDagilimi.total) * 100}%` }} className="bg-emerald-500 h-full"></div>
+                      )}
+                      {dogumSekliDagilimi.dagilim['Güç Doğum'] > 0 && (
+                        <div style={{ width: `${(dogumSekliDagilimi.dagilim['Güç Doğum'] / dogumSekliDagilimi.total) * 100}%` }} className="bg-orange-500 h-full"></div>
+                      )}
+                      {dogumSekliDagilimi.dagilim['Ölü Doğum'] > 0 && (
+                        <div style={{ width: `${(dogumSekliDagilimi.dagilim['Ölü Doğum'] / dogumSekliDagilimi.total) * 100}%` }} className="bg-red-500 h-full"></div>
+                      )}
+                      {dogumSekliDagilimi.dagilim['Düşük'] > 0 && (
+                        <div style={{ width: `${(dogumSekliDagilimi.dagilim['Düşük'] / dogumSekliDagilimi.total) * 100}%` }} className="bg-purple-500 h-full"></div>
+                      )}
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-3 justify-center text-sm font-bold">
+                      <div className="flex items-center space-x-1 text-emerald-600 dark:text-emerald-400">
+                        <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                        <span>Sağlıklı ({dogumSekliDagilimi.dagilim['Sağlıklı']})</span>
+                      </div>
+                      <div className="flex items-center space-x-1 text-orange-600 dark:text-orange-400">
+                        <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                        <span>Güç Doğum ({dogumSekliDagilimi.dagilim['Güç Doğum']})</span>
+                      </div>
+                      <div className="flex items-center space-x-1 text-red-600 dark:text-red-400">
+                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                        <span>Ölü Doğum ({dogumSekliDagilimi.dagilim['Ölü Doğum']})</span>
+                      </div>
+                      <div className="flex items-center space-x-1 text-purple-600 dark:text-purple-400">
+                        <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                        <span>Düşük ({dogumSekliDagilimi.dagilim['Düşük']})</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-earth-500 dark:text-gray-400 font-medium">
+                    Henüz bu ineğe ait yavruların doğum şekli verisi girilmemiş.
+                  </div>
+                )}
               </div>
             )}
 

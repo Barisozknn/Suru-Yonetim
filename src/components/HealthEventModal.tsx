@@ -185,7 +185,7 @@ const HealthEventModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => {
               />
               {showHastalikDropdown && (
                 <ul className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-earth-200 dark:border-gray-700 rounded-lg shadow-xl max-h-48 overflow-y-auto">
-                  {COMMON_DISEASES.filter(d => d.toLowerCase().includes(hastalikAdi.toLowerCase())).map(d => (
+                  {COMMON_DISEASES.filter(d => d.toLocaleLowerCase('tr-TR').includes(hastalikAdi.toLocaleLowerCase('tr-TR'))).map(d => (
                     <li 
                       key={d} 
                       onMouseDown={() => { setHastalikAdi(d); setShowHastalikDropdown(false); }}
@@ -194,7 +194,7 @@ const HealthEventModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => {
                       {d}
                     </li>
                   ))}
-                  {hastalikAdi && !COMMON_DISEASES.some(d => d.toLowerCase() === hastalikAdi.toLowerCase()) && (
+                  {hastalikAdi && !COMMON_DISEASES.some(d => d.toLocaleLowerCase('tr-TR') === hastalikAdi.toLocaleLowerCase('tr-TR')) && (
                     <li 
                       onMouseDown={() => setShowHastalikDropdown(false)}
                       className="px-3 py-2 text-sm text-nature-600 dark:text-nature-400 italic bg-nature-50/50 dark:bg-nature-900/10 cursor-pointer"

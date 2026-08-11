@@ -43,24 +43,26 @@ describe('calculateAnimalProfitability', () => {
       [],
       20, // Süt fiyatı
       10000, // Buzağı fiyatı
+      200, // Canlı kilo fiyatı
       hayvanGunlukYemMaliyetleri
     );
 
-    // Revenue: (30L * 20) = 600 Milk, 1 * 10000 = 10000 Calf -> Total 10600
+    // Revenue: (30L * 20) = 600 Milk, 1 * 10000 = 10000 Calf, 600 * 200 = 120000 Meat -> Total 130600
     expect(result.details.milkRevenue).toBe(600);
     expect(result.details.calfRevenue).toBe(10000);
-    expect(result.totalRevenue).toBe(10600);
+    expect(result.details.meatRevenue).toBe(120000);
+    expect(result.totalRevenue).toBe(130600);
 
-    // Costs: 100 (Feed) + 500 (Health) + 200 (Repro) -> Total 800
-    expect(result.details.feedCost).toBe(100);
+    // Costs: 123000 (Feed: 1 record + 1229 missing days * 100) + 500 (Health) + 200 (Repro) -> Total 123700
+    expect(result.details.feedCost).toBe(123000);
     expect(result.details.healthCost).toBe(500);
     expect(result.details.reproCost).toBe(200);
-    expect(result.totalCost).toBe(800);
+    expect(result.totalCost).toBe(123700);
 
-    // Net Profit: 10600 - 800 = 9800
-    expect(result.netProfit).toBe(9800);
+    // Net Profit: 130600 - 123700 = 6900
+    expect(result.netProfit).toBe(6900);
     
-    // ROI: (9800 / 800) * 100 = 1225%
-    expect(result.roi).toBe(1225);
+    // ROI: (6900 / 123700) * 100 = 5.578%
+    expect(result.roi).toBeCloseTo(5.578, 2);
   });
 });

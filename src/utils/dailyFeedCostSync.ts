@@ -36,14 +36,14 @@ export const syncDailyAnimalFeedCosts = async () => {
       }
     }
 
-    // Tüm aktif inekleri bul
-    const inekler = await db.hayvanlar
+    // Tüm aktif hayvanları bul
+    const aktifHayvanlar = await db.hayvanlar
       .where('ciftlikId')
       .equals(ciftlikId)
-      .filter(h => h.tur === 'İnek' && h.durum === 'Aktif')
+      .filter(h => h.durum === 'Aktif')
       .toArray();
 
-    if (inekler.length === 0) return;
+    if (aktifHayvanlar.length === 0) return;
 
     const gruplar = await db.gruplar.where('ciftlikId').equals(ciftlikId).toArray();
     const yemler = await db.yemler.where('ciftlikId').equals(ciftlikId).toArray();
@@ -59,13 +59,13 @@ export const syncDailyAnimalFeedCosts = async () => {
 
     const yeniKayitlar = [];
 
-    for (const inek of inekler) {
-      if (kaydedilmisHayvanIds.has(inek.id)) continue;
+    for (const hayvan of aktifHayvanlar) {
+      if (kaydedilmisHayvanIds.has(hayvan.id)) continue;
 
       let maliyet = 0;
 
-      if (inek.grupId) {
-        const grup = gruplar.find(g => g.id === inek.grupId);
+      if (hayvan.grupId) {
+        const grup = gruplar.find(g => g.id === hayvan.grupId);
         if (grup && grup.rasyonOzet) {
           maliyet = parseRasyonCost(grup.rasyonOzet, yemler);
         }
@@ -75,7 +75,7 @@ export const syncDailyAnimalFeedCosts = async () => {
         yeniKayitlar.push({
           id: uuidv4(),
           ciftlikId,
-          hayvanId: inek.id,
+          hayvanId: hayvan.id,
           tarih: today,
           maliyet
         });
@@ -84,7 +84,7 @@ export const syncDailyAnimalFeedCosts = async () => {
 
     if (yeniKayitlar.length > 0) {
       await db.hayvanGunlukYemMaliyetleri.bulkAdd(yeniKayitlar);
-      console.log(`${yeniKayitlar.length} inek için günlük yem maliyeti kaydedildi.`);
+      console.log(`${yeniKayitlar.length} hayvan için günlük yem maliyeti kaydedildi.`);
     }
 
   } catch (error) {

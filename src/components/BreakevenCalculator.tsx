@@ -4,13 +4,13 @@ import { useStore } from '../store/useStore';
 
 const BreakevenCalculator: React.FC = () => {
   const globalSutFiyati = useStore(state => state.sutLitreFiyati);
-  const globalCanliKiloFiyati = useStore(state => state.canliKiloFiyati);
+  const globalCanliKiloFiyatlari = useStore(state => state.canliKiloFiyatlari);
   const isletmeTipi = useStore(state => state.isletmeTipi);
 
   const [hesapTipi, setHesapTipi] = useState<'sut' | 'besi'>(isletmeTipi === 'Besi' ? 'besi' : 'sut');
 
   const [sutFiyati, setSutFiyati] = useState<number>(globalSutFiyati);
-  const [canliKiloFiyati, setCanliKiloFiyati] = useState<number>(globalCanliKiloFiyati || 300);
+  const [canliKiloFiyati, setCanliKiloFiyati] = useState<number>(globalCanliKiloFiyatlari?.['Dana'] || 300);
   
   const [yemMaliyeti, setYemMaliyeti] = useState<number>(150);
   const [digerGiderler, setDigerGiderler] = useState<number>(20); // Günlük sabit giderler (sağlık, işçilik vb.)

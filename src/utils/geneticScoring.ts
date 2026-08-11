@@ -197,42 +197,59 @@ export const calculateOverallTDI = (
   return (s * wSut) + (b * wBuyume) + (h * wSaglik);
 };
 
-// ─── Pedigri / Inbreeding ────────────────────────────────────────────────────
-export const findAncestors = (hayvanId: string, hayvanlar: Hayvan[], depth: number = 3): string[] => {
-  if (depth === 0) return [];
+// ─── Pedigri / Inbreeding (Wright's Inbreeding Coefficient) ──────────────────
+interface AncestorNode {
+  id: string;
+  depth: number;
+}
+
+export const getAncestorsWithDepth = (hayvanId: string, hayvanlar: Hayvan[], currentDepth: number = 0, maxDepth: number = 3): AncestorNode[] => {
+  if (currentDepth > maxDepth) return [];
   const h = hayvanlar.find(x => x.id === hayvanId);
   if (!h) return [];
 
-  let ancestors: string[] = [];
+  // Kendisini derinlik 0 olarak ekle
+  let nodes: AncestorNode[] = [{ id: h.id, depth: currentDepth }];
+  
   if (h.anneKupeNo) {
     const anne = hayvanlar.find(x => x.kupeNo === h.anneKupeNo);
     if (anne) {
-      ancestors.push(anne.id);
-      ancestors = ancestors.concat(findAncestors(anne.id, hayvanlar, depth - 1));
+      nodes = nodes.concat(getAncestorsWithDepth(anne.id, hayvanlar, currentDepth + 1, maxDepth));
     }
   }
   if (h.babaKupeNo) {
     const baba = hayvanlar.find(x => x.kupeNo === h.babaKupeNo);
     if (baba) {
-      ancestors.push(baba.id);
-      ancestors = ancestors.concat(findAncestors(baba.id, hayvanlar, depth - 1));
+      nodes = nodes.concat(getAncestorsWithDepth(baba.id, hayvanlar, currentDepth + 1, maxDepth));
     }
   }
-  return Array.from(new Set(ancestors));
+  return nodes;
 };
 
 export const calculateInbreedingCoeff = (sireId: string | null, damId: string | null, hayvanlar: Hayvan[]): number => {
   if (!sireId || !damId) return 0;
 
-  const sireAncestors = findAncestors(sireId, hayvanlar);
-  const damAncestors = findAncestors(damId, hayvanlar);
+  const sireAncestors = getAncestorsWithDepth(sireId, hayvanlar, 0, 4);
+  const damAncestors = getAncestorsWithDepth(damId, hayvanlar, 0, 4);
 
-  const common = sireAncestors.filter(x => damAncestors.includes(x));
+  // Sadece eşsiz id'leri bul
+  const sireIds = Array.from(new Set(sireAncestors.map(a => a.id)));
+  const damIds = Array.from(new Set(damAncestors.map(a => a.id)));
+  const commonIds = sireIds.filter(id => damIds.includes(id));
 
   let f = 0;
-  if (common.length > 0) {
-    if (sireAncestors.includes(damId) || damAncestors.includes(sireId)) return 0.25;
-    f = Math.min(common.length * 0.0625, 0.25);
-  }
-  return f;
+  
+  commonIds.forEach(commonId => {
+    // Bu ortak ataya giden EN KISA yolları bul
+    const n1 = Math.min(...sireAncestors.filter(a => a.id === commonId).map(a => a.depth));
+    const n2 = Math.min(...damAncestors.filter(a => a.id === commonId).map(a => a.depth));
+    
+    // Aynı hayvanın kendisiyle çiftleşmesi senaryosu (imkansız ama mantıken engellenmeli)
+    if (n1 === 0 && n2 === 0) return;
+
+    // Wright'ın inbreeding formülü bileşeni: (1/2)^(n1 + n2 + 1)
+    f += Math.pow(0.5, n1 + n2 + 1);
+  });
+
+  return Math.min(f, 1); // Max 1.0 olabilir
 };

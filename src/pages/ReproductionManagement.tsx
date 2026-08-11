@@ -9,6 +9,7 @@ import MaleReproductionTimeline from '../components/MaleReproductionTimeline';
 import MaleReproductionModal from '../components/MaleReproductionModal';
 import ReproductionKPI from '../components/ReproductionKPI';
 import ReproductionStatusReport from '../components/ReproductionStatusReport';
+import HerdBirthAnalysis from '../components/HerdBirthAnalysis';
 
 const ReproductionManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -86,6 +87,7 @@ const ReproductionManagement: React.FC = () => {
       </div>
 
       <ReproductionStatusReport />
+      <HerdBirthAnalysis />
 
       <div className="flex-1 min-h-[500px]">
         <ReproductionSchedule />
