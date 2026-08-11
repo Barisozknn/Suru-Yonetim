@@ -14,7 +14,7 @@ describe('calculateHerdScore', () => {
   });
 
   it('should return 0 for empty herd', () => {
-    const result = calculateHerdScore([], [], [], [], [], [], 15);
+    const result = calculateHerdScore([], [], [], [], [], [], [], 15);
     expect(result.totalScore).toBe(0);
   });
 
@@ -55,7 +55,7 @@ describe('calculateHerdScore', () => {
 
     const sutFiyati = 15;
 
-    const result = calculateHerdScore(hayvanlar, sutKayitlari, uremeKayitlari, yemler, gruplar, saglikOlaylari, sutFiyati);
+    const result = calculateHerdScore(hayvanlar, sutKayitlari, uremeKayitlari, yemler, gruplar, saglikOlaylari, [], sutFiyati);
     
     expect(result.breakdown.milkScore).toBe(40);
     expect(result.breakdown.reproductionScore).toBe(30);

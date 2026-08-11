@@ -82,7 +82,7 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
 
     const payload: UremeKaydi = {
       id: existing?.id || uuidv4(),
-      ciftlikId: existing?.ciftlikId || activeCiftlikId,
+      ciftlikId: existing?.ciftlikId || activeCiftlikId || undefined,
       hayvanId,
       tarih,
       tur,

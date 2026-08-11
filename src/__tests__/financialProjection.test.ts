@@ -48,7 +48,7 @@ describe('calculate30DayProjection', () => {
 
     const sutFiyati = 15;
 
-    const result = calculate30DayProjection(hayvanlar, sutKayitlari, uremeKayitlari, yemler, gruplar, saglikOlaylari, sutFiyati);
+    const result = calculate30DayProjection(hayvanlar, sutKayitlari, uremeKayitlari, yemler, gruplar, saglikOlaylari, [], sutFiyati);
     
     // Average daily milk = 180 / 7 = 25.714
     // Base 30 day milk = 25.714 * 30 = 771.42

@@ -65,7 +65,7 @@ const MaleReproductionModal: React.FC<Props> = ({ hayvan, onClose, existing }) =
 
       const yeniKayit = {
         id: existing?.id || uuidv4(),
-        ciftlikId: existing?.ciftlikId || hayvan.ciftlikId, // Fallback to animal's farm ID
+        ciftlikId: existing?.ciftlikId || hayvan.ciftlikId || undefined, // Fallback to animal's farm ID
         hayvanId: hayvan.id,
         tarih,
         tur,
@@ -85,7 +85,7 @@ const MaleReproductionModal: React.FC<Props> = ({ hayvan, onClose, existing }) =
       if (tur === 'Doğal Aşım' && selectedDişiId && !existing) {
         const disiKayit = {
           id: uuidv4(),
-          ciftlikId: activeCiftlikId,
+          ciftlikId: activeCiftlikId || undefined,
           hayvanId: selectedDişiId,
           tarih,
           tur: 'Tohumlama/Aşım' as UremeKaydiTur,
