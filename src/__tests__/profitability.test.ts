@@ -43,7 +43,7 @@ describe('calculateAnimalProfitability', () => {
       [],
       20, // Süt fiyatı
       10000, // Buzağı fiyatı
-      200, // Canlı kilo fiyatı
+      { 'İnek': 200 }, // Canlı kilo fiyatları
       hayvanGunlukYemMaliyetleri
     );
 
