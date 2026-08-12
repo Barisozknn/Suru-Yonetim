@@ -8,7 +8,14 @@ import {
   calculateHealthTDI,
   calculateOverallTDI,
   calcHerdMilkAvg,
-  calcHerdADGAvg
+  calcHerdMilkStdDev,
+  calcHerdADGAvg,
+  calcHerdADGStdDev,
+  calcHerdHealthAvg,
+  calcHerdHealthStdDev,
+  calcHerdFertilityAvg,
+  calcHerdFertilityStdDev,
+  calculateFertilityTDI
 } from '../../utils/geneticScoring';
 import { Trophy, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
 
@@ -19,6 +26,7 @@ const HerdRanking: React.FC = () => {
   const sutKayitlari = useLiveFarmQuery(() => db.sutKayitlari.toArray()) || [];
   const agirlikKayitlari = useLiveFarmQuery(() => db.agirlikKayitlari.toArray()) || [];
   const saglikOlaylari = useLiveFarmQuery(() => db.saglikOlaylari.toArray()) || [];
+  const uremeKayitlari = useLiveFarmQuery(() => db.uremeKayitlari.toArray()) || [];
 
   const [filterTur, setFilterTur] = useState<'Tümü' | 'İnek' | 'Boğa'>('İnek');
 
@@ -26,22 +34,33 @@ const HerdRanking: React.FC = () => {
     if (hayvanlar.length === 0) return [];
 
     const suruOrtSut = calcHerdMilkAvg(sutKayitlari);
+    const suruStdSut = calcHerdMilkStdDev(sutKayitlari, suruOrtSut);
+    
     const suruOrtADG = calcHerdADGAvg(agirlikKayitlari, hayvanlar);
+    const suruStdADG = calcHerdADGStdDev(agirlikKayitlari, hayvanlar, suruOrtADG);
+    
+    const suruOrtSaglik = calcHerdHealthAvg(saglikOlaylari, hayvanlar);
+    const suruStdSaglik = calcHerdHealthStdDev(saglikOlaylari, hayvanlar, suruOrtSaglik);
+    
+    const suruOrtCR = calcHerdFertilityAvg(uremeKayitlari);
+    const suruStdCR = calcHerdFertilityStdDev(uremeKayitlari, hayvanlar, suruOrtCR);
 
     const list = hayvanlar
       // SADECE İnek ve Boğa damızlık olarak göster
       .filter(h => h.durum === 'Aktif' && (h.tur === 'İnek' || h.tur === 'Boğa') && (filterTur === 'Tümü' || h.tur === filterTur))
       .map(hayvan => {
-        const sutSkoru = calculateMilkTDI(hayvan, sutKayitlari, suruOrtSut);
-        const buyumeSkoru = calculateGrowthTDI(hayvan, agirlikKayitlari, suruOrtADG);
-        const saglikSkoru = calculateHealthTDI(hayvan, saglikOlaylari);
-        const overall = calculateOverallTDI(sutSkoru, buyumeSkoru, saglikSkoru, isletmeTipi);
+        const sutSkoru = calculateMilkTDI(hayvan, sutKayitlari, suruOrtSut, suruStdSut, hayvanlar, uremeKayitlari);
+        const buyumeSkoru = calculateGrowthTDI(hayvan, agirlikKayitlari, suruOrtADG, suruStdADG);
+        const saglikSkoru = calculateHealthTDI(hayvan, saglikOlaylari, suruOrtSaglik, suruStdSaglik);
+        const uremeSkoru = calculateFertilityTDI(hayvan, uremeKayitlari, suruOrtCR, suruStdCR, hayvanlar);
         
-        return { hayvan, overall, sutSkoru, buyumeSkoru, saglikSkoru };
+        const overall = calculateOverallTDI(sutSkoru, buyumeSkoru, saglikSkoru, uremeSkoru, isletmeTipi);
+        
+        return { hayvan, overall, sutSkoru, buyumeSkoru, saglikSkoru, uremeSkoru };
       });
 
     return list.sort((a, b) => b.overall - a.overall);
-  }, [hayvanlar, sutKayitlari, agirlikKayitlari, saglikOlaylari, isletmeTipi, filterTur]);
+  }, [hayvanlar, sutKayitlari, agirlikKayitlari, saglikOlaylari, uremeKayitlari, isletmeTipi, filterTur]);
 
   if (hayvanlar.length === 0) {
     return <div className="text-center p-8 text-earth-500">Hayvan bulunamadı.</div>;
@@ -75,6 +94,8 @@ const HerdRanking: React.FC = () => {
               <th className="px-4 py-3 text-right font-black text-nature-700 dark:text-nature-400">Genel TDİ</th>
               <th className="px-4 py-3 text-right font-bold text-earth-700 dark:text-gray-300">Süt</th>
               <th className="px-4 py-3 text-right font-bold text-earth-700 dark:text-gray-300">Büyüme</th>
+              <th className="px-4 py-3 text-right font-bold text-earth-700 dark:text-gray-300">Sağlık</th>
+              <th className="px-4 py-3 text-right font-bold text-earth-700 dark:text-gray-300">Üreme</th>
               <th className="px-4 py-3 text-center font-bold text-earth-700 dark:text-gray-300">Durum</th>
             </tr>
           </thead>
@@ -94,6 +115,8 @@ const HerdRanking: React.FC = () => {
                   <td className="px-4 py-3 text-right font-black text-nature-600 dark:text-nature-400">{row.overall.toFixed(1)}</td>
                   <td className="px-4 py-3 text-right text-earth-600 dark:text-gray-300">{row.sutSkoru.normalizedSkor.toFixed(1)}</td>
                   <td className="px-4 py-3 text-right text-earth-600 dark:text-gray-300">{row.buyumeSkoru.normalizedSkor.toFixed(1)}</td>
+                  <td className="px-4 py-3 text-right text-earth-600 dark:text-gray-300">{row.saglikSkoru.normalizedSkor.toFixed(1)}</td>
+                  <td className="px-4 py-3 text-right text-earth-600 dark:text-gray-300">{row.uremeSkoru.normalizedSkor.toFixed(1)}</td>
                   <td className="px-4 py-3 text-center">
                     {top10Percent ? (
                       <span className="inline-flex items-center space-x-1 px-2 py-1 rounded-md bg-green-100 text-green-800 text-xs font-bold">

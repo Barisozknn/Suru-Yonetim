@@ -340,6 +340,7 @@ export interface ProgenyTestResult {
   yavruOrtalamaSutSapma?: number; // Sürü ortalamasından sapma (+/-)
   yavruOrtalamaCanliAgirlik?: number; 
   yavruOrtalamaCanliAgirlikSapma?: number;
+  yavruOrtalamaUremeSkoru?: number;
   // İhtiyaca göre diğer metrikler eklenebilir
 }
 

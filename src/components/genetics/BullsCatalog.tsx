@@ -70,13 +70,21 @@ const BullsCatalog: React.FC = () => {
             </div>
 
             <div className="space-y-3">
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center border-b border-earth-100 dark:border-gray-600 pb-2">
+                <span className="text-sm font-bold text-earth-700 dark:text-gray-300">
+                  Kız CR (Conception Rate)
+                </span>
+                <span className={`font-bold px-2 py-0.5 rounded-full text-xs ${boga.yavruOrtalamaUremeSkoru && boga.yavruOrtalamaUremeSkoru >= 0.55 ? 'bg-purple-100 text-purple-700' : boga.yavruOrtalamaUremeSkoru ? 'bg-orange-100 text-orange-700' : 'text-earth-500'}`}>
+                  {boga.yavruOrtalamaUremeSkoru !== undefined ? `%${(boga.yavruOrtalamaUremeSkoru * 100).toFixed(1)}` : '-'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center border-b border-earth-100 dark:border-gray-600 pb-2">
                 <span className="text-sm font-bold text-earth-700 dark:text-gray-300">Yavru Süt Ortalaması</span>
                 <span className={`font-bold ${boga.yavruOrtalamaSutSapma && boga.yavruOrtalamaSutSapma > 0 ? 'text-green-600' : 'text-earth-900 dark:text-white'}`}>
                   {boga.yavruOrtalamaSut ? `${boga.yavruOrtalamaSut.toFixed(1)} L` : '-'}
                 </span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span className="text-sm font-bold text-earth-700 dark:text-gray-300">Günlük Canlı Ağırlık Artışı</span>
                 <span className={`font-bold ${boga.yavruOrtalamaCanliAgirlikSapma && boga.yavruOrtalamaCanliAgirlikSapma > 0 ? 'text-green-600' : 'text-earth-900 dark:text-white'}`}>
                   {boga.yavruOrtalamaCanliAgirlik ? `${(boga.yavruOrtalamaCanliAgirlik / 1000).toFixed(2)} kg/gün` : '-'}

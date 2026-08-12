@@ -3,28 +3,36 @@ import { Search, Info } from 'lucide-react';
 import { useLiveFarmQuery } from '../../hooks/useLiveFarmQuery';
 import { db } from '../../lib/db';
 import { useStore } from '../../store/useStore';
-import { 
-  calculateMilkTDI, 
-  calculateGrowthTDI, 
+import {
+  calculateMilkTDI,
+  calculateGrowthTDI,
   calculateHealthTDI,
   calculateOverallTDI,
   calcHerdMilkAvg,
-  calcHerdADGAvg
+  calcHerdMilkStdDev,
+  calcHerdADGAvg,
+  calcHerdADGStdDev,
+  calcHerdHealthAvg,
+  calcHerdHealthStdDev,
+  calcHerdFertilityAvg,
+  calcHerdFertilityStdDev,
+  calculateFertilityTDI
 } from '../../utils/geneticScoring';
 
 const GeneticScoreCard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAnimalId, setSelectedAnimalId] = useState<string | null>(null);
-  
+
   const isletmeTipi = useStore(state => state.isletmeTipi);
 
   const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
   const sutKayitlari = useLiveFarmQuery(() => db.sutKayitlari.toArray()) || [];
   const agirlikKayitlari = useLiveFarmQuery(() => db.agirlikKayitlari.toArray()) || [];
   const saglikOlaylari = useLiveFarmQuery(() => db.saglikOlaylari.toArray()) || [];
+  const uremeKayitlari = useLiveFarmQuery(() => db.uremeKayitlari.toArray()) || [];
 
-  const filteredHayvanlar = hayvanlar.filter(h => 
-    (h.tur === 'İnek' || h.tur === 'Boğa') && 
+  const filteredHayvanlar = hayvanlar.filter(h =>
+    (h.tur === 'İnek' || h.tur === 'Boğa') &&
     h.kupeNo.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -34,16 +42,26 @@ const GeneticScoreCard: React.FC = () => {
     if (!selectedAnimal) return null;
 
     const suruOrtSut = calcHerdMilkAvg(sutKayitlari);
-    const suruOrtADG = calcHerdADGAvg(agirlikKayitlari, hayvanlar);
-
-    const sutSkoru = calculateMilkTDI(selectedAnimal, sutKayitlari, suruOrtSut);
-    const buyumeSkoru = calculateGrowthTDI(selectedAnimal, agirlikKayitlari, suruOrtADG);
-    const saglikSkoru = calculateHealthTDI(selectedAnimal, saglikOlaylari);
+    const suruStdSut = calcHerdMilkStdDev(sutKayitlari, suruOrtSut);
     
-    const overall = calculateOverallTDI(sutSkoru, buyumeSkoru, saglikSkoru, isletmeTipi);
+    const suruOrtADG = calcHerdADGAvg(agirlikKayitlari, hayvanlar);
+    const suruStdADG = calcHerdADGStdDev(agirlikKayitlari, hayvanlar, suruOrtADG);
 
-    return { sutSkoru, buyumeSkoru, saglikSkoru, overall };
-  }, [selectedAnimal, sutKayitlari, agirlikKayitlari, saglikOlaylari, isletmeTipi, hayvanlar]);
+    const suruOrtSaglik = calcHerdHealthAvg(saglikOlaylari, hayvanlar);
+    const suruStdSaglik = calcHerdHealthStdDev(saglikOlaylari, hayvanlar, suruOrtSaglik);
+    
+    const suruOrtCR = calcHerdFertilityAvg(uremeKayitlari);
+    const suruStdCR = calcHerdFertilityStdDev(uremeKayitlari, hayvanlar, suruOrtCR);
+
+    const sutSkoru = calculateMilkTDI(selectedAnimal, sutKayitlari, suruOrtSut, suruStdSut, hayvanlar, uremeKayitlari);
+    const buyumeSkoru = calculateGrowthTDI(selectedAnimal, agirlikKayitlari, suruOrtADG, suruStdADG);
+    const saglikSkoru = calculateHealthTDI(selectedAnimal, saglikOlaylari, suruOrtSaglik, suruStdSaglik);
+    const uremeSkoru = calculateFertilityTDI(selectedAnimal, uremeKayitlari, suruOrtCR, suruStdCR, hayvanlar);
+
+    const overall = calculateOverallTDI(sutSkoru, buyumeSkoru, saglikSkoru, uremeSkoru, isletmeTipi);
+
+    return { sutSkoru, buyumeSkoru, saglikSkoru, uremeSkoru, overall };
+  }, [selectedAnimal, sutKayitlari, agirlikKayitlari, saglikOlaylari, uremeKayitlari, isletmeTipi, hayvanlar]);
 
   return (
     <div className="space-y-6">
@@ -52,11 +70,11 @@ const GeneticScoreCard: React.FC = () => {
         <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
         <div className="space-y-2">
           <p>
-            <strong>TDİ (Tahmini Damızlık İndeksi) Nedir?</strong> Bu değerler, ham ölçümlerin sürü ortalamasına göre sapmaları bulunup kalıtım derecesi (h²) ile ölçeklendirilmesiyle elde edilen bir <strong>genetik tahmindir</strong>.
+            <strong>TDİ (Tahmini Damızlık İndeksi) Nedir?</strong> Bu değerler, ham ölçümlerin sürü ortalamasına göre sapmaları bulunup kalıtım derecesi (h²) ile ölçeklendirilmesi ve sürü standart sapması (Z-skoru) ile 0-100 aralığına normalize edilmesiyle elde edilen bir <strong>genetik tahmindir</strong>. (Sürü ortalaması = 50 Puan)
           </p>
           <ul className="list-disc list-inside text-xs space-y-1 ml-1 text-blue-700 dark:text-blue-300">
-            <li><strong>Dişiler (İnek/Düve):</strong> Süt, Büyüme ve Sağlık skorları doğrudan hayvanın <strong>kendi verileri</strong> üzerinden sürü ortalamasına kıyasla hesaplanır.</li>
-            <li><strong>Erkekler (Boğa/Tosun):</strong> Erkeklerin kendi süt verimi olmadığı için <strong>Süt Skoru nötr (50)</strong> kabul edilir. Bir boğanın asıl süt aktarım gücü <strong>"Boğa Kataloğu"</strong> sekmesindeki Yavru Testi (kızlarının verimi) ile ölçülür. Büyüme ve Sağlık skorları ise kendi verilerinden hesaplanır.</li>
+            <li><strong>Dişiler (İnek):</strong> Süt, Büyüme, Sağlık ve Üreme skorları doğrudan hayvanın <strong>kendi verileri</strong> üzerinden sürü ortalamasına kıyasla hesaplanır.</li>
+            <li><strong>Damızlık Boğalar:</strong> Boğaların kendi süt ve gebelik verimi olmadığı için Süt ve Üreme (Fertilite) Skorları, kızlarının verimlerine <strong>(Yavru Testi)</strong> bakılarak hesaplanır. Kızlarının kaydı yoksa nötr (50) kabul edilir. Büyüme ve Sağlık skorları ise kendi verilerinden hesaplanır.</li>
           </ul>
         </div>
       </div>
@@ -65,20 +83,20 @@ const GeneticScoreCard: React.FC = () => {
         <label className="text-sm font-bold text-earth-700 dark:text-gray-300">Hayvan Seç (Küpe No)</label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-earth-400" />
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="Küpe No ile ara..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-3 border-2 border-earth-200 dark:border-gray-700 rounded-xl focus:border-nature-500 focus:ring-0 transition dark:bg-gray-700 dark:text-white"
           />
         </div>
-        
+
         {searchTerm && (
           <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-earth-200 dark:border-gray-700 rounded-xl shadow-lg max-h-60 overflow-y-auto">
             {filteredHayvanlar.length > 0 ? (
               filteredHayvanlar.map(h => (
-                <div 
+                <div
                   key={h.id}
                   onClick={() => {
                     setSelectedAnimalId(h.id);
@@ -114,6 +132,7 @@ const GeneticScoreCard: React.FC = () => {
             <ScoreBar label="Süt Verimi" score={tdiResult.sutSkoru.normalizedSkor} guven={tdiResult.sutSkoru.guvenilirlik} veriSayisi={tdiResult.sutSkoru.veriSayisi} color="bg-blue-500" />
             <ScoreBar label="Büyüme (ADG)" score={tdiResult.buyumeSkoru.normalizedSkor} guven={tdiResult.buyumeSkoru.guvenilirlik} veriSayisi={tdiResult.buyumeSkoru.veriSayisi} color="bg-green-500" />
             <ScoreBar label="Sağlık Direnci" score={tdiResult.saglikSkoru.normalizedSkor} guven={tdiResult.saglikSkoru.guvenilirlik} veriSayisi={tdiResult.saglikSkoru.veriSayisi} color="bg-red-500" />
+            <ScoreBar label="Üreme (Fertilite)" score={tdiResult.uremeSkoru.normalizedSkor} guven={tdiResult.uremeSkoru.guvenilirlik} veriSayisi={tdiResult.uremeSkoru.veriSayisi} color="bg-purple-500" />
           </div>
         </div>
       )}

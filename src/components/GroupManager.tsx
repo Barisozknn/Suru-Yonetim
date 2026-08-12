@@ -251,7 +251,7 @@ const GroupManager: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
             ) : (
               <div className="space-y-3">
                 {gruplar.map(grup => {
-                  const sayi = hayvanlar.filter(h => h.grupId === grup.id).length;
+                  const sayi = hayvanlar.filter(h => h.grupId === grup.id && h.durum === 'Aktif').length;
                   return (
                     <div key={grup.id} className="p-3 border border-earth-200 dark:border-gray-700 rounded-lg hover:shadow-sm transition bg-white dark:bg-gray-800">
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
