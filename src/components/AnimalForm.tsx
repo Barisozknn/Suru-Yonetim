@@ -35,6 +35,7 @@ const schema = z.object({
   tur: z.enum(['İnek', 'Tosun', 'Boğa', 'Öküz', 'Düve', 'Dana', 'Buzağı']),
   irk: z.string().min(2, 'Irk bilgisi zorunludur'),
   dogumTarihi: z.string().optional(),
+  ciftligeGelisTarihi: z.string().optional(),
   cinsiyet: z.enum(['Erkek', 'Dişi']),
   guncelAgirlikKg: z.number().min(0, 'Ağırlık 0\'dan küçük olamaz'),
   durum: z.enum(['Aktif', 'Satıldı', 'Öldü']),
@@ -94,7 +95,8 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
       durum: 'Aktif',
       grupId: '',
       guncelAgirlikKg: 0,
-      dogumTarihi: new Date().toISOString().split('T')[0]
+      dogumTarihi: new Date().toISOString().split('T')[0],
+      ciftligeGelisTarihi: new Date().toISOString().split('T')[0]
     }
   });
 
@@ -500,7 +502,16 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
               <input 
                 type="date" 
                 {...register('dogumTarihi')} 
-                className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500"
+                className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 bg-white dark:bg-gray-800"
+              />
+            </div>
+            
+            <div className="space-y-1">
+              <label className="text-sm font-semibold text-earth-700 dark:text-gray-300">Çiftliğe Geliş Tarihi</label>
+              <input 
+                type="date" 
+                {...register('ciftligeGelisTarihi')} 
+                className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-nature-500 bg-white dark:bg-gray-800"
               />
             </div>
           </div>

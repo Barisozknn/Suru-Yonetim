@@ -14,6 +14,8 @@ const FinancialAnalysis: React.FC = () => {
   
   const [activeTab, setActiveTab] = useState<'ozet' | 'hayvanBazli' | 'breakeven'>('ozet');
   const [selectedProfitAnimalId, setSelectedProfitAnimalId] = useState<string>('');
+  const [animalSearchTerm, setAnimalSearchTerm] = useState('');
+  const [isAnimalDropdownOpen, setIsAnimalDropdownOpen] = useState(false);
 
   const { sutLitreFiyati, setSutLitreFiyati } = useStore();
   const [localSutFiyati, setLocalSutFiyati] = useState(sutLitreFiyati.toString());
@@ -486,17 +488,65 @@ const FinancialAnalysis: React.FC = () => {
       ) : activeTab === 'hayvanBazli' ? (
         <div className="space-y-6 mt-4">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-earth-200 dark:border-gray-700">
-            <label className="text-sm font-bold text-earth-700 dark:text-gray-300 block mb-2">Hayvan Seçin (Yalnızca İnekler)</label>
-            <select
-              value={selectedProfitAnimalId}
-              onChange={(e) => setSelectedProfitAnimalId(e.target.value)}
-              className="w-full p-3 border border-earth-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-nature-500 font-medium bg-white dark:bg-gray-700 dark:text-white"
-            >
-              <option value="">-- Hayvan Seçin --</option>
-              {hayvanlar.filter(h => h.tur === 'İnek').map(h => (
-                <option key={h.id} value={h.id}>{h.kupeNo} - {h.irk}</option>
-              ))}
-            </select>
+            <label className="text-sm font-bold text-earth-700 dark:text-gray-300 block mb-2">Hayvan Seçin (Küpe No ile Arama)</label>
+            <div className="relative">
+              <div 
+                className="w-full p-3 border border-earth-300 dark:border-gray-600 rounded-xl focus-within:ring-2 focus-within:ring-nature-500 bg-white dark:bg-gray-700 dark:text-white flex items-center justify-between cursor-pointer"
+                onClick={() => setIsAnimalDropdownOpen(!isAnimalDropdownOpen)}
+              >
+                {selectedProfitAnimalId ? (
+                  <span className="font-bold">
+                    {hayvanlar.find(h => h.id === selectedProfitAnimalId)?.kupeNo} - {hayvanlar.find(h => h.id === selectedProfitAnimalId)?.irk} ({hayvanlar.find(h => h.id === selectedProfitAnimalId)?.tur})
+                  </span>
+                ) : (
+                  <span className="text-earth-500 dark:text-gray-400">-- Hayvan Seçin --</span>
+                )}
+              </div>
+              
+              {isAnimalDropdownOpen && (
+                <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-earth-200 dark:border-gray-700 rounded-xl shadow-lg max-h-60 flex flex-col overflow-hidden">
+                  <div className="p-2 border-b border-earth-100 dark:border-gray-700 bg-earth-50 dark:bg-gray-900 sticky top-0">
+                    <input
+                      autoFocus
+                      type="text"
+                      placeholder="Küpe No veya Irk Ara..."
+                      className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 dark:text-white outline-none focus:border-nature-500"
+                      value={animalSearchTerm}
+                      onChange={(e) => setAnimalSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <div className="overflow-y-auto flex-1 custom-scrollbar">
+                    <div
+                      className="p-3 hover:bg-earth-50 dark:hover:bg-gray-700 cursor-pointer text-sm"
+                      onClick={() => {
+                        setSelectedProfitAnimalId('');
+                        setIsAnimalDropdownOpen(false);
+                        setAnimalSearchTerm('');
+                      }}
+                    >
+                      -- Seçimi Temizle --
+                    </div>
+                    {hayvanlar
+                      .filter(h => h.tur !== 'Buzağı')
+                      .filter(h => h.kupeNo.toLowerCase().includes(animalSearchTerm.toLowerCase()) || h.irk.toLowerCase().includes(animalSearchTerm.toLowerCase()))
+                      .map(h => (
+                        <div
+                          key={h.id}
+                          className={`p-3 hover:bg-earth-50 dark:hover:bg-gray-700 cursor-pointer text-sm font-medium border-t border-earth-50 dark:border-gray-750 flex items-center justify-between ${selectedProfitAnimalId === h.id ? 'bg-nature-50 text-nature-700 dark:bg-nature-900/30 dark:text-nature-300' : 'text-earth-800 dark:text-gray-200'}`}
+                          onClick={() => {
+                            setSelectedProfitAnimalId(h.id);
+                            setIsAnimalDropdownOpen(false);
+                            setAnimalSearchTerm('');
+                          }}
+                        >
+                          <span>{h.kupeNo}</span>
+                          <span className="text-xs text-earth-500 dark:text-gray-400 bg-earth-100 dark:bg-gray-700 px-2 py-0.5 rounded">{h.tur} - {h.irk}</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           
           {selectedProfitAnimalId && hayvanlar.find(h => h.id === selectedProfitAnimalId) ? (

@@ -9,6 +9,7 @@ export interface Hayvan {
   guncelAgirlikKg: number;
   grupId: string | null;
   durum: 'Aktif' | 'Satıldı' | 'Öldü';
+  ciftligeGelisTarihi?: string;
   olumTarihi?: string;
   olumNedeniTipi?: 'Hastalık' | 'Kaza / Travma' | 'Zehirlenme' | 'Güç Doğum' | 'Yaşlılık' | 'Diğer';
   olumNedeniDetay?: string;

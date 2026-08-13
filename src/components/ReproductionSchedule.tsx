@@ -32,7 +32,7 @@ const EVENT_CONFIG: Record<EventType, { icon: React.ReactNode; color: string; bg
 const ReproductionSchedule: React.FC = () => {
   const navigate = useNavigate();
   const hayvanlar = useLiveFarmQuery(() => db.hayvanlar.toArray()) || [];
-  const uremeKayitlari = useLiveFarmQuery(() => db.uremeKayitlari.orderBy('tarih').reverse().toArray()) || [];
+  const uremeKayitlari = useLiveFarmQuery(() => db.uremeKayitlari.toArray()) || [];
 
   const [filtre, setFiltre] = useState<EventType | 'Tümü'>('Tümü');
   const { uremeAyarlari } = useStore();
@@ -49,18 +49,19 @@ const ReproductionSchedule: React.FC = () => {
     const olaylar = uremeKayitlari.filter(o => o.hayvanId === hayvan.id);
     if (olaylar.length === 0) continue;
 
-    const sonOlay = olaylar[0];
+    const hayvanOlaylari = [...olaylar].sort((a, b) => new Date(b.tarih).getTime() - new Date(a.tarih).getTime());
+    const sonOlay = hayvanOlaylari[0];
 
     if (sonOlay.tur === 'Gebelik Kontrolü') {
       if (sonOlay.durum === 'Gebe') {
-        const sonTohumlama = olaylar.find(o => o.tur === 'Tohumlama/Aşım');
+        const sonTohumlama = hayvanOlaylari.find(o => o.tur === 'Tohumlama/Aşım');
         if (sonTohumlama) {
           const tahminiDogum = addDays(sonTohumlama.tarih, irkAyari.gebelikSuresi);
           const onerilenKuruyaCikarma = addDays(tahminiDogum, -irkAyari.kuruyaCikarma);
 
           planlar.push({ hayvanId: hayvan.id, kupeNo: hayvan.kupeNo, tur: hayvan.tur, tarih: tahminiDogum, olayTuru: 'Tahmini Doğum' });
 
-          if (!olaylar.some(o => o.tur === 'Kuruya Çıkarma')) {
+          if (!hayvanOlaylari.some(o => o.tur === 'Kuruya Çıkarma')) {
             planlar.push({ hayvanId: hayvan.id, kupeNo: hayvan.kupeNo, tur: hayvan.tur, tarih: onerilenKuruyaCikarma, olayTuru: 'Kuruya Çıkarma Önerisi' });
           }
         }
@@ -72,7 +73,7 @@ const ReproductionSchedule: React.FC = () => {
       const beklenen = addDays(sonOlay.tarih, irkAyari.kizginlikDongusu);
       planlar.push({ hayvanId: hayvan.id, kupeNo: hayvan.kupeNo, tur: hayvan.tur, tarih: beklenen, olayTuru: 'Kızgınlık Beklentisi' });
     } else if (sonOlay.tur === 'Kuruya Çıkarma') {
-      const sonTohumlama = olaylar.find(o => o.tur === 'Tohumlama/Aşım');
+      const sonTohumlama = hayvanOlaylari.find(o => o.tur === 'Tohumlama/Aşım');
       let tahminiDogum: string;
       if (sonTohumlama) {
         tahminiDogum = addDays(sonTohumlama.tarih, irkAyari.gebelikSuresi);

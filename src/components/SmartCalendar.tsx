@@ -146,7 +146,7 @@ export const SmartCalendar: React.FC = () => {
               type: 'Tahmini Doğum',
               title: `${hayvan.kupeNo}: Tahmini Doğum`,
               dateStr: tahminiDogum,
-              icon: <Droplet className="w-4 h-4" />,
+              icon: <PiCow className="w-4 h-4" />,
               color: 'text-green-600 bg-green-100 border-green-200',
               link: `/hayvanlar?id=${hayvan.id}&tab=ureme`
             });
@@ -199,7 +199,7 @@ export const SmartCalendar: React.FC = () => {
           type: 'Tahmini Doğum',
           title: `${hayvan.kupeNo}: Tahmini Doğum`,
           dateStr: tahminiDogum,
-          icon: <Droplet className="w-4 h-4" />,
+          icon: <PiCow className="w-4 h-4" />,
           color: 'text-green-600 bg-green-100 border-green-200',
           link: `/hayvanlar?id=${hayvan.id}&tab=ureme`
         });

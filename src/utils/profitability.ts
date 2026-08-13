@@ -70,7 +70,11 @@ export function calculateAnimalProfitability(
   const recordedDays = animalFeedRecords.length;
 
   let daysInFarm = 365;
-  if (hayvan.dogumTarihi) {
+  if (hayvan.ciftligeGelisTarihi) {
+    const arrivalDate = new Date(hayvan.ciftligeGelisTarihi);
+    const diffTime = now.getTime() - arrivalDate.getTime();
+    daysInFarm = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+  } else if (hayvan.dogumTarihi) {
     const birthDate = new Date(hayvan.dogumTarihi);
     const diffTime = Math.abs(now.getTime() - birthDate.getTime());
     daysInFarm = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
