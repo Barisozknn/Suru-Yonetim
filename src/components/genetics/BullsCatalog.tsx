@@ -72,7 +72,7 @@ const BullsCatalog: React.FC = () => {
             <div className="space-y-3">
               <div className="flex justify-between items-center border-b border-earth-100 dark:border-gray-600 pb-2">
                 <span className="text-sm font-bold text-earth-700 dark:text-gray-300">
-                  Kız CR (Conception Rate)
+                  Kız CR (Tohumlama Başarısı)
                 </span>
                 <span className={`font-bold px-2 py-0.5 rounded-full text-xs ${boga.yavruOrtalamaUremeSkoru && boga.yavruOrtalamaUremeSkoru >= 0.55 ? 'bg-purple-100 text-purple-700' : boga.yavruOrtalamaUremeSkoru ? 'bg-orange-100 text-orange-700' : 'text-earth-500'}`}>
                   {boga.yavruOrtalamaUremeSkoru !== undefined ? `%${(boga.yavruOrtalamaUremeSkoru * 100).toFixed(1)}` : '-'}

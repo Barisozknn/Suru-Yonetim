@@ -211,6 +211,12 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
                 <span className="text-sm font-bold text-earth-500 dark:text-gray-400 ml-2">({getYasMetni(hayvan.dogumTarihi)})</span>
               </p>
             </div>
+            <div className="space-y-1">
+              <label className="text-sm font-bold text-earth-500 dark:text-gray-400 uppercase tracking-wider">Çiftliğe Geliş Tarihi</label>
+              <p className="text-lg font-semibold text-earth-900 dark:text-gray-100">
+                {hayvan.ciftligeGelisTarihi ? new Date(hayvan.ciftligeGelisTarihi).toLocaleDateString('tr-TR') : '-'}
+              </p>
+            </div>
             <div className="space-y-1 sm:col-span-2 bg-nature-50 dark:bg-nature-900/30 p-4 rounded-xl border border-nature-200 dark:border-nature-800 flex justify-between items-center">
               <label className="text-sm font-bold text-nature-700 dark:text-nature-300 uppercase tracking-wider">Güncel Ağırlık</label>
               <p className="text-3xl font-black text-nature-800 dark:text-nature-200">{hayvan.guncelAgirlikKg} <span className="text-lg font-bold">kg</span></p>

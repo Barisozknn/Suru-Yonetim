@@ -127,6 +127,7 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
           irk: anne.irk,
           durum: 'Aktif',
           dogumTarihi: tarih,
+          ciftligeGelisTarihi: tarih,
           anneKupeNo: anne.kupeNo,
           babaKupeNo: expectedBabaKupeNo,
           grupId: null,

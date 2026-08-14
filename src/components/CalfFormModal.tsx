@@ -24,6 +24,7 @@ const CalfFormModal: React.FC<Props> = ({ hayvanId, onClose }) => {
   const [hedefSuttenKesimAgirligiKg, setHedefSuttenKesimAgirligiKg] = useState('');
   const [gerceklesenSuttenKesimTarihi, setGerceklesenSuttenKesimTarihi] = useState('');
   const [gerceklesenSuttenKesimAgirligiKg, setGerceklesenSuttenKesimAgirligiKg] = useState('');
+  const [hedefGAAKgGun, setHedefGAAKgGun] = useState('');
 
 
   useEffect(() => {
@@ -39,6 +40,7 @@ const CalfFormModal: React.FC<Props> = ({ hayvanId, onClose }) => {
         setHedefSuttenKesimAgirligiKg(existing.hedefSuttenKesimAgirligiKg?.toString() || '');
         setGerceklesenSuttenKesimTarihi(existing.gerceklesenSuttenKesimTarihi || '');
         setGerceklesenSuttenKesimAgirligiKg(existing.gerceklesenSuttenKesimAgirligiKg?.toString() || '');
+        setHedefGAAKgGun(existing.hedefGAAKgGun?.toString() || '');
 
       }
       setLoading(false);
@@ -59,7 +61,7 @@ const CalfFormModal: React.FC<Props> = ({ hayvanId, onClose }) => {
       hedefSuttenKesimAgirligiKg: hedefSuttenKesimAgirligiKg ? Number(hedefSuttenKesimAgirligiKg) : undefined,
       gerceklesenSuttenKesimTarihi: gerceklesenSuttenKesimTarihi || undefined,
       gerceklesenSuttenKesimAgirligiKg: gerceklesenSuttenKesimAgirligiKg ? Number(gerceklesenSuttenKesimAgirligiKg) : undefined,
-
+      hedefGAAKgGun: hedefGAAKgGun ? Number(hedefGAAKgGun) : undefined,
     };
 
     const action = kayit ? 'UPDATE' : 'INSERT';
@@ -80,6 +82,7 @@ ${noteHeader}
 Kolostrum (Ağız Sütü): ${agizSutuVerildi ? `Verildi (${agizSutuMiktarLt || '-'} Lt, Doğumdan ${agizSutuSaatSonra || '-'} Saat Sonra)` : 'Verilmedi'}
 Sütten Kesim Hedefi: ${hedefSuttenKesimTarihi ? new Date(hedefSuttenKesimTarihi).toLocaleDateString('tr-TR') : '-'} | ${hedefSuttenKesimAgirligiKg || '-'} Kg
 Gerçekleşen Sütten Kesim: ${gerceklesenSuttenKesimTarihi ? new Date(gerceklesenSuttenKesimTarihi).toLocaleDateString('tr-TR') : '-'} | ${gerceklesenSuttenKesimAgirligiKg || '-'} Kg
+Hedef GAA: ${hedefGAAKgGun || '-'} kg/gün
 ----------------------------`.trim();
 
       let currentNotes = hayvan.notlar || '';
@@ -106,13 +109,13 @@ Gerçekleşen Sütten Kesim: ${gerceklesenSuttenKesimTarihi ? new Date(gercekles
 
   return (
     <div className="fixed inset-0 z-50 bg-earth-900/60 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="p-4 border-b border-earth-200 dark:border-gray-700 flex justify-between items-center bg-blue-50 dark:bg-blue-900/20 rounded-t-2xl flex-shrink-0">
-          <div className="flex items-center space-x-2 text-blue-800">
+          <div className="flex items-center space-x-2 text-blue-800 dark:text-blue-300">
             <PiCow className="w-6 h-6" />
             <div>
               <h2 className="text-xl font-black">Buzağı Büyütme Kaydı</h2>
-              <p className="text-xs text-blue-600/70 opacity-80">Ağız sütü ve sütten kesim hedefleri</p>
+              <p className="text-xs text-blue-600/70 dark:text-blue-400/70 opacity-80">Ağız sütü ve sütten kesim hedefleri</p>
             </div>
           </div>
           <button onClick={onClose} className="text-earth-500 dark:text-gray-400 hover:text-red-500 transition">
@@ -120,75 +123,102 @@ Gerçekleşen Sütten Kesim: ${gerceklesenSuttenKesimTarihi ? new Date(gercekles
           </button>
         </div>
 
-        <div className="p-5 space-y-6 overflow-y-auto flex-1">
-          {/* Doğum Ağırlığı */}
-          <div>
-            <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Doğum Ağırlığı (kg)</label>
-            <input type="number" step="0.1" value={dogumAgirligiKg} onChange={e => setDogumAgirligiKg(e.target.value)}
-              className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500" />
-          </div>
-
-          <hr className="border-earth-100 dark:border-gray-700" />
-
-          {/* Ağız Sütü (Kolostrum) */}
-          <div className="space-y-4">
-            <h3 className="font-bold text-earth-800 dark:text-gray-200">Ağız Sütü (Kolostrum)</h3>
-            <label className="flex items-center space-x-2 cursor-pointer">
-              <input type="checkbox" checked={agizSutuVerildi} onChange={e => setAgizSutuVerildi(e.target.checked)}
-                className="w-5 h-5 text-blue-600 dark:text-blue-400 rounded border-earth-300 dark:border-gray-600 focus:ring-blue-500" />
-              <span className="font-semibold text-earth-700 dark:text-gray-300">Ağız sütü verildi</span>
-            </label>
-
-            {agizSutuVerildi && (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Miktar (Litre)</label>
-                  <input type="number" step="0.5" value={agizSutuMiktarLt} onChange={e => setAgizSutuMiktarLt(e.target.value)}
-                    placeholder="Örn: 2" className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500" />
-                </div>
-                <div>
-                  <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Kaç Saat Sonra?</label>
-                  <input type="number" value={agizSutuSaatSonra} onChange={e => setAgizSutuSaatSonra(e.target.value)}
-                    placeholder="Örn: 1" className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500" />
-                </div>
-              </div>
-            )}
-          </div>
-
-          <hr className="border-earth-100 dark:border-gray-700" />
-
-          {/* Sütten Kesim Hedefleri */}
-          <div className="space-y-4">
-            <h3 className="font-bold text-earth-800 dark:text-gray-200">Sütten Kesim Hedefleri</h3>
-            <div className="grid grid-cols-2 gap-4">
+        <div className="p-5 overflow-y-auto flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Sol Kolon */}
+            <div className="space-y-6">
+              {/* Doğum Ağırlığı */}
               <div>
-                <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Hedef Tarih</label>
-                <input type="date" value={hedefSuttenKesimTarihi} onChange={e => setHedefSuttenKesimTarihi(e.target.value)}
-                  className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Doğum Ağırlığı (kg)</label>
+                <input type="number" step="0.1" value={dogumAgirligiKg} onChange={e => setDogumAgirligiKg(e.target.value)}
+                  className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-gray-100" />
               </div>
-              <div>
-                <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Hedef Ağırlık (kg)</label>
-                <input type="number" step="1" value={hedefSuttenKesimAgirligiKg} onChange={e => setHedefSuttenKesimAgirligiKg(e.target.value)}
-                  className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500" />
+
+              <hr className="border-earth-100 dark:border-gray-700" />
+
+              {/* Ağız Sütü */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between bg-earth-50 dark:bg-gray-900 p-3 rounded-xl border border-earth-100 dark:border-gray-700">
+                  <span className="font-bold text-earth-800 dark:text-gray-200">Ağız Sütü Verildi</span>
+                  <button
+                    type="button"
+                    onClick={() => setAgizSutuVerildi(!agizSutuVerildi)}
+                    className={`w-12 h-6 rounded-full transition relative ${agizSutuVerildi ? 'bg-green-500' : 'bg-earth-300 dark:bg-gray-600'}`}
+                  >
+                    <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-all ${agizSutuVerildi ? 'left-7' : 'left-1'}`} />
+                  </button>
+                </div>
+
+                {agizSutuVerildi && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Miktar (Litre)</label>
+                      <input type="number" step="0.1" value={agizSutuMiktarLt} onChange={e => setAgizSutuMiktarLt(e.target.value)}
+                        placeholder="Örn: 2" className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-gray-100" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Kaç Saat Sonra?</label>
+                      <input type="number" value={agizSutuSaatSonra} onChange={e => setAgizSutuSaatSonra(e.target.value)}
+                        placeholder="Örn: 1" className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-gray-100" />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
 
-          <hr className="border-earth-100 dark:border-gray-700" />
+            {/* Sağ Kolon */}
+            <div className="space-y-6">
+              {/* Sütten Kesim Hedefleri */}
+              <div className="space-y-4">
+                <h3 className="font-bold text-earth-800 dark:text-gray-200">Sütten Kesim Hedefleri</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Hedef Tarih</label>
+                    <input type="date" value={hedefSuttenKesimTarihi} onChange={e => setHedefSuttenKesimTarihi(e.target.value)}
+                      className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-gray-100" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Hedef (kg)</label>
+                    <input type="number" step="1" value={hedefSuttenKesimAgirligiKg} onChange={e => setHedefSuttenKesimAgirligiKg(e.target.value)}
+                      className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-gray-100" />
+                  </div>
+                </div>
 
-          {/* Sütten Kesim Gerçekleşen */}
-          <div className="space-y-4 bg-earth-50 dark:bg-gray-900 p-4 rounded-xl border border-earth-100 dark:border-gray-700">
-            <h3 className="font-bold text-earth-800 dark:text-gray-200">Sütten Kesim (Gerçekleşen)</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Gerçekleşen Tarih</label>
-                <input type="date" value={gerceklesenSuttenKesimTarihi} onChange={e => setGerceklesenSuttenKesimTarihi(e.target.value)}
-                  className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                {/* Hedef GAA */}
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl border border-blue-200 dark:border-blue-800/50">
+                  <label className="text-sm font-bold text-blue-800 dark:text-blue-300 mb-1 block flex items-center space-x-1">
+                    <span>🎯 Hedef GAA (kg/gün)</span>
+                  </label>
+                  <input
+                    type="number" step="0.05" min="0" max="5"
+                    value={hedefGAAKgGun}
+                    onChange={e => setHedefGAAKgGun(e.target.value)}
+                    placeholder="Örn: 0.80"
+                    className="w-full p-2 border border-blue-300 dark:border-blue-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-gray-100"
+                  />
+                  <p className="text-xs text-blue-600/70 dark:text-blue-400/70 mt-1.5 leading-tight">
+                    Tipik: Holstein 0.80 • Jersey 0.65 • Angus 0.90
+                  </p>
+                </div>
               </div>
-              <div>
-                <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Gerçekleşen Ağırlık (kg)</label>
-                <input type="number" step="1" value={gerceklesenSuttenKesimAgirligiKg} onChange={e => setGerceklesenSuttenKesimAgirligiKg(e.target.value)}
-                  className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500" />
+
+              <hr className="border-earth-100 dark:border-gray-700" />
+
+              {/* Sütten Kesim Gerçekleşen */}
+              <div className="space-y-4 bg-earth-50 dark:bg-gray-900 p-4 rounded-xl border border-earth-100 dark:border-gray-700">
+                <h3 className="font-bold text-earth-800 dark:text-gray-200">Gerçekleşen Sütten Kesim</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Tarih</label>
+                    <input type="date" value={gerceklesenSuttenKesimTarihi} onChange={e => setGerceklesenSuttenKesimTarihi(e.target.value)}
+                      className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-gray-100" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-bold text-earth-700 dark:text-gray-300 mb-1 block">Ağırlık (kg)</label>
+                    <input type="number" step="1" value={gerceklesenSuttenKesimAgirligiKg} onChange={e => setGerceklesenSuttenKesimAgirligiKg(e.target.value)}
+                      className="w-full p-2 border border-earth-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-gray-100" />
+                  </div>
+                </div>
               </div>
             </div>
           </div>

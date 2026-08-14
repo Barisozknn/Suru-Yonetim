@@ -122,37 +122,80 @@ export const calcHerdADGStdDev = (agirlikKayitlari: AgirlikKaydi[], hayvanlar: H
   return Math.sqrt(sumOfSquares / (perAnimal.length - 1)) || 1;
 };
 
+// ─── Sağlık Skoru Yardımcı Fonksiyonları ───────────────────────────────────
+//
+// HSI (Health Score Index) Sistemi:
+//   - Baz puan 100'den başlar.
+//   - Her sağlık olayı zaman-azalmalı (decay) ceza düşürür.
+//   - Muayene + hastalikAdi dolu ise hastalık teşhisi = büyük ceza.
+//   - Aşı = 0 ceza (koruyucu hekimlik ödüllendirilmez ama cezalandırılmaz).
+//   - Decay: e^(-0.2 × yıl) → 1 yıl önce %82, 3 yıl önce %55 etki.
+
+const HSI_CEZA: Record<string, number> = {
+  MUAYENE_HASTALIK: 15, // Muayene + hastalikAdi dolu → gerçek hastalık teşhisi
+  OPERASYON:        20, // En ciddi müdahale
+  ILAC:              5, // Tedavi gerekti
+  MUAYENE_RUTIN:     1, // Rutin kontrol
+  DIGER:             2, // Belirsiz
+  ASI:               0, // Koruyucu = ceza yok
+};
+
+const SAGLIK_DECAY_K = 0.2; // yıllık decay sabiti
+
+/** Bir hayvanın sağlık olaylarından HSI (0-100) hesaplar */
+const hesaplaHSI = (records: SaglikOlayi[], bugun: Date = new Date()): number => {
+  let toplamCeza = 0;
+  records.forEach(r => {
+    // Ceza türünü belirle
+    let ceza = 0;
+    if (r.tur === 'Aşı') {
+      ceza = HSI_CEZA.ASI; // 0
+    } else if (r.tur === 'Operasyon') {
+      ceza = HSI_CEZA.OPERASYON;
+    } else if (r.tur === 'İlaç') {
+      ceza = HSI_CEZA.ILAC;
+    } else if (r.tur === 'Muayene') {
+      // Hastalık adı girilmişse gerçek hastalık teşhisi
+      ceza = (r.hastalikAdi && r.hastalikAdi.trim().length > 0)
+        ? HSI_CEZA.MUAYENE_HASTALIK
+        : HSI_CEZA.MUAYENE_RUTIN;
+    } else {
+      ceza = HSI_CEZA.DIGER;
+    }
+
+    if (ceza === 0) return;
+
+    // Zaman azalması: yeni olaylar daha fazla etkiler
+    const yilGecmis = Math.max(0,
+      (bugun.getTime() - new Date(r.tarih).getTime()) / (1000 * 60 * 60 * 24 * 365)
+    );
+    const decayFaktor = Math.exp(-SAGLIK_DECAY_K * yilGecmis);
+    toplamCeza += ceza * decayFaktor;
+  });
+
+  return Math.max(0, 100 - toplamCeza);
+};
+
 // Sağlık
 export const calcHerdHealthAvg = (saglikOlaylari: SaglikOlayi[], hayvanlar: Hayvan[]): number => {
-  if (hayvanlar.length === 0 || saglikOlaylari.length === 0) return 0;
-  
-  let totalPenalty = 0;
-  saglikOlaylari.forEach(r => {
-    if (r.tur === 'Operasyon') totalPenalty += 3;
-    else if (r.tur === 'İlaç') totalPenalty += 2;
-    else if (r.tur === 'Muayene') totalPenalty += 0.5;
-  });
-  
-  return totalPenalty / hayvanlar.length;
+  if (hayvanlar.length === 0) return 100;
+  const bugun = new Date();
+  const byAnimal: Record<string, SaglikOlayi[]> = {};
+  hayvanlar.forEach(h => byAnimal[h.id] = []);
+  saglikOlaylari.forEach(r => { if (byAnimal[r.hayvanId] !== undefined) byAnimal[r.hayvanId].push(r); });
+  const skorlar = Object.values(byAnimal).map(r => hesaplaHSI(r, bugun));
+  return skorlar.reduce((a, b) => a + b, 0) / skorlar.length;
 };
 
 export const calcHerdHealthStdDev = (saglikOlaylari: SaglikOlayi[], hayvanlar: Hayvan[], avg: number): number => {
-  if (hayvanlar.length < 2 || saglikOlaylari.length === 0) return 1;
-
-  const penaltiesByAnimal: Record<string, number> = {};
-  hayvanlar.forEach(h => penaltiesByAnimal[h.id] = 0);
-  
-  saglikOlaylari.forEach(r => {
-    if (penaltiesByAnimal[r.hayvanId] !== undefined) {
-      if (r.tur === 'Operasyon') penaltiesByAnimal[r.hayvanId] += 3;
-      else if (r.tur === 'İlaç') penaltiesByAnimal[r.hayvanId] += 2;
-      else if (r.tur === 'Muayene') penaltiesByAnimal[r.hayvanId] += 0.5;
-    }
-  });
-
-  const penalties = Object.values(penaltiesByAnimal);
-  const sumOfSquares = penalties.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0);
-  return Math.sqrt(sumOfSquares / (penalties.length - 1)) || 1;
+  if (hayvanlar.length < 2) return 1;
+  const bugun = new Date();
+  const byAnimal: Record<string, SaglikOlayi[]> = {};
+  hayvanlar.forEach(h => byAnimal[h.id] = []);
+  saglikOlaylari.forEach(r => { if (byAnimal[r.hayvanId] !== undefined) byAnimal[r.hayvanId].push(r); });
+  const skorlar = Object.values(byAnimal).map(r => hesaplaHSI(r, bugun));
+  const sumSq = skorlar.reduce((sum, v) => sum + Math.pow(v - avg, 2), 0);
+  return Math.sqrt(sumSq / (skorlar.length - 1)) || 1;
 };
 
 // Fertilite (CR)
@@ -193,13 +236,35 @@ export const calcHerdFertilityStdDev = (uremeKayitlari: UremeKaydi[], hayvanlar:
 };
 
 // ─── Çevresel Düzeltme Fonksiyonları ────────────────────────────────────────
-export const correctForSeason = (value: number, _date: string): number => {
-  return value;
+// Türkiye iklim koşullarına göre aylık mevsim düzeltme katsayıları.
+// Yaz aylarındaki ısı stresi sütü düşürür; kış aylarında hafif artış vardır.
+// Kaynak: Akkaraman/Holstein araştırmaları (Türkiye koşulları)
+const SEZON_DUZELTME: Record<number, number> = {
+  1: 1.04,  // Ocak   — soğuk, ısı stresi az, verim hafif yüksek
+  2: 1.03,  // Şubat
+  3: 1.01,  // Mart
+  4: 1.00,  // Nisan  — referans ay
+  5: 0.99,  // Mayıs
+  6: 0.96,  // Haziran — ısı stresi başlar
+  7: 0.93,  // Temmuz — pik ısı stresi
+  8: 0.93,  // Ağustos — pik ısı stresi
+  9: 0.97,  // Eylül
+  10: 1.00, // Ekim
+  11: 1.02, // Kasım
+  12: 1.03, // Aralık
 };
 
-export const correctForLactation = (milkLitre: number, lactNo: number): number => {
+export const correctForSeason = (value: number, date: string): number => {
+  const month = new Date(date).getMonth() + 1; // 1-12
+  const katsayi = SEZON_DUZELTME[month] ?? 1.00;
+  return value / katsayi; // Düşük aylardaki ölçümü gerçek potansiyele çevir
+};
+
+// laktasyonBiliniyorMu: doğum kaydı yoksa false — düzeltme uygulanmaz
+export const correctForLactation = (milkLitre: number, lactNo: number, laktasyonBiliniyorMu: boolean = true): number => {
+  if (!laktasyonBiliniyorMu) return milkLitre; // Veri yoksa olduğu gibi kullan
   let corrected = milkLitre;
-  if (lactNo === 1) corrected *= 1.20; 
+  if (lactNo === 1) corrected *= 1.20;
   else if (lactNo === 2) corrected *= 1.10;
   else if (lactNo >= 5) corrected *= 1.05;
   return corrected;
@@ -237,9 +302,14 @@ export const calculateMilkTDI = (
   }
 
   let laktasyonNo = 1;
+  let laktasyonBiliniyorMu = false;
   if (hayvan.tur !== 'Boğa') {
     const dogumlar = uremeKayitlari.filter(r => r.hayvanId === hayvan.id && r.tur === 'Doğum');
-    if (dogumlar.length > 0) laktasyonNo = dogumlar.length;
+    if (dogumlar.length > 0) {
+      laktasyonNo = dogumlar.length;
+      laktasyonBiliniyorMu = true;
+    }
+    // Doğum kaydı yoksa laktasyon no bilinmiyor — düzeltme uygulanmaz
   }
 
   const byDate: Record<string, number> = {};
@@ -250,12 +320,14 @@ export const calculateMilkTDI = (
   
   const dailyTotals = Object.values(byDate);
   const avgMilk = dailyTotals.reduce((sum, v) => sum + v, 0) / dailyTotals.length;
-  
+
+  // Mevsim düzeltmesi: her kaydın katkısını ağırlıklı ortalamayla düzelt
   const seasonCorrected = correctForSeason(avgMilk, records[0].tarih);
-  const corrected = correctForLactation(seasonCorrected, laktasyonNo);
+  const corrected = correctForLactation(seasonCorrected, laktasyonNo, laktasyonBiliniyorMu);
 
   const genetikTahmin = applyHeritability(corrected - suruOrtalamasi, H2.SUT_VERIMI);
-  const normalizedSkor = Math.max(0, Math.min(100, 50 + (genetikTahmin / Math.max(0.1, suruStdDev)) * 15));
+  const zSkor = (corrected - suruOrtalamasi) / Math.max(0.1, suruStdDev);
+  const normalizedSkor = Math.max(0, Math.min(100, 50 + zSkor * 15));
 
   return {
     hamDeger: avgMilk,
@@ -279,6 +351,14 @@ export const calculateGrowthTDI = (hayvan: Hayvan, agirlikKayitlari: AgirlikKayd
     return { hamDeger: 0, cevreselDuzeltme: 0, duzeltilmisDeger: 0, h2Katsayisi: H2.BUYUME_ADG, genetikTahmin: 0, normalizedSkor: 50, guvenilirlik: 0, veriSayisi: 0 };
   }
 
+  // Irk bazlı doğum ağırlığı referansları (kg)
+  const DOGUM_AGIRLIGI: Record<string, number> = {
+    'Holstein': 42, 'Simental': 46, 'Simmental': 46,
+    'Jersey': 25, 'Ayrshire': 35, 'Montofon': 44,
+    'Esmer': 42, 'Brown Swiss': 42, 'Angus': 35,
+  };
+  const dogumAgirligi = DOGUM_AGIRLIGI[hayvan.irk] ?? 38; // bilinmeyen ırk için ortalama
+
   let adg = 0;
   if (records.length >= 2) {
     const first = records[0];
@@ -288,13 +368,14 @@ export const calculateGrowthTDI = (hayvan: Hayvan, agirlikKayitlari: AgirlikKayd
   } else if (records.length === 1 && hayvan.dogumTarihi) {
     const last = records[0];
     const gunFarki = Math.max(1, (new Date(last.tarih).getTime() - new Date(hayvan.dogumTarihi).getTime()) / (1000 * 60 * 60 * 24));
-    adg = ((last.kg - 40) / gunFarki) * 1000;
+    adg = ((last.kg - dogumAgirligi) / gunFarki) * 1000; // ırka özgü doğum ağırlığı
   }
 
   adg = Math.max(-1500, Math.min(4000, adg));
 
   const genetikTahmin = applyHeritability(adg - suruOrtalamasi, H2.BUYUME_ADG);
-  const normalizedSkor = Math.max(0, Math.min(100, 50 + (genetikTahmin / Math.max(1, suruStdDev)) * 15));
+  const zSkor = (adg - suruOrtalamasi) / Math.max(1, suruStdDev);
+  const normalizedSkor = Math.max(0, Math.min(100, 50 + zSkor * 15));
 
   return {
     hamDeger: adg,
@@ -309,33 +390,33 @@ export const calculateGrowthTDI = (hayvan: Hayvan, agirlikKayitlari: AgirlikKayd
 };
 
 // ─── Sağlık TDİ ─────────────────────────────────────────────────────────────
-export const calculateHealthTDI = (hayvan: Hayvan, saglikOlaylari: SaglikOlayi[], suruOrtSaglik: number, suruStdDevSaglik: number): SkorDetay => {
+export const calculateHealthTDI = (hayvan: Hayvan, saglikOlaylari: SaglikOlayi[], suruOrtSaglik: number, _suruStdDevSaglik: number): SkorDetay => {
   const records = saglikOlaylari.filter(r => r.hayvanId === hayvan.id);
+  const bugun = new Date();
 
-  let penaltiPuani = 0;
-  records.forEach(r => {
-    if (r.tur === 'Operasyon') penaltiPuani += 3;
-    else if (r.tur === 'İlaç') penaltiPuani += 2;
-    else if (r.tur === 'Muayene') penaltiPuani += 0.5;
-  });
+  // HSI: 100'den başla, olaylara göre ceza düş (0-100 mutlak skor)
+  const hsi = hesaplaHSI(records, bugun);
 
-  const hamDeger = penaltiPuani;
-  const sapma = suruOrtSaglik - penaltiPuani;
+  // Sağlık skoru = HSI'nın kendisi (z-skoru değil).
+  // 0 olay → 100, ağır hastalık → 20-40, rutin aşı → ~100
+  // suruOrtSaglik sadece EBV/genetikTahmin için referans olarak kullanılır.
+  const sapma = hsi - suruOrtSaglik;
   const genetikTahmin = applyHeritability(sapma, H2.SAGLIK);
-  
-  const normalizedSkor = Math.max(0, Math.min(100, 50 + (genetikTahmin / Math.max(0.1, suruStdDevSaglik)) * 15));
+
+  const toplamOnemliOlay = records.filter(r => r.tur !== 'Aşı').length;
 
   return {
-    hamDeger,
+    hamDeger: hsi,
     cevreselDuzeltme: 0,
-    duzeltilmisDeger: hamDeger,
+    duzeltilmisDeger: hsi,
     h2Katsayisi: H2.SAGLIK,
     genetikTahmin,
-    normalizedSkor,
-    guvenilirlik: calculateReliability(records.length, H2.SAGLIK),
+    normalizedSkor: hsi,  // Doğrudan HSI = sağlık skoru (0-100)
+    guvenilirlik: calculateReliability(toplamOnemliOlay, H2.SAGLIK),
     veriSayisi: records.length
   };
 };
+
 
 // ─── Üreme (Fertilite) TDİ ──────────────────────────────────────────────────
 export const calculateFertilityTDI = (
@@ -353,24 +434,26 @@ export const calculateFertilityTDI = (
     records = uremeKayitlari.filter(r => kizIdleri.includes(r.hayvanId));
   }
 
-  if (records.length === 0) {
+  // Tohumlama kaydı olmadan CR hesaplanamaz — nötr dön
+  const tohumlamalar = records.filter(r => r.tur === 'Tohumlama/Aşım' || r.tur === 'Doğal Aşım').length;
+  if (tohumlamalar === 0) {
     return { hamDeger: 0, cevreselDuzeltme: 0, duzeltilmisDeger: 0, h2Katsayisi: H2.FERTILITE, genetikTahmin: 0, normalizedSkor: 50, guvenilirlik: 0, veriSayisi: 0 };
   }
 
-  const tohumlamalar = records.filter(r => r.tur === 'Tohumlama/Aşım' || r.tur === 'Doğal Aşım').length;
   let basarili = 0;
-  
   records.forEach(r => {
     if (r.tur === 'Doğum') basarili++;
     else if (r.tur === 'Gebelik Kontrolü' && r.durum === 'Gebe') basarili++;
   });
 
   const gercekBasari = Math.min(tohumlamalar, basarili);
-  const cr = tohumlamalar > 0 ? (gercekBasari / tohumlamalar) : (basarili > 0 ? 1 : 0);
+  const cr = gercekBasari / tohumlamalar; // Artık tohumlamalar > 0 garantili
 
   const sapma = cr - suruOrtCR;
   const genetikTahmin = applyHeritability(sapma, H2.FERTILITE);
-  const normalizedSkor = Math.max(0, Math.min(100, 50 + (genetikTahmin / Math.max(0.01, suruStdDevCR)) * 15));
+  // Fertilite için h²=0.05 çok küçük, z-skoru doğrudan ham CR'den alınır
+  const zSkor = sapma / Math.max(0.01, suruStdDevCR);
+  const normalizedSkor = Math.max(0, Math.min(100, 50 + zSkor * 15));
 
   return {
     hamDeger: cr,
@@ -379,8 +462,9 @@ export const calculateFertilityTDI = (
     h2Katsayisi: H2.FERTILITE,
     genetikTahmin,
     normalizedSkor,
-    guvenilirlik: calculateReliability(records.length, H2.FERTILITE),
-    veriSayisi: records.length
+    // veriSayisi = tohumlama sayısı (güvenilirlik hesabı için doğru baz)
+    guvenilirlik: calculateReliability(tohumlamalar, H2.FERTILITE),
+    veriSayisi: tohumlamalar
   };
 };
 

@@ -168,6 +168,25 @@ export interface BuzagiKaydi {
   hedefSuttenKesimAgirligiKg?: number;
   gerceklesenSuttenKesimTarihi?: string;
   gerceklesenSuttenKesimAgirligiKg?: number;
+  /** Faz 2: Kullanıcının girdiği hedef günlük ağırlık artışı (kg/gün) */
+  hedefGAAKgGun?: number;
+  /** Faz 3: Beslenme programı */
+  sutBeslemeProgrami?: 'Tam Süt' | 'Süt İkamesi' | 'Karma';
+  gunlukSutMiktariLt?: number;
+  starterYemBaslangicTarihi?: string;
+  kabaYemBaslangicTarihi?: string;
+}
+
+/** Faz 4: Buzağıya günlük verilen süt/mama miktarı kaydı */
+export interface BuzagiSutKaydi {
+  ciftlikId?: string;
+  id: string;
+  hayvanId: string;
+  tarih: string; // ISO date YYYY-MM-DD
+  miktarLt: number;
+  ogun?: 'Sabah' | 'Öğle' | 'Akşam' | 'Gece';
+  tip?: 'Tam Süt' | 'Süt İkamesi' | 'Karma';
+  notlar?: string;
 }
 
 export interface Mesaj {
