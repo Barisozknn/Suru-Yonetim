@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import DataManagement from '../components/DataManagement';
-import { Trash2, LogOut, CalendarClock, Save, CloudOff, UserX, LogIn, User, Download, Upload, Moon, Sun, Bell, MapPin, LocateFixed, X } from 'lucide-react';
+import { Trash2, LogOut, CalendarClock, Save, CloudOff, UserX, LogIn, User, Download, Upload, Moon, Sun, Bell, MapPin, LocateFixed, X, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { subscribeToPushNotifications, unsubscribeFromPushNotifications, checkPushSubscription } from '../utils/pushUtils';
 import { supabase } from '../lib/supabase';
@@ -9,7 +9,7 @@ import { STANDART_IRKLAR } from '../components/AnimalForm';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
-  const { user, uremeAyarlari, setUremeAyarlari, theme, setTheme, sutLitreFiyati, setSutLitreFiyati, buzagiFiyati, setBuzagiFiyati, canliKiloFiyatlari, setCanliKiloFiyatlari, isletmeTipi, setIsletmeTipi, konum, setKonum } = useStore();
+  const { user, uremeAyarlari, setUremeAyarlari, theme, setTheme, sutLitreFiyati, setSutLitreFiyati, buzagiFiyati, setBuzagiFiyati, canliKiloFiyatlari, setCanliKiloFiyatlari, isletmeTipi, setIsletmeTipi, konum, setKonum, isAiUnlocked, setIsAiUnlocked } = useStore();
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [localUremeAyarlari, setLocalUremeAyarlari] = useState(uremeAyarlari);
@@ -29,6 +29,8 @@ const Settings: React.FC = () => {
   const [pushLoading, setPushLoading] = useState(true);
   const [konumLoading, setKonumLoading] = useState(false);
   const [konumError, setKonumError] = useState<string | null>(null);
+  const [aiCode, setAiCode] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
 
   React.useEffect(() => {
     checkPushSubscription().then(sub => {
@@ -242,6 +244,27 @@ const Settings: React.FC = () => {
     useStore.getState().setIsGuest(false);
     await supabase.auth.signOut();
     navigate('/login');
+  };
+
+  const handleActivateAi = async () => {
+    if (!aiCode) return;
+    setAiLoading(true);
+    try {
+      const { data, error } = await supabase.rpc('verify_ai_activation', { activation_code: aiCode });
+      if (error) {
+        alert('Doğrulama sırasında bir hata oluştu: ' + error.message);
+      } else if (data === true) {
+        setIsAiUnlocked(true);
+        alert('AI Asistan ve Gelişmiş Analizler başarıyla aktif edildi.');
+        setAiCode('');
+      } else {
+        alert('Geçersiz aktivasyon kodu.');
+      }
+    } catch (err: any) {
+      alert('Sistem hatası: ' + err.message);
+    } finally {
+      setAiLoading(false);
+    }
   };
 
 
@@ -672,6 +695,51 @@ const Settings: React.FC = () => {
               <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isSubscribed ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>
           </div>
+        </div>
+
+        {/* AI Asistan Aktivasyonu */}
+        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-6 rounded-2xl shadow-sm border border-indigo-100 dark:border-indigo-800/30 space-y-4 md:col-span-2 transition-colors">
+          <div className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 rounded-lg">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <h2 className="text-xl font-bold text-indigo-900 dark:text-indigo-100">AI Asistan Aktivasyonu</h2>
+          </div>
+          
+          <p className="text-sm text-indigo-700 dark:text-indigo-300">
+            Yapay zeka destekli çiftlik analizleri ve sohbet asistanını kullanmak için aktivasyon kodunuzu girin.
+          </p>
+
+          {isAiUnlocked ? (
+            <div className="flex items-center space-x-2 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 p-4 rounded-xl border border-green-200 dark:border-green-800">
+              <Sparkles className="w-5 h-5" />
+              <span className="font-bold">AI Asistan ve Gelişmiş Analizler Aktif</span>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input 
+                type="text" 
+                placeholder="Aktivasyon Kodunu Girin" 
+                value={aiCode}
+                onChange={(e) => setAiCode(e.target.value)}
+                className="flex-1 p-3 border-2 border-indigo-200 dark:border-indigo-700/50 bg-white dark:bg-gray-800 text-earth-900 dark:text-white rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
+              />
+              <button 
+                onClick={handleActivateAi}
+                disabled={aiLoading || !aiCode}
+                className="flex items-center justify-center space-x-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 text-white px-6 py-3 rounded-xl font-bold transition shadow-sm"
+              >
+                {aiLoading ? (
+                  <span>Doğrulanıyor...</span>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5" />
+                    <span>Aktive Et</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Veri Yönetimi */}

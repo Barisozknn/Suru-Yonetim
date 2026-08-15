@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Camera, Save, X, ImagePlus, UserCircle2 } from 'lucide-react';
+import { Camera, Save, X, ImagePlus, UserCircle2, Trash2 } from 'lucide-react';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import OcrScanner from './OcrScanner';
@@ -58,9 +58,10 @@ interface AnimalFormProps {
   initialData?: FormData & { id: string };
   onClose: () => void;
   onSuccess: () => void;
+  onDelete?: () => void;
 }
 
-const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess }) => {
+const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess, onDelete }) => {
   const gruplar = useLiveFarmQuery(() => db.gruplar.toArray());
   const [scannerTarget, setScannerTarget] = useState<'kupeNo' | 'anneKupeNo' | 'babaKupeNo' | null>(null);
   const [fotografOnizleme, setFotografOnizleme] = useState<string>(initialData?.fotografUrl || '');
@@ -225,6 +226,32 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
     } catch (err) {
       console.error(err);
       alert('Kayıt sırasında bir hata oluştu.');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!initialData?.id) return;
+    const confirmed = window.confirm(
+      `"${initialData.kupeNo}" küpe numaralı hayvanı sistemden kalıcı olarak silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`
+    );
+    if (!confirmed) return;
+    try {
+      await db.hayvanlar.delete(initialData.id);
+      await db.syncQueue.add({
+        table: 'hayvanlar',
+        action: 'DELETE',
+        payload: { id: initialData.id },
+        created_at: Date.now()
+      });
+      if (navigator.onLine) {
+        const { processSyncQueue } = await import('../services/syncService');
+        processSyncQueue();
+      }
+      onDelete?.();
+      onClose();
+    } catch (err) {
+      console.error(err);
+      alert('Silme işlemi sırasında bir hata oluştu.');
     }
   };
 
@@ -589,12 +616,26 @@ const AnimalForm: React.FC<AnimalFormProps> = ({ initialData, onClose, onSuccess
             </div>
           </div>
 
-          <div className="p-6 border-t border-earth-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex justify-end space-x-3 flex-shrink-0 rounded-b-2xl">
-            <button type="button" onClick={onClose} className="px-5 py-2 text-earth-600 dark:text-gray-400 font-semibold hover:bg-earth-100 dark:hover:bg-gray-700 rounded-lg">İptal</button>
-            <button type="submit" className="px-5 py-2 bg-nature-600 text-white font-bold rounded-lg flex items-center space-x-2 hover:bg-nature-700 shadow-sm">
-              <Save className="w-5 h-5" />
-              <span>Kaydet</span>
-            </button>
+          <div className="p-6 border-t border-earth-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex justify-between items-center flex-shrink-0 rounded-b-2xl">
+            <div>
+              {initialData && (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="flex items-center space-x-2 px-4 py-2 text-red-600 dark:text-red-400 font-semibold hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800/50 transition"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Hayvanı Sil</span>
+                </button>
+              )}
+            </div>
+            <div className="flex space-x-3">
+              <button type="button" onClick={onClose} className="px-5 py-2 text-earth-600 dark:text-gray-400 font-semibold hover:bg-earth-100 dark:hover:bg-gray-700 rounded-lg">İptal</button>
+              <button type="submit" className="px-5 py-2 bg-nature-600 text-white font-bold rounded-lg flex items-center space-x-2 hover:bg-nature-700 shadow-sm">
+                <Save className="w-5 h-5" />
+                <span>Kaydet</span>
+              </button>
+            </div>
           </div>
         </form>
       </div>

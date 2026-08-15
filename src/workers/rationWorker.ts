@@ -14,6 +14,8 @@ self.onmessage = (e) => {
       if (model.constraints.hp) delete model.constraints.hp.max;
       if (model.constraints.ca) delete model.constraints.ca;
       if (model.constraints.p) delete model.constraints.p;
+      // dmi.max da kaldır — dar bant fallback'te de infeasible yapabilir
+      if (model.constraints.dmi) delete model.constraints.dmi.max;
       
       result = solver.Solve(model);
       if (result.feasible !== false) {

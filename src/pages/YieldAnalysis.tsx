@@ -74,17 +74,29 @@ const YieldAnalysis: React.FC = () => {
   const gunlukOrtalamaSut = toplamSut / gunSayisi;
 
   // 2. En yüksek verimli 5 inek (Seçili Periyot ve Grupta)
-  const inekSutOrtalamalari: Record<string, { toplam: number, sayi: number }> = {};
+  // Hesaplama: Hayvan başına günlük toplam sütlerin ortalaması
+  const inekGunlukSutler: Record<string, Record<string, number>> = {};
+  
   filteredSutKayitlari.forEach(k => {
-    if (!inekSutOrtalamalari[k.hayvanId]) inekSutOrtalamalari[k.hayvanId] = { toplam: 0, sayi: 0 };
-    inekSutOrtalamalari[k.hayvanId].toplam += k.litre;
-    inekSutOrtalamalari[k.hayvanId].sayi += 1;
+    if (!inekGunlukSutler[k.hayvanId]) {
+      inekGunlukSutler[k.hayvanId] = {};
+    }
+    const gun = k.tarih.split('T')[0];
+    if (!inekGunlukSutler[k.hayvanId][gun]) {
+      inekGunlukSutler[k.hayvanId][gun] = 0;
+    }
+    inekGunlukSutler[k.hayvanId][gun] += k.litre;
   });
 
-  const sampiyonlar = Object.entries(inekSutOrtalamalari)
-    .map(([id, val]) => {
+  const sampiyonlar = Object.entries(inekGunlukSutler)
+    .map(([id, gunlerData]) => {
+      const gunlukToplamlar = Object.values(gunlerData);
+      const toplamLitre = gunlukToplamlar.reduce((acc, val) => acc + val, 0);
+      const gunSayisi = gunlukToplamlar.length;
+      const ortalama = gunSayisi > 0 ? (toplamLitre / gunSayisi) : 0;
+      
       const h = hayvanlar.find(x => x.id === id);
-      return { id, kupeNo: h ? h.kupeNo : 'Bilinmeyen', ortalama: val.toplam / val.sayi };
+      return { id, kupeNo: h ? h.kupeNo : 'Bilinmeyen', ortalama };
     })
     .sort((a, b) => b.ortalama - a.ortalama)
     .slice(0, 5);

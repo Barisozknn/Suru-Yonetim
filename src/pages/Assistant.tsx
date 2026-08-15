@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Send, Loader2, Plus, MessageSquare, Trash2, User, Menu, X, Sparkles, Mic, MicOff } from 'lucide-react';
+import { Send, Loader2, Plus, MessageSquare, Trash2, User, Menu, X, Sparkles, Mic, MicOff, Square } from 'lucide-react';
 import { db } from '../lib/db';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import type { Sohbet, Mesaj } from '../types';
@@ -29,13 +29,14 @@ Süt ve besi sığırcılığı yönetimi, rasyon, süt verimi, üreme, gelir/gi
 1. **Sürü Verisi ve Uzmanlık Bilgisi:** Çiftliğin kendi verilerini (hayvanlar, stok vb.) uydurma, mutlaka elindeki verilere dayan. ANCAK, kullanıcı senden genel bir hayvancılık bilgisi, hammadde (yem) besin içerikleri (HP, ME, KM vb.) veya araştırma yapmanı isterse, ASLA "internetim yok" veya "erişimim yok" deme! Zootekni/hayvancılık alanındaki geniş bilgi birikimini kullanarak uluslararası veya Türkiye standartlarındaki (literatürdeki) ortalama, makul değerleri sun ve işlemleri bu değerlere göre yap.
 2. **Kısa ve eyleme dönük yaz.** Çiftlik sahibi genelde sahada telefondan bakar. Madde işaretleriyle kısa özetler ve öneriler ver.
 3. **Veteriner/ilaç sınırı.** Teşhis koymaz, ilaç dozu önermezsin.
-4. **ARAÇ KULLANIMI VE ÇOKLU İŞLEM:** Kullanıcı senden bir işlem yapmanı isterse araçları (tools) kullan. Kullanıcı birden fazla gün için veya birden fazla hayvan için işlem yapmanı isterse, ARACI GEREKTİĞİ KADAR (örneğin 2 kez) ÇAĞIR. Asla "sen yapmalısın" deme. Tarih formatı ZORUNLU olarak **YYYY-MM-DD** (Örn: "2026-07-28") olmalıdır. Kullanıcı farklı tarih yazsa bile YYYY-MM-DD formatına çevir! DİKKAT: Aynı anda birden çok iş yapman gerekirse bunları standart "tool_calls" fonksiyonuyla çağır. Asla metin içerisine XML veya DSML etiketleri (<|DSML|>, <|invoke|>) YAZMA! Tarih belirtilmezse bugünü kullan.
+4. **ARAÇ KULLANIMI VE ÇOKLU İŞLEM SINIRI:** Kullanıcı senden bir işlem yapmanı isterse araçları (tools) kullan. ÖNEMLİ: Eğer kullanıcı aynı anda 3'ten fazla kayıt eklemeni veya işlem yapmanı isterse (Örn: 7 farklı yem ekle), TEK SEFERDE EN FAZLA 3 TANESİNİ YAP. İşlemleri yaptıktan sonra kullanıcıya "İlk 3 kaydı ekledim, kalanları eklemeye devam etmemi ister misiniz?" diye sor. Asla tek bir cevapta 3'ten fazla araç (tool) çağırmaya çalışma, aksi takdirde sistemin limitleri aşılabilir! Tarih formatı ZORUNLU olarak **YYYY-MM-DD** (Örn: "2026-07-28") olmalıdır. Kullanıcı farklı tarih yazsa bile YYYY-MM-DD formatına çevir! DİKKAT: Aynı anda birden çok iş yapman gerekirse bunları standart "tool_calls" fonksiyonuyla çağır. Tarih belirtilmezse bugünü kullan.
+5. **KAYIT ZORUNLULUĞU:** Kullanıcı bir yem, hayvan, sağlık kaydı, üreme olayı veya herhangi bir kayıt eklenmesini isterse araç MUTLAKA çağrılmalıdır. Yem eklerken besin değerlerini bilmesen bile hayvancılık literatüründeki ortalama değerleri kullanarak tüm besin alanlarını (kmYuzde, meMcalKg, hpYuzde, caYuzde, pYuzde) doldur ve gönder. Asla eksik bırakma. İşlem başarısız olursa kullanıcıya hatayı açıkça bildir.
+6. **ID GİZLİLİĞİ:** Sana iletilen verilerdeki sistem kimliklerini (id, hayvanId gibi "15d4d4d7-..." formatındaki verileri) ASLA kullanıcıya gösterme! Sadece küpe numarası (kupeNo) ve isimleri kullan. Kimlikleri (id) sadece kendi içindeki verileri (örneğin süt kayıtlarını doğru ineğe eşlemek için) eşleştirmek amacıyla kullan.
 
 # YANITLAMA FORMATI
 - Formatlamak için Markdown kullan.
 - Maksimum 3-4 maddelik kısa listeler tercih et. Sayısal verilerde birim belirt.
 - Sana iletilen gelir, gider, hayvan sayısı gibi metrikleri net bir şekilde kullanıcıya sun.
-5. **KAYIT ZORUNLULUĞU:** Kullanıcı bir yem, hayvan, sağlık kaydı, üreme olayı veya herhangi bir kayıt eklenmesini isterse araç MUTLAKA çağrılmalıdır. Yem eklerken besin değerlerini bilmesen bile hayvancılık literatüründeki ortalama değerleri kullanarak tüm besin alanlarını (kmYuzde, meMcalKg, hpYuzde, caYuzde, pYuzde) doldur ve gönder. Asla eksik bırakma. İşlem başarısız olursa kullanıcıya hatayı açıkça bildir.
 `.trim();
 
 const parseDateString = (dateStr: string | undefined): string => {
@@ -525,10 +526,278 @@ const ASSISTANT_TOOLS = [
         required: ["id", "islem"]
       }
     }
+  },
+  {
+    type: "function",
+    function: {
+      name: "updateAnimalInfo",
+      description: "Belirtilen küpe numarasına sahip hayvanın temel bilgilerini (küpe no, ırk, tür, doğum tarihi, anne/baba küpe no gibi) günceller.",
+      parameters: {
+        type: "object",
+        properties: {
+          kupeNo: { type: "string", description: "Güncellenecek hayvanın mevcut küpe numarası" },
+          yeniKupeNo: { type: "string", description: "Yeni küpe numarası (değiştirilmeyecekse boş bırakın)" },
+          tur: { type: "string", enum: ["İnek", "Tosun", "Boğa", "Öküz", "Düve", "Dana", "Buzağı"], description: "Hayvanın yeni türü" },
+          irk: { type: "string", description: "Hayvanın ırkı (Holstein, Simental vb.)" },
+          dogumTarihi: { type: "string", description: "Doğum tarihi (YYYY-MM-DD)" },
+          anneKupeNo: { type: "string", description: "Anne hayvanın küpe numarası" },
+          babaKupeNo: { type: "string", description: "Baba hayvanın küpe numarası (boğa/tohumlama kodu)" },
+          cinsiyet: { type: "string", enum: ["Erkek", "Dişi"], description: "Cinsiyeti" }
+        },
+        required: ["kupeNo"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "deleteAnimal",
+      description: "Belirtilen küpe numarasına sahip hayvanı sistemden kalıcı olarak siler. Bu işlem geri alınamaz.",
+      parameters: {
+        type: "object",
+        properties: {
+          kupeNo: { type: "string", description: "Silinecek hayvanın küpe numarası" }
+        },
+        required: ["kupeNo"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "bulkAddMilkRecord",
+      description: "Belirli bir gruptaki TÜM sağmal hayvanlara aynı anda toplu süt kaydı ekler.",
+      parameters: {
+        type: "object",
+        properties: {
+          grupAdi: { type: "string", description: "Toplu süt kaydı eklenecek grubun adı" },
+          litrePerHayvan: { type: "number", description: "Her hayvana eklenecek süt miktarı (litre)" },
+          tarih: { type: "string", description: "Kayıt tarihi (YYYY-MM-DD)" }
+        },
+        required: ["grupAdi", "litrePerHayvan", "tarih"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "getMilkRecords",
+      description: "Belirli bir hayvana veya tüm sürüye ait süt kayıtlarını getirir. Belirli tarih aralığında da filtrelenebilir.",
+      parameters: {
+        type: "object",
+        properties: {
+          kupeNo: { type: "string", description: "Hayvanın küpe numarası (tüm sürü için boş bırakın)" },
+          baslangicTarihi: { type: "string", description: "Başlangıç tarihi (YYYY-MM-DD). Boş bırakılırsa son 30 gün getirilir." },
+          bitisTarihi: { type: "string", description: "Bitiş tarihi (YYYY-MM-DD)" }
+        },
+        required: []
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "getWeightRecords",
+      description: "Belirli bir hayvana ait geçmiş ağırlık (tartım) kayıtlarını ve gelişim grafiğini getirir.",
+      parameters: {
+        type: "object",
+        properties: {
+          kupeNo: { type: "string", description: "Hayvanın küpe numarası" }
+        },
+        required: ["kupeNo"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "updateReproductionRecord",
+      description: "Mevcut bir üreme kaydının durumunu günceller (Örn: Tohumlamayı Gebe olarak güncelle).",
+      parameters: {
+        type: "object",
+        properties: {
+          kupeNo: { type: "string", description: "Hayvanın küpe numarası" },
+          kayitId: { type: "string", description: "Güncellenecek kaydın ID'si (getReproductionRecords ile elde edilir, bilinmiyorsa en son kayıt güncellenir)" },
+          yeniDurum: { type: "string", enum: ["Gebe", "Boş", "Şüpheli", "Başarılı", "Başarısız", "Beklemede"], description: "Yeni durum" },
+          notlar: { type: "string", description: "Güncellenecek notlar" }
+        },
+        required: ["kupeNo", "yeniDurum"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "getMaleReproductionRecords",
+      description: "Erkek hayvanların (boğa/tosun) tohumlama kayıtlarını ve performanslarını getirir.",
+      parameters: {
+        type: "object",
+        properties: {
+          kupeNo: { type: "string", description: "Erkek hayvanın küpe numarası (boş bırakılırsa tüm erkek hayvanlar)" }
+        },
+        required: []
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "getFinancialSummary",
+      description: "Belirli bir tarih aralığındaki tüm gelir ve gider kayıtlarını kategorilere göre özetler.",
+      parameters: {
+        type: "object",
+        properties: {
+          baslangicTarihi: { type: "string", description: "Başlangıç tarihi (YYYY-MM-DD). Boş bırakılırsa bu ay getirilir." },
+          bitisTarihi: { type: "string", description: "Bitiş tarihi (YYYY-MM-DD)" }
+        },
+        required: []
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "deleteFinancialTransaction",
+      description: "Yanlış girilen bir gelir veya gider kaydını sistemden siler.",
+      parameters: {
+        type: "object",
+        properties: {
+          kayitId: { type: "string", description: "Silinecek finansal kaydın ID'si (getFinancialSummary ile elde edilir)" }
+        },
+        required: ["kayitId"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "updateGroupInfo",
+      description: "Mevcut bir hayvan grubunun adını, açıklamasını veya türünü günceller.",
+      parameters: {
+        type: "object",
+        properties: {
+          grupAdi: { type: "string", description: "Güncellenecek grubun mevcut adı" },
+          yeniAd: { type: "string", description: "Yeni grup adı (değiştirilmeyecekse boş bırakın)" },
+          aciklama: { type: "string", description: "Yeni açıklama" },
+          tur: { type: "string", enum: ["İnek", "Tosun", "Boğa", "Öküz", "Düve", "Dana", "Buzağı", "Karma"], description: "Yeni hayvan türü" }
+        },
+        required: ["grupAdi"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "deleteGroup",
+      description: "Boş olan bir hayvan grubunu sistemden siler. Grupta hayvan varsa önce hayvanları taşımanız gerekir.",
+      parameters: {
+        type: "object",
+        properties: {
+          grupAdi: { type: "string", description: "Silinecek grubun adı" }
+        },
+        required: ["grupAdi"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "deleteFeed",
+      description: "Sistemden bir yem tipini siler. Stok miktarı 0 olan yemler silinebilir.",
+      parameters: {
+        type: "object",
+        properties: {
+          yemAdi: { type: "string", description: "Silinecek yemin adı" }
+        },
+        required: ["yemAdi"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "getHealthRecords",
+      description: "Belirli bir hayvanın veya tüm sürünün sağlık kayıtlarını (tedavi, aşı, muayene) getirir.",
+      parameters: {
+        type: "object",
+        properties: {
+          kupeNo: { type: "string", description: "Hayvanın küpe numarası (tüm sürü için boş bırakın)" },
+          baslangicTarihi: { type: "string", description: "Başlangıç tarihi (YYYY-MM-DD)" },
+          bitisTarihi: { type: "string", description: "Bitiş tarihi (YYYY-MM-DD)" }
+        },
+        required: []
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "updatePlannedVaccine",
+      description: "Planlanan bir aşıyı 'yapıldı' veya 'iptal edildi' olarak işaretler ve gerekirse maliyet bilgisi ekler.",
+      parameters: {
+        type: "object",
+        properties: {
+          kupeNo: { type: "string", description: "Hayvanın küpe numarası" },
+          asiAdi: { type: "string", description: "Aşının adı (kısmi eşleşme aranır)" },
+          yapildiMi: { type: "boolean", description: "Aşı yapıldı mı? (true=yapıldı, false=iptal)" },
+          maliyet: { type: "number", description: "Aşı maliyeti (TL)" },
+          yapilmaTarihi: { type: "string", description: "Yapılma tarihi (YYYY-MM-DD). Boş bırakılırsa bugün kullanılır." }
+        },
+        required: ["kupeNo", "asiAdi", "yapildiMi"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "addCalfMilkRecord",
+      description: "Buzağı büyütme takibine günlük süt içirme kaydı ekler.",
+      parameters: {
+        type: "object",
+        properties: {
+          kupeNo: { type: "string", description: "Buzağının küpe numarası" },
+          litre: { type: "number", description: "Verilen süt miktarı (litre)" },
+          tarih: { type: "string", description: "Kayıt tarihi (YYYY-MM-DD). Boş bırakılırsa bugün kullanılır." }
+        },
+        required: ["kupeNo", "litre"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "updateFarmDiaryNote",
+      description: "Çiftlik günlüğündeki mevcut bir notu düzenler veya siler.",
+      parameters: {
+        type: "object",
+        properties: {
+          kayitId: { type: "string", description: "Düzenlenecek veya silinecek notun ID'si (getFarmDiaryNotes ile elde edilir)" },
+          islem: { type: "string", enum: ["duzenle", "sil"], description: "Yapılacak işlem: duzenle veya sil" },
+          yeniMetin: { type: "string", description: "Düzenleme yapılıyorsa yeni not metni" }
+        },
+        required: ["kayitId", "islem"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "updateAnimalPedigree",
+      description: "Hayvanın pedigri/soy bilgilerini (anne küpe no, baba küpe no/boğa kodu) günceller.",
+      parameters: {
+        type: "object",
+        properties: {
+          kupeNo: { type: "string", description: "Hayvanın küpe numarası" },
+          anneKupeNo: { type: "string", description: "Anne hayvanın küpe numarası" },
+          babaKupeNo: { type: "string", description: "Baba hayvanın küpe numarası veya boğa kodu" }
+        },
+        required: ["kupeNo"]
+      }
+    }
   }
 ];
 
-const gatherFarmContext = async (akilliUyarilar: any[] = []) => {
+const gatherFarmContext = async (activeCiftlikId: string, akilliUyarilar: any[] = []) => {
   const [
     hayvanlar,
     yemler,
@@ -544,19 +813,19 @@ const gatherFarmContext = async (akilliUyarilar: any[] = []) => {
     buzagiKayitlari,
     yemHareketleri
   ] = await Promise.all([
-    db.hayvanlar.toArray(),
-    db.yemler.toArray(),
-    db.ekFinansalIslemler.toArray(),
-    db.sutKayitlari.toArray(),
-    db.planlananAsilar.toArray(),
-    db.uremeKayitlari.toArray(),
-    db.saglikOlaylari.toArray(),
-    db.gunlukYemMaliyetleri.toArray(),
-    db.gruplar.toArray(),
-    db.agirlikKayitlari.toArray(),
-    db.asiProtokolleri.toArray(),
-    db.buzagiKayitlari.toArray(),
-    db.yemHareketleri.toArray()
+    db.hayvanlar.where('ciftlikId').equals(activeCiftlikId).toArray(),
+    db.yemler.where('ciftlikId').equals(activeCiftlikId).toArray(),
+    db.ekFinansalIslemler.where('ciftlikId').equals(activeCiftlikId).toArray(),
+    db.sutKayitlari.where('ciftlikId').equals(activeCiftlikId).toArray(),
+    db.planlananAsilar.where('ciftlikId').equals(activeCiftlikId).toArray(),
+    db.uremeKayitlari.where('ciftlikId').equals(activeCiftlikId).toArray(),
+    db.saglikOlaylari.where('ciftlikId').equals(activeCiftlikId).toArray(),
+    db.gunlukYemMaliyetleri.where('ciftlikId').equals(activeCiftlikId).toArray(),
+    db.gruplar.where('ciftlikId').equals(activeCiftlikId).toArray(),
+    db.agirlikKayitlari.where('ciftlikId').equals(activeCiftlikId).toArray(),
+    db.asiProtokolleri.where('ciftlikId').equals(activeCiftlikId).toArray(),
+    db.buzagiKayitlari.where('ciftlikId').equals(activeCiftlikId).toArray(),
+    db.yemHareketleri.where('ciftlikId').equals(activeCiftlikId).toArray()
   ]);
 
   const now = new Date();
@@ -725,6 +994,15 @@ const Assistant: React.FC = () => {
   const [tempMessages, setTempMessages] = useState<Mesaj[]>([]);
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsLoading(false);
+  };
   
   const displayMessages = activeChat ? messages : tempMessages;
 
@@ -852,6 +1130,7 @@ const Assistant: React.FC = () => {
     setInput('');
     setIsLoading(true);
     setError(null);
+    abortControllerRef.current = new AbortController();
 
     try {
       const apiKey = import.meta.env.VITE_DEEPSEEK_API_KEY;
@@ -860,7 +1139,7 @@ const Assistant: React.FC = () => {
       }
 
       // Veritabanından tüm farm verisini (gelir/gider dahil) özet olarak topla
-      const contextData = await gatherFarmContext(akilliUyarilar);
+      const contextData = await gatherFarmContext(activeCiftlikId, akilliUyarilar);
       
       const systemPrompt = {
         role: 'system',
@@ -882,6 +1161,7 @@ const Assistant: React.FC = () => {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${apiKey}`
         },
+        signal: abortControllerRef.current?.signal,
         body: JSON.stringify({
           model: "deepseek-chat",
           messages: apiMessages,
@@ -907,9 +1187,31 @@ const Assistant: React.FC = () => {
           const functionArgs = JSON.parse(toolCall.function.arguments);
           let functionResult = "";
 
-          try {
+          // --- YAPAY ZEKA GÜVENLİK KONTROLÜ ---
+          const isDestructive = 
+            ["deleteAnimal", "deleteFinancialTransaction", "deleteGroup", "deleteFeed"].includes(functionName) ||
+            (functionName === "updateFarmDiaryNote" && functionArgs.islem === "sil");
+
+          let userConfirmed = true;
+          
+          if (isDestructive) {
+             let warningMsg = "Yapay Zeka asistanı geri alınamaz bir işlem yapmak istiyor:\n\n";
+             if (functionName === "deleteAnimal") warningMsg += `🗑️ Hayvan (Küpe No: ${functionArgs.kupeNo}) sistemden silinecek.`;
+             else if (functionName === "deleteFinancialTransaction") warningMsg += `🗑️ Finansal İşlem silinecek.`;
+             else if (functionName === "deleteGroup") warningMsg += `🗑️ Grup (${functionArgs.grupAdi}) silinecek.`;
+             else if (functionName === "deleteFeed") warningMsg += `🗑️ Yem (${functionArgs.yemAdi}) silinecek.`;
+             else if (functionName === "updateFarmDiaryNote") warningMsg += `🗑️ Günlük notu silinecek.`;
+             
+             warningMsg += "\n\nBu işleme izin veriyor musunuz?";
+             userConfirmed = window.confirm(warningMsg);
+          }
+
+          if (!userConfirmed) {
+             functionResult = "GÜVENLİK ENGELİ: Bu işlem kullanıcı tarafından iptal edildi ve onaylanmadı. Kullanıcıya işlemin iptal edildiğini bildir.";
+          } else {
+            try {
             if (functionName === "addMilkRecord") {
-               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
+               const hayvan = await db.hayvanlar.where('ciftlikId').equals(activeCiftlikId).filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
                if (!hayvan) throw new Error("Belirtilen küpe numarasına sahip hayvan bulunamadı.");
                const payload = {
                  id: uuidv4(),
@@ -923,7 +1225,7 @@ const Assistant: React.FC = () => {
                functionResult = `Süt kaydı başarıyla eklendi. (Litre: ${payload.litre})`;
 
             } else if (functionName === "addHealthRecord") {
-               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
+               const hayvan = await db.hayvanlar.where('ciftlikId').equals(activeCiftlikId).filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
                if (!hayvan) throw new Error("Belirtilen küpe numarasına sahip hayvan bulunamadı.");
                const payload = {
                   id: uuidv4(),
@@ -939,7 +1241,7 @@ const Assistant: React.FC = () => {
                functionResult = `Sağlık kaydı başarıyla eklendi. (Tür: ${payload.tur})`;
 
             } else if (functionName === "updateFeedStock") {
-               const yems = await db.yemler.toArray();
+               const yems = await db.yemler.where('ciftlikId').equals(activeCiftlikId).toArray();
                const hedefYem = yems.find(y => y.ad.toLowerCase() === functionArgs.yemAdi.toLowerCase());
                if (!hedefYem) throw new Error(`"${functionArgs.yemAdi}" isminde bir yem bulunamadı.`);
                
@@ -967,7 +1269,7 @@ const Assistant: React.FC = () => {
                functionResult = `Yem stoğu güncellendi. Yeni Stok: ${newStock} kg.`;
                
             } else if (functionName === "updateFeedNutrition") {
-               const yems = await db.yemler.toArray();
+               const yems = await db.yemler.where('ciftlikId').equals(activeCiftlikId).toArray();
                const hedefYem = yems.find(y => y.ad.toLowerCase() === functionArgs.yemAdi.toLowerCase());
                if (!hedefYem) throw new Error(`"${functionArgs.yemAdi}" isminde bir yem bulunamadı.`);
                
@@ -989,7 +1291,7 @@ const Assistant: React.FC = () => {
                functionResult = `Yem besin değerleri güncellendi. (Yeni Fiyat: ${updatedYem.birimFiyat} TL, KM: ${updatedYem.kmYuzde}%, ME: ${updatedYem.meMcalKg}, HP: ${updatedYem.hpYuzde}%)`;
                
             } else if (functionName === "addFeed") {
-               const yems = await db.yemler.toArray();
+               const yems = await db.yemler.where('ciftlikId').equals(activeCiftlikId).toArray();
                const existingYem = yems.find(y => y.ad.toLowerCase() === functionArgs.yemAdi.toLowerCase());
                if (existingYem) throw new Error(`"${functionArgs.yemAdi}" isminde bir yem zaten var.`);
                
@@ -1053,7 +1355,7 @@ const Assistant: React.FC = () => {
                functionResult = `"${payload.ad}" isimli aşı protokolü başarıyla eklendi (${payload.uygulamalar.length} farklı aşama içeriyor).`;
                
             } else if (functionName === "createRation") {
-               const gruplar = await db.gruplar.toArray();
+               const gruplar = await db.gruplar.where('ciftlikId').equals(activeCiftlikId).toArray();
                const hedefGrup = gruplar.find(g => g.ad.toLowerCase() === functionArgs.hedefGrupAdi.toLowerCase());
                if (!hedefGrup) throw new Error(`'${functionArgs.hedefGrupAdi}' isminde bir grup bulunamadı.`);
                
@@ -1088,7 +1390,7 @@ const Assistant: React.FC = () => {
             } else if (functionName === "addFarmReminder") {
                let hayvanId = "sürü-geneli";
                if (functionArgs.kupeNo && functionArgs.kupeNo.trim() !== "") {
-                 const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
+                 const hayvan = await db.hayvanlar.where('ciftlikId').equals(activeCiftlikId).filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
                  if (!hayvan) throw new Error("Belirtilen küpe numarasına sahip hayvan bulunamadı.");
                  hayvanId = hayvan.id;
                }
@@ -1109,7 +1411,7 @@ const Assistant: React.FC = () => {
                functionResult = `Akıllı Takvime hatırlatıcı başarıyla eklendi: ${functionArgs.aciklama}`;
 
             } else if (functionName === "bulkApplyHealthRecord") {
-               const gruplar = await db.gruplar.toArray();
+               const gruplar = await db.gruplar.where('ciftlikId').equals(activeCiftlikId).toArray();
                const hedefGrup = gruplar.find(g => g.ad.toLowerCase() === functionArgs.grupAdi.toLowerCase());
                if (!hedefGrup) throw new Error(`'${functionArgs.grupAdi}' isminde bir grup bulunamadı.`);
                
@@ -1154,7 +1456,7 @@ const Assistant: React.FC = () => {
                functionResult = `Hayvan başarıyla sisteme kaydedildi. (Küpe: ${payload.kupeNo})`;
 
             } else if (functionName === "updateAnimalStatus") {
-               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
+               const hayvan = await db.hayvanlar.where('ciftlikId').equals(activeCiftlikId).filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
                if (!hayvan) throw new Error("Hayvan bulunamadı.");
                
                const updatedHayvan = { 
@@ -1169,10 +1471,10 @@ const Assistant: React.FC = () => {
                functionResult = `Hayvanın durumu '${functionArgs.durum}' olarak güncellendi.`;
 
             } else if (functionName === "changeAnimalGroup") {
-               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
+               const hayvan = await db.hayvanlar.where('ciftlikId').equals(activeCiftlikId).filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
                if (!hayvan) throw new Error("Hayvan bulunamadı.");
                
-               const gruplar = await db.gruplar.toArray();
+               const gruplar = await db.gruplar.where('ciftlikId').equals(activeCiftlikId).toArray();
                const hedefGrup = gruplar.find(g => g.ad.toLowerCase().includes(functionArgs.hedefGrupAdi.toLowerCase()));
                if (!hedefGrup) throw new Error(`'${functionArgs.hedefGrupAdi}' isminde bir grup bulunamadı.`);
                
@@ -1182,7 +1484,7 @@ const Assistant: React.FC = () => {
                functionResult = `Hayvan başarıyla '${hedefGrup.ad}' grubuna taşındı.`;
 
             } else if (functionName === "updateAnimalNote") {
-                const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
+                const hayvan = await db.hayvanlar.where('ciftlikId').equals(activeCiftlikId).filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
                 if (!hayvan) throw new Error("Belirtilen küpe numarasına sahip hayvan bulunamadı.");
                 
                 const updatedHayvan = { ...hayvan, notlar: functionArgs.not };
@@ -1191,7 +1493,7 @@ const Assistant: React.FC = () => {
                 functionResult = `Hayvan notları başarıyla güncellendi. Yeni Not: ${functionArgs.not}`;
 
              } else if (functionName === "addWeightRecord") {
-               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
+               const hayvan = await db.hayvanlar.where('ciftlikId').equals(activeCiftlikId).filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
                if (!hayvan) throw new Error("Hayvan bulunamadı.");
                
                const payload = {
@@ -1210,7 +1512,7 @@ const Assistant: React.FC = () => {
                functionResult = `Ağırlık kaydı eklendi. Güncel ağırlık: ${functionArgs.kg} kg.`;
 
             } else if (functionName === "addReproductionRecord") {
-               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
+               const hayvan = await db.hayvanlar.where('ciftlikId').equals(activeCiftlikId).filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
                if (!hayvan) throw new Error("Hayvan bulunamadı.");
                
                const payload = {
@@ -1227,7 +1529,7 @@ const Assistant: React.FC = () => {
                functionResult = `Üreme kaydı başarıyla eklendi. (${payload.tur} - ${payload.durum})`;
 
             } else if (functionName === "addCalfRecord") {
-               const hayvan = await db.hayvanlar.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
+               const hayvan = await db.hayvanlar.where('ciftlikId').equals(activeCiftlikId).filter(h => !!h.kupeNo && h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase())).first();
                if (!hayvan) throw new Error("Belirtilen küpe numarasına sahip buzağı bulunamadı.");
                
                const payload = {
@@ -1275,7 +1577,7 @@ const Assistant: React.FC = () => {
                functionResult = `Yeni grup başarıyla oluşturuldu: ${payload.ad}`;
 
             } else if (functionName === "assignRationToGroup") {
-               const gruplar = await db.gruplar.toArray();
+               const gruplar = await db.gruplar.where('ciftlikId').equals(activeCiftlikId).toArray();
                const hedefGrup = gruplar.find(g => g.ad.toLowerCase().includes(functionArgs.grupAdi.toLowerCase()));
                if (!hedefGrup) throw new Error(`'${functionArgs.grupAdi}' isminde bir grup bulunamadı.`);
                
@@ -1291,7 +1593,7 @@ const Assistant: React.FC = () => {
                functionResult = `'${updatedGrup.ad}' grubunun rasyonu başarıyla '${updatedGrup.rasyonAdi}' olarak ayarlandı.`;
 
             } else if (functionName === "getFarmDiaryNotes") {
-               const notlar = await db.gunlukNotlari.toArray();
+               const notlar = await db.gunlukNotlari.where('ciftlikId').equals(activeCiftlikId).toArray();
                let filtered = notlar;
                if (functionArgs.tarihFiltresi) {
                  filtered = notlar.filter(n => n.tarih.startsWith(functionArgs.tarihFiltresi));
@@ -1318,7 +1620,7 @@ const Assistant: React.FC = () => {
                functionResult = `Not başarıyla çiftlik günlüğüne kaydedildi: "${payload.metin}"`;
 
             } else if (functionName === "getDashboardTodos") {
-               const todos = await db.todos.orderBy('olusturulmaTarihi').reverse().toArray();
+               const todos = (await db.todos.orderBy('olusturulmaTarihi').reverse().toArray()).filter(t => t.ciftlikId === activeCiftlikId);
                if (todos.length === 0) {
                   functionResult = "Şu anda 'Bugün Yapılacaklar' listesinde hiç görev bulunmuyor.";
                } else {
@@ -1358,10 +1660,10 @@ const Assistant: React.FC = () => {
                }
 
             } else if (functionName === "compareGroups") {
-               const gruplar = await db.gruplar.toArray();
-               const yemler = await db.yemler.toArray();
-               const hayvanlar = await db.hayvanlar.toArray();
-               const sutKayitlari = await db.sutKayitlari.toArray();
+               const gruplar = await db.gruplar.where('ciftlikId').equals(activeCiftlikId).toArray();
+               const yemler = await db.yemler.where('ciftlikId').equals(activeCiftlikId).toArray();
+               const hayvanlar = await db.hayvanlar.where('ciftlikId').equals(activeCiftlikId).toArray();
+               const sutKayitlari = await db.sutKayitlari.where('ciftlikId').equals(activeCiftlikId).toArray();
                
                const grupAdlari = functionArgs.grupAdlari as string[];
                const karsilastirmaSonucu: any[] = [];
@@ -1406,12 +1708,241 @@ const Assistant: React.FC = () => {
                
                functionResult = "Grupların Karşılaştırma Sonucu:\n" + JSON.stringify(karsilastirmaSonucu, null, 2);
 
+            } else if (functionName === "updateAnimalInfo") {
+               const hayvan = await db.hayvanlar.where('ciftlikId').equals(activeCiftlikId).filter(h => !!h.kupeNo && (h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase()))).first();
+               if (!hayvan) throw new Error("Hayvan bulunamadı.");
+               const updatedHayvan = {
+                 ...hayvan,
+                 kupeNo: functionArgs.yeniKupeNo || hayvan.kupeNo,
+                 tur: functionArgs.tur || hayvan.tur,
+                 irk: functionArgs.irk || hayvan.irk,
+                 dogumTarihi: functionArgs.dogumTarihi ? parseDateString(functionArgs.dogumTarihi) : hayvan.dogumTarihi,
+                 cinsiyet: functionArgs.cinsiyet || hayvan.cinsiyet,
+                 anneKupeNo: functionArgs.anneKupeNo !== undefined ? functionArgs.anneKupeNo : hayvan.anneKupeNo,
+                 babaKupeNo: functionArgs.babaKupeNo !== undefined ? functionArgs.babaKupeNo : hayvan.babaKupeNo
+               };
+               await db.hayvanlar.update(hayvan.id, updatedHayvan);
+               await db.syncQueue.add({ table: 'hayvanlar', action: 'UPDATE', payload: updatedHayvan, created_at: Date.now() });
+               functionResult = `"${hayvan.kupeNo}" küpe numaralı hayvanın bilgileri başarıyla güncellendi.`;
+
+            } else if (functionName === "deleteAnimal") {
+               const hayvan = await db.hayvanlar.where('ciftlikId').equals(activeCiftlikId).filter(h => !!h.kupeNo && (h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()) || functionArgs.kupeNo.toLowerCase().includes(h.kupeNo.toLowerCase()))).first();
+               if (!hayvan) throw new Error("Hayvan bulunamadı.");
+               await db.hayvanlar.delete(hayvan.id);
+               await db.syncQueue.add({ table: 'hayvanlar', action: 'DELETE', payload: { id: hayvan.id }, created_at: Date.now() });
+               functionResult = `"${hayvan.kupeNo}" küpe numaralı hayvan sistemden kalıcı olarak silindi.`;
+
+            } else if (functionName === "bulkAddMilkRecord") {
+               const gruplar = await db.gruplar.where('ciftlikId').equals(activeCiftlikId).toArray();
+               const hedefGrup = gruplar.find(g => g.ad.toLowerCase().includes(functionArgs.grupAdi.toLowerCase()));
+               if (!hedefGrup) throw new Error(`'${functionArgs.grupAdi}' isminde bir grup bulunamadı.`);
+               const gruptakiHayvanlar = await db.hayvanlar.where('grupId').equals(hedefGrup.id).filter(h => h.durum === 'Aktif').toArray();
+               if (gruptakiHayvanlar.length === 0) throw new Error("Grupta aktif hayvan bulunmuyor.");
+               const islemTarihi = parseDateString(functionArgs.tarih);
+               let successCount = 0;
+               for (const h of gruptakiHayvanlar) {
+                 const payload = { id: uuidv4(), ciftlikId: activeCiftlikId, hayvanId: h.id, tarih: islemTarihi, litre: functionArgs.litrePerHayvan };
+                 await db.sutKayitlari.add(payload);
+                 await db.syncQueue.add({ table: 'sutKayitlari', action: 'INSERT', payload, created_at: Date.now() });
+                 successCount++;
+               }
+               functionResult = `"${hedefGrup.ad}" grubundaki ${successCount} hayvana ${functionArgs.litrePerHayvan} litre süt kaydı toplu eklendi.`;
+
+            } else if (functionName === "getMilkRecords") {
+               let sutKayitlari = await db.sutKayitlari.where('ciftlikId').equals(activeCiftlikId).toArray();
+               const hayvanlar = await db.hayvanlar.where('ciftlikId').equals(activeCiftlikId).toArray();
+               if (functionArgs.kupeNo && functionArgs.kupeNo.trim() !== "") {
+                 const hedefHayvan = hayvanlar.find(h => !!h.kupeNo && (h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase())));
+                 if (!hedefHayvan) throw new Error(`"${functionArgs.kupeNo}" küpeli hayvan bulunamadı.`);
+                 sutKayitlari = sutKayitlari.filter(k => k.hayvanId === hedefHayvan.id);
+               }
+               const baslangic = functionArgs.baslangicTarihi ? new Date(functionArgs.baslangicTarihi) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+               const bitis = functionArgs.bitisTarihi ? new Date(functionArgs.bitisTarihi) : new Date();
+               sutKayitlari = sutKayitlari.filter(k => { const d = new Date(k.tarih); return d >= baslangic && d <= bitis; });
+               const hayvanMap = new Map(hayvanlar.map(h => [h.id, h.kupeNo]));
+               if (sutKayitlari.length === 0) { functionResult = "Belirtilen kriterlerde süt kaydı bulunamadı."; }
+               else {
+                 const toplamLitre = sutKayitlari.reduce((s, k) => s + k.litre, 0);
+                 const liste = sutKayitlari.slice(-20).map(k => `- [${k.tarih}] ${hayvanMap.get(k.hayvanId) || 'Bilinmiyor'}: ${k.litre} L`).join("\n");
+                 functionResult = `Toplam ${toplamLitre.toFixed(1)} litre (${sutKayitlari.length} kayıt, son 20 gösteriliyor):\n${liste}`;
+               }
+
+            } else if (functionName === "getWeightRecords") {
+               const hayvan = await db.hayvanlar.where('ciftlikId').equals(activeCiftlikId).filter(h => !!h.kupeNo && (h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()))).first();
+               if (!hayvan) throw new Error("Hayvan bulunamadı.");
+               const kayitlar = await db.agirlikKayitlari.where('hayvanId').equals(hayvan.id).sortBy('tarih');
+               if (kayitlar.length === 0) { functionResult = `"${hayvan.kupeNo}" için ağırlık kaydı bulunmuyor.`; }
+               else {
+                 const liste = kayitlar.map((k, i) => {
+                   const onceki = i > 0 ? kayitlar[i-1].kg : null;
+                   const fark = onceki !== null ? ` (${k.kg > onceki ? '+' : ''}${(k.kg - onceki).toFixed(1)} kg)` : '';
+                   return `- [${k.tarih}] ${k.kg} kg${fark}`;
+                 }).join("\n");
+                 functionResult = `"${hayvan.kupeNo}" ağırlık geçmişi (${kayitlar.length} kayıt):\n${liste}\nGüncel: ${hayvan.guncelAgirlikKg} kg`;
+               }
+
+            } else if (functionName === "updateReproductionRecord") {
+               const hayvan = await db.hayvanlar.where('ciftlikId').equals(activeCiftlikId).filter(h => !!h.kupeNo && (h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()))).first();
+               if (!hayvan) throw new Error("Hayvan bulunamadı.");
+               let kayit;
+               if (functionArgs.kayitId) {
+                 kayit = await db.uremeKayitlari.get(functionArgs.kayitId);
+               } else {
+                 const kayitlar = await db.uremeKayitlari.where('hayvanId').equals(hayvan.id).sortBy('tarih');
+                 kayit = kayitlar[kayitlar.length - 1];
+               }
+               if (!kayit) throw new Error("Güncellenecek üreme kaydı bulunamadı.");
+               const updatedKayit = { ...kayit, durum: functionArgs.yeniDurum, notlar: functionArgs.notlar !== undefined ? functionArgs.notlar : kayit.notlar };
+               await db.uremeKayitlari.update(kayit.id, updatedKayit);
+               await db.syncQueue.add({ table: 'uremeKayitlari', action: 'UPDATE', payload: updatedKayit, created_at: Date.now() });
+               functionResult = `"${hayvan.kupeNo}" için üreme kaydı '${functionArgs.yeniDurum}' olarak güncellendi.`;
+
+            } else if (functionName === "getMaleReproductionRecords") {
+               const hayvanlar = await db.hayvanlar.where('ciftlikId').equals(activeCiftlikId).toArray();
+               let erkekler = hayvanlar.filter(h => h.cinsiyet === 'Erkek' || h.tur === 'Boğa' || h.tur === 'Tosun');
+               if (functionArgs.kupeNo && functionArgs.kupeNo.trim() !== "") {
+                 erkekler = erkekler.filter(h => !!h.kupeNo && h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()));
+               }
+               if (erkekler.length === 0) { functionResult = "Erkek hayvan bulunamadı."; }
+               else {
+                 const uremeKayitlari = await db.uremeKayitlari.where('ciftlikId').equals(activeCiftlikId).toArray();
+                 const sonuclar = erkekler.map(e => {
+                   const kayitlar = uremeKayitlari.filter(u => u.babaKupeNo === e.kupeNo || u.notlar?.includes(e.kupeNo));
+                   const basarili = kayitlar.filter(u => u.durum === 'Gebe' || u.durum === 'Başarılı').length;
+                   return `- ${e.kupeNo} (${e.tur}): ${kayitlar.length} tohumlama, ${basarili} başarılı`;
+                 }).join("\n");
+                 functionResult = `Erkek Hayvan Tohumlama Kayıtları:\n${sonuclar}`;
+               }
+
+            } else if (functionName === "getFinancialSummary") {
+               const ekFinansalIslemler = await db.ekFinansalIslemler.where('ciftlikId').equals(activeCiftlikId).toArray();
+               const baslangic = functionArgs.baslangicTarihi ? new Date(functionArgs.baslangicTarihi) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+               const bitis = functionArgs.bitisTarihi ? new Date(functionArgs.bitisTarihi) : new Date();
+               const filtered = ekFinansalIslemler.filter(i => { const d = new Date(i.tarih); return d >= baslangic && d <= bitis; });
+               const gelirler = filtered.filter(i => i.tip === 'Gelir');
+               const giderler = filtered.filter(i => i.tip === 'Gider');
+               const toplamGelir = gelirler.reduce((s, i) => s + i.miktar, 0);
+               const toplamGider = giderler.reduce((s, i) => s + i.miktar, 0);
+               const gelirDetay = gelirler.map(i => `  - [${i.id.slice(0,8)}] ${i.tarih} | ${i.kategori}: ${i.miktar} TL | ${i.aciklama || ''}`).join("\n");
+               const giderDetay = giderler.map(i => `  - [${i.id.slice(0,8)}] ${i.tarih} | ${i.kategori}: ${i.miktar} TL | ${i.aciklama || ''}`).join("\n");
+               functionResult = `Finansal Özet (${baslangic.toISOString().split('T')[0]} - ${bitis.toISOString().split('T')[0]}):\n💰 Toplam Gelir: ${toplamGelir.toLocaleString('tr-TR')} TL\n${gelirDetay}\n💸 Toplam Gider: ${toplamGider.toLocaleString('tr-TR')} TL\n${giderDetay}\n📊 Net: ${(toplamGelir - toplamGider).toLocaleString('tr-TR')} TL`;
+
+            } else if (functionName === "deleteFinancialTransaction") {
+               // ID kısmı eşleştirmesi (tam ID veya kısa prefix)
+               const tumIslemler = await db.ekFinansalIslemler.where('ciftlikId').equals(activeCiftlikId).toArray();
+               const hedef = tumIslemler.find(i => i.id === functionArgs.kayitId || i.id.startsWith(functionArgs.kayitId));
+               if (!hedef) throw new Error(`ID'si "${functionArgs.kayitId}" ile başlayan finansal kayıt bulunamadı.`);
+               await db.ekFinansalIslemler.delete(hedef.id);
+               await db.syncQueue.add({ table: 'ekFinansalIslemler', action: 'DELETE', payload: { id: hedef.id }, created_at: Date.now() });
+               functionResult = `Finansal kayıt silindi: ${hedef.tarih} | ${hedef.tip} | ${hedef.miktar} TL`;
+
+            } else if (functionName === "updateGroupInfo") {
+               const gruplar = await db.gruplar.where('ciftlikId').equals(activeCiftlikId).toArray();
+               const hedefGrup = gruplar.find(g => g.ad.toLowerCase().includes(functionArgs.grupAdi.toLowerCase()));
+               if (!hedefGrup) throw new Error(`'${functionArgs.grupAdi}' isminde bir grup bulunamadı.`);
+               const updatedGrup = {
+                 ...hedefGrup,
+                 ad: functionArgs.yeniAd || hedefGrup.ad,
+                 aciklama: functionArgs.aciklama !== undefined ? functionArgs.aciklama : hedefGrup.aciklama,
+                 tur: functionArgs.tur || hedefGrup.tur
+               };
+               await db.gruplar.update(hedefGrup.id, updatedGrup);
+               await db.syncQueue.add({ table: 'gruplar', action: 'UPDATE', payload: updatedGrup, created_at: Date.now() });
+               functionResult = `"${hedefGrup.ad}" grubunun bilgileri güncellendi.`;
+
+            } else if (functionName === "deleteGroup") {
+               const gruplar = await db.gruplar.where('ciftlikId').equals(activeCiftlikId).toArray();
+               const hedefGrup = gruplar.find(g => g.ad.toLowerCase().includes(functionArgs.grupAdi.toLowerCase()));
+               if (!hedefGrup) throw new Error(`'${functionArgs.grupAdi}' isminde bir grup bulunamadı.`);
+               const gruptakiHayvanlar = await db.hayvanlar.where('grupId').equals(hedefGrup.id).count();
+               if (gruptakiHayvanlar > 0) throw new Error(`"${hedefGrup.ad}" grubunda ${gruptakiHayvanlar} hayvan var. Önce hayvanları başka gruba taşıyın.`);
+               await db.gruplar.delete(hedefGrup.id);
+               await db.syncQueue.add({ table: 'gruplar', action: 'DELETE', payload: { id: hedefGrup.id }, created_at: Date.now() });
+               functionResult = `"${hedefGrup.ad}" grubu başarıyla silindi.`;
+
+            } else if (functionName === "deleteFeed") {
+               const yemler = await db.yemler.where('ciftlikId').equals(activeCiftlikId).toArray();
+               const hedefYem = yemler.find(y => y.ad.toLowerCase() === functionArgs.yemAdi.toLowerCase() || y.ad.toLowerCase().includes(functionArgs.yemAdi.toLowerCase()));
+               if (!hedefYem) throw new Error(`"${functionArgs.yemAdi}" isminde bir yem bulunamadı.`);
+               await db.yemler.delete(hedefYem.id);
+               await db.syncQueue.add({ table: 'yemler', action: 'DELETE', payload: { id: hedefYem.id }, created_at: Date.now() });
+               functionResult = `"${hedefYem.ad}" yemi sistemden silindi.`;
+
+            } else if (functionName === "getHealthRecords") {
+               const hayvanlar = await db.hayvanlar.where('ciftlikId').equals(activeCiftlikId).toArray();
+               let saglikOlaylari = await db.saglikOlaylari.where('ciftlikId').equals(activeCiftlikId).toArray();
+               if (functionArgs.kupeNo && functionArgs.kupeNo.trim() !== "") {
+                 const hedefHayvan = hayvanlar.find(h => !!h.kupeNo && (h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase())));
+                 if (!hedefHayvan) throw new Error(`"${functionArgs.kupeNo}" küpeli hayvan bulunamadı.`);
+                 saglikOlaylari = saglikOlaylari.filter(s => s.hayvanId === hedefHayvan.id);
+               }
+               if (functionArgs.baslangicTarihi) { const b = new Date(functionArgs.baslangicTarihi); saglikOlaylari = saglikOlaylari.filter(s => new Date(s.tarih) >= b); }
+               if (functionArgs.bitisTarihi) { const b = new Date(functionArgs.bitisTarihi); saglikOlaylari = saglikOlaylari.filter(s => new Date(s.tarih) <= b); }
+               const hayvanMap = new Map(hayvanlar.map(h => [h.id, h.kupeNo]));
+               if (saglikOlaylari.length === 0) { functionResult = "Belirtilen kriterlerde sağlık kaydı bulunamadı."; }
+               else {
+                 const liste = saglikOlaylari.slice(-30).sort((a,b) => b.tarih.localeCompare(a.tarih)).map(s => `- [${s.tarih}] ${hayvanMap.get(s.hayvanId) || '?'} | ${s.tur}: ${s.aciklama || ''}`).join("\n");
+                 functionResult = `${saglikOlaylari.length} sağlık kaydı bulundu (son 30):\n${liste}`;
+               }
+
+            } else if (functionName === "updatePlannedVaccine") {
+               const hayvan = await db.hayvanlar.where('ciftlikId').equals(activeCiftlikId).filter(h => !!h.kupeNo && (h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()))).first();
+               if (!hayvan) throw new Error("Hayvan bulunamadı.");
+               const tumAsilar = await db.planlananAsilar.where('hayvanId').equals(hayvan.id).toArray();
+               const hedefAsi = tumAsilar.find(a => (a as any).asiAdi?.toLowerCase().includes(functionArgs.asiAdi.toLowerCase()) || (a as any).ad?.toLowerCase().includes(functionArgs.asiAdi.toLowerCase()));
+               if (!hedefAsi) throw new Error(`"${hayvan.kupeNo}" için "${functionArgs.asiAdi}" adlı planlanan aşı bulunamadı.`);
+               const updatedAsi = { ...hedefAsi, yapildiMi: functionArgs.yapildiMi, yapilmaTarihi: parseDateString(functionArgs.yapilmaTarihi), maliyet: functionArgs.maliyet !== undefined ? functionArgs.maliyet : (hedefAsi as any).maliyet };
+               await db.planlananAsilar.update(hedefAsi.id, updatedAsi);
+               await db.syncQueue.add({ table: 'planlananAsilar', action: 'UPDATE', payload: updatedAsi, created_at: Date.now() });
+               functionResult = `"${hayvan.kupeNo}" için "${functionArgs.asiAdi}" aşısı ${functionArgs.yapildiMi ? "'YAPILDI' olarak işaretlendi" : "'İPTAL' edildi"}.`;
+
+            } else if (functionName === "addCalfMilkRecord") {
+               const hayvan = await db.hayvanlar.where('ciftlikId').equals(activeCiftlikId).filter(h => !!h.kupeNo && (h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()))).first();
+               if (!hayvan) throw new Error("Buzağı bulunamadı.");
+               const payload = {
+                 id: uuidv4(),
+                 ciftlikId: activeCiftlikId,
+                 hayvanId: hayvan.id,
+                 tarih: parseDateString(functionArgs.tarih),
+                 litre: functionArgs.litre
+               };
+               await db.buzagiSutKayitlari.add(payload as any);
+               await db.syncQueue.add({ table: 'buzagiSutKayitlari', action: 'INSERT', payload, created_at: Date.now() });
+               functionResult = `"${hayvan.kupeNo}" buzağısına ${functionArgs.litre} litre süt kaydı eklendi.`;
+
+            } else if (functionName === "updateFarmDiaryNote") {
+               const not = await db.gunlukNotlari.get(functionArgs.kayitId);
+               if (!not) throw new Error(`ID'si "${functionArgs.kayitId}" olan günlük notu bulunamadı.`);
+               if (functionArgs.islem === "sil") {
+                 await db.gunlukNotlari.delete(not.id);
+                 await db.syncQueue.add({ table: 'gunlukNotlari', action: 'DELETE', payload: { id: not.id }, created_at: Date.now() });
+                 functionResult = `Günlük notu silindi: "${not.metin?.slice(0, 50)}..."`;
+               } else {
+                 const updatedNot = { ...not, metin: functionArgs.yeniMetin || not.metin };
+                 await db.gunlukNotlari.update(not.id, updatedNot);
+                 await db.syncQueue.add({ table: 'gunlukNotlari', action: 'UPDATE', payload: updatedNot, created_at: Date.now() });
+                 functionResult = `Günlük notu başarıyla güncellendi.`;
+               }
+
+            } else if (functionName === "updateAnimalPedigree") {
+               const hayvan = await db.hayvanlar.where('ciftlikId').equals(activeCiftlikId).filter(h => !!h.kupeNo && (h.kupeNo.toLowerCase() === functionArgs.kupeNo.toLowerCase() || h.kupeNo.toLowerCase().includes(functionArgs.kupeNo.toLowerCase()))).first();
+               if (!hayvan) throw new Error("Hayvan bulunamadı.");
+               const updatedHayvan = {
+                 ...hayvan,
+                 anneKupeNo: functionArgs.anneKupeNo !== undefined ? functionArgs.anneKupeNo : hayvan.anneKupeNo,
+                 babaKupeNo: functionArgs.babaKupeNo !== undefined ? functionArgs.babaKupeNo : hayvan.babaKupeNo
+               };
+               await db.hayvanlar.update(hayvan.id, updatedHayvan);
+               await db.syncQueue.add({ table: 'hayvanlar', action: 'UPDATE', payload: updatedHayvan, created_at: Date.now() });
+               functionResult = `"${hayvan.kupeNo}" için pedigri bilgileri güncellendi. Anne: ${updatedHayvan.anneKupeNo || 'Bilinmiyor'}, Baba: ${updatedHayvan.babaKupeNo || 'Bilinmiyor'}.`;
+
             } else {
               throw new Error("Bilinmeyen fonksiyon çağrısı.");
             }
           } catch (err: any) {
              functionResult = `İşlem Başarısız: ${err.message}`;
           }
+          } // closing brace for the 'else {' security check block
 
           apiMessages.push({
             tool_call_id: toolCall.id,
@@ -1427,6 +1958,7 @@ const Assistant: React.FC = () => {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${apiKey}`
           },
+          signal: abortControllerRef.current?.signal,
           body: JSON.stringify({
             model: "deepseek-chat",
             messages: apiMessages,
@@ -1440,7 +1972,15 @@ const Assistant: React.FC = () => {
         }
       }
 
-      const replyContent = responseMessage.content;
+      let replyContent = responseMessage.content || "";
+      // Kullanıcının görmemesi gereken yapay zeka iç etiketlerini (DSML vb.) temizle
+      replyContent = replyContent
+        .replace(/<[^>]*DSML[^>]*>/gi, "")
+        .replace(/<[^>]*invoke[^>]*>/gi, "")
+        .replace(/<[^>]*parameter[^>]*>/gi, "")
+        .replace(/<[^>]*tool_calls[^>]*>/gi, "")
+        .trim();
+
       const finalAssistantMessage: Mesaj = { role: 'assistant', content: replyContent, createdAt: Date.now() };
       currentMessages.push(finalAssistantMessage);
 
@@ -1451,8 +1991,12 @@ const Assistant: React.FC = () => {
       }
 
     } catch (err: any) {
-      console.error('Assistant Error:', err);
-      setError(err.message || 'Bir hata oluştu. Lütfen tekrar deneyin.');
+      if (err.name === 'AbortError') {
+        console.log('API isteği kullanıcı tarafından iptal edildi.');
+      } else {
+        console.error('Assistant Error:', err);
+        setError(err.message || 'Bir hata oluştu. Lütfen tekrar deneyin.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -1628,7 +2172,7 @@ const Assistant: React.FC = () => {
                 
                 <div className={`max-w-[90%] flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                     <div className={`rounded-2xl p-4 shadow-sm ${msg.role === 'user' ? 'bg-nature-600 text-white rounded-tr-sm' : 'bg-white dark:bg-gray-800 border border-earth-200 dark:border-gray-700 text-earth-800 dark:text-gray-200 rounded-tl-sm'}`}>
-                      <div className="prose prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-earth-900 prose-pre:text-earth-100 prose-th:bg-earth-100 prose-td:border-b prose-table:border-collapse prose-table:w-full">
+                      <div className={`prose prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-earth-900 prose-pre:text-earth-100 prose-th:bg-earth-100 prose-td:border-b prose-table:border-collapse prose-table:w-full ${msg.role === 'user' ? 'whitespace-pre-wrap' : ''}`}>
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                       </div>
                     </div>
@@ -1680,30 +2224,53 @@ const Assistant: React.FC = () => {
               onSubmit={(e) => { e.preventDefault(); handleSend(); }}
               className="relative flex items-center"
             >
-              <input 
-                type="text" 
+              <textarea 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (input.trim() && !isLoading) handleSend();
+                  }
+                }}
                 disabled={isLoading}
                 placeholder="Yapay zekaya bir soru sorun..."
-                className="w-full pl-5 pr-[100px] py-3.5 bg-white dark:bg-gray-800 border border-earth-300 dark:border-gray-600 rounded-2xl md:rounded-full focus:outline-none focus:ring-2 focus:ring-nature-500 focus:border-nature-500 text-earth-900 dark:text-gray-100 text-sm md:text-base disabled:opacity-50 transition shadow-sm"
+                rows={1}
+                className="w-full pl-5 pr-[100px] py-3.5 bg-white dark:bg-gray-800 border border-earth-300 dark:border-gray-600 rounded-2xl md:rounded-3xl focus:outline-none focus:ring-2 focus:ring-nature-500 focus:border-nature-500 text-earth-900 dark:text-gray-100 text-sm md:text-base disabled:opacity-50 transition shadow-sm resize-none overflow-y-auto scrollbar-hide min-h-[52px]"
+                style={{ height: 'auto' }}
+                onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  target.style.height = 'auto';
+                  target.style.height = Math.min(target.scrollHeight, 120) + 'px';
+                }}
               />
-              <div className="absolute right-2 flex items-center space-x-1">
+              <div className="absolute right-2 bottom-2 flex items-center space-x-1">
                 <button 
                   type="button" 
                   onClick={toggleListening}
                   title={isListening ? "Dinleniyor... (Kapatmak için tıklayın)" : "Sesli komut için tıklayın"}
-                  className={`p-2.5 rounded-full transition shadow-md ${isListening ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' : 'bg-earth-100 hover:bg-earth-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-earth-600 dark:text-gray-300'}`}
+                  className={`p-2 rounded-full transition shadow-md ${isListening ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' : 'bg-earth-100 hover:bg-earth-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-earth-600 dark:text-gray-300'}`}
                 >
                   {isListening ? <MicOff className="w-4.5 h-4.5 md:w-5 md:h-5" /> : <Mic className="w-4.5 h-4.5 md:w-5 md:h-5" />}
                 </button>
-                <button 
-                  type="submit" 
-                  disabled={!input.trim() || isLoading}
-                  className="p-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full disabled:opacity-40 disabled:hover:bg-blue-600 transition shadow-md"
-                >
-                  <Send className="w-4.5 h-4.5 md:w-5 md:h-5" />
-                </button>
+                {isLoading ? (
+                  <button 
+                    type="button" 
+                    onClick={handleStop}
+                    title="İşlemi iptal et"
+                    className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-full transition shadow-md"
+                  >
+                    <Square className="w-4.5 h-4.5 md:w-5 md:h-5 fill-current" />
+                  </button>
+                ) : (
+                  <button 
+                    type="submit" 
+                    disabled={!input.trim()}
+                    className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full disabled:opacity-40 disabled:hover:bg-blue-600 transition shadow-md"
+                  >
+                    <Send className="w-4.5 h-4.5 md:w-5 md:h-5" />
+                  </button>
+                )}
               </div>
             </form>
           </div>

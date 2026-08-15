@@ -15,7 +15,7 @@ declare global {
 }
 
 const FarmDiary: React.FC = () => {
-  const { activeCiftlikId } = useStore();
+  const { activeCiftlikId, isAiUnlocked } = useStore();
   const todayStr = new Date().toISOString().split('T')[0];
   const [selectedDate, setSelectedDate] = useState(todayStr);
   const [noteText, setNoteText] = useState('');
@@ -195,6 +195,10 @@ const FarmDiary: React.FC = () => {
   };
 
   const handleAIAnalyze = async () => {
+    if (!isAiUnlocked) {
+      alert('Bu özelliği kullanmak için Ayarlar sayfasından aktivasyon kodunu girmelisiniz.');
+      return;
+    }
     if (!monthlyNotes || monthlyNotes.length === 0) {
       alert('Seçili ayda analiz edilecek hiçbir not bulunamadı!');
       return;
@@ -207,6 +211,21 @@ const FarmDiary: React.FC = () => {
     try {
       const sonuc = await analyzeDiaryNotes(monthlyNotes);
       setAnalysisResult(sonuc);
+      
+      // Analiz sonucunu otomatik olarak günlüğe kaydet
+      const raporNotu = {
+        id: uuidv4(),
+        ciftlikId: activeCiftlikId || 'default',
+        tarih: selectedDate, // O günün tarihine rapor olarak ekle
+        metin: `🤖 **Yapay Zeka Sürü Değerlendirme Raporu**\n\n${sonuc}\n\n#AIAylıkRapor`,
+        medyalar: [],
+        etiketler: ['#AIAylıkRapor'],
+        olusturulmaTarihi: Date.now()
+      };
+      
+      await db.gunlukNotlari.add(raporNotu as any);
+      await db.syncQueue.add({ table: 'gunlukNotlari', action: 'INSERT', payload: raporNotu, created_at: Date.now() });
+
     } catch (err: any) {
       setAnalysisResult('Hata: ' + err.message);
     } finally {
@@ -382,8 +401,13 @@ const FarmDiary: React.FC = () => {
 
                 <button 
                   onClick={handleAIAnalyze}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-xl font-bold text-xs transition-colors border border-purple-200"
-                  title="Seçili ayın notlarını yapay zekaya analiz ettir"
+                  disabled={!isAiUnlocked}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-colors border ${
+                    isAiUnlocked 
+                      ? 'bg-purple-100 text-purple-700 hover:bg-purple-200 border-purple-200' 
+                      : 'bg-gray-100 text-gray-400 border-gray-200 opacity-60 cursor-not-allowed'
+                  }`}
+                  title={isAiUnlocked ? "Seçili ayın notlarını yapay zekaya analiz ettir" : "Bu özelliği kullanmak için Ayarlar sayfasından aktivasyon kodunu girmelisiniz"}
                 >
                   <Sparkles className="w-4 h-4" /> Ayı Analiz Et
                 </button>
@@ -456,14 +480,20 @@ const FarmDiary: React.FC = () => {
               {isAnalyzing ? (
                 <div className="flex flex-col items-center justify-center py-12 text-purple-600">
                   <Loader2 className="w-12 h-12 animate-spin mb-4" />
-                  <p className="font-bold">Notlarınız yapay zekaya okunup analiz ediliyor...</p>
+                  <p className="font-bold text-center">Notlarınız ve hayvan verileriniz toplanıp yapay zekaya okunuyor...</p>
                   <p className="text-sm opacity-70 mt-2">Bu işlem yaklaşık 10-15 saniye sürebilir.</p>
                 </div>
               ) : analysisResult ? (
-                <div className="prose prose-purple dark:prose-invert max-w-none prose-sm sm:prose-base">
-                  <ReactMarkdown>
-                    {analysisResult}
-                  </ReactMarkdown>
+                <div className="flex flex-col h-full">
+                  <div className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 p-3 rounded-lg mb-4 flex items-center gap-2 text-sm font-semibold border border-green-200 dark:border-green-800/50">
+                    <CheckCircle2 className="w-5 h-5" />
+                    Bu rapor, günlüğünüze #AIAylıkRapor etiketiyle otomatik olarak kaydedildi.
+                  </div>
+                  <div className="prose prose-purple dark:prose-invert max-w-none prose-sm sm:prose-base">
+                    <ReactMarkdown>
+                      {analysisResult}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               ) : null}
             </div>

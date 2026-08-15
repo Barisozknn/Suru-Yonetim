@@ -50,6 +50,13 @@ export const calcHerdMilkStdDev = (sutKayitlari: SutKaydi[], avg: number): numbe
   return Math.sqrt(sumOfSquares / (perAnimal.length - 1)) || 1;
 };
 
+// Irk bazlı doğum ağırlığı referansları — hem sürü ortalaması hem bireysel skorla tutarlı olsun
+const DOGUM_AGIRLIGI_REF: Record<string, number> = {
+  'Holstein': 42, 'Simental': 46, 'Simmental': 46,
+  'Jersey': 25, 'Ayrshire': 35, 'Montofon': 44,
+  'Esmer': 42, 'Brown Swiss': 42, 'Angus': 35,
+};
+
 export const calcHerdADGAvg = (agirlikKayitlari: AgirlikKaydi[], hayvanlar: Hayvan[]): number => {
   if (agirlikKayitlari.length === 0) return 0;
   
@@ -65,17 +72,17 @@ export const calcHerdADGAvg = (agirlikKayitlari: AgirlikKaydi[], hayvanlar: Hayv
   Object.entries(byAnimal).forEach(([hayvanId, records]) => {
     records.sort((a, b) => new Date(a.tarih).getTime() - new Date(b.tarih).getTime());
     let adg = 0;
+    const hayvan = hayvanlar.find(h => h.id === hayvanId);
     if (records.length >= 2) {
       const first = records[0];
       const last = records[records.length - 1];
       const gunFarki = Math.max(1, (new Date(last.tarih).getTime() - new Date(first.tarih).getTime()) / (1000 * 60 * 60 * 24));
       adg = ((last.kg - first.kg) / gunFarki) * 1000;
-    } else if (records.length === 1) {
-      const hayvan = hayvanlar.find(h => h.id === hayvanId);
-      if (hayvan && hayvan.dogumTarihi) {
-        const gunFarki = Math.max(1, (new Date(records[0].tarih).getTime() - new Date(hayvan.dogumTarihi).getTime()) / (1000 * 60 * 60 * 24));
-        adg = ((records[0].kg - 40) / gunFarki) * 1000;
-      }
+    } else if (records.length === 1 && hayvan && hayvan.dogumTarihi) {
+      // DÜZ. 4: Sabit 40 kg yerine ırk bazlı referans (bireysel skorla tutarlı)
+      const refAgirlik = DOGUM_AGIRLIGI_REF[hayvan.irk] ?? 38;
+      const gunFarki = Math.max(1, (new Date(records[0].tarih).getTime() - new Date(hayvan.dogumTarihi).getTime()) / (1000 * 60 * 60 * 24));
+      adg = ((records[0].kg - refAgirlik) / gunFarki) * 1000;
     }
     
     if (adg > -1500 && adg < 4000) {
@@ -99,17 +106,17 @@ export const calcHerdADGStdDev = (agirlikKayitlari: AgirlikKaydi[], hayvanlar: H
   Object.entries(byAnimal).forEach(([hayvanId, records]) => {
     records.sort((a, b) => new Date(a.tarih).getTime() - new Date(b.tarih).getTime());
     let adg = 0;
+    const hayvan = hayvanlar.find(h => h.id === hayvanId);
     if (records.length >= 2) {
       const first = records[0];
       const last = records[records.length - 1];
       const gunFarki = Math.max(1, (new Date(last.tarih).getTime() - new Date(first.tarih).getTime()) / (1000 * 60 * 60 * 24));
       adg = ((last.kg - first.kg) / gunFarki) * 1000;
-    } else if (records.length === 1) {
-      const hayvan = hayvanlar.find(h => h.id === hayvanId);
-      if (hayvan && hayvan.dogumTarihi) {
-        const gunFarki = Math.max(1, (new Date(records[0].tarih).getTime() - new Date(hayvan.dogumTarihi).getTime()) / (1000 * 60 * 60 * 24));
-        adg = ((records[0].kg - 40) / gunFarki) * 1000;
-      }
+    } else if (records.length === 1 && hayvan && hayvan.dogumTarihi) {
+      // DÜZ. 4: Sabit 40 kg yerine ırk bazlı referans
+      const refAgirlik = DOGUM_AGIRLIGI_REF[hayvan.irk] ?? 38;
+      const gunFarki = Math.max(1, (new Date(records[0].tarih).getTime() - new Date(hayvan.dogumTarihi).getTime()) / (1000 * 60 * 60 * 24));
+      adg = ((records[0].kg - refAgirlik) / gunFarki) * 1000;
     }
     
     if (adg > -1500 && adg < 4000) {
@@ -198,36 +205,57 @@ export const calcHerdHealthStdDev = (saglikOlaylari: SaglikOlayi[], hayvanlar: H
   return Math.sqrt(sumSq / (skorlar.length - 1)) || 1;
 };
 
+// ─── Fertilite Yardımcı: Tohumlama bazlı CR (çift sayım önlendi) ────────────
+// DÜZ. 3: Her tohumlama için en yakın sonuç olayına bakılır.
+// Aynı gebelik için hem GK-Gebe hem Doğum kaydı varsa yalnızca biri sayılır.
+const calcCRFromRecords = (records: UremeKaydi[]): { cr: number; tohumlamaSayisi: number } => {
+  const tohumlamalar = records
+    .filter(r => r.tur === 'Tohumlama/Aşım' || r.tur === 'Doğal Aşım')
+    .sort((a, b) => new Date(a.tarih).getTime() - new Date(b.tarih).getTime());
+
+  if (tohumlamalar.length === 0) return { cr: 0, tohumlamaSayisi: 0 };
+
+  let basarili = 0;
+  tohumlamalar.forEach(tohum => {
+    const tohTarih = new Date(tohum.tarih).getTime();
+    // Bu tohumlamadan sonra gelen kayıtları al, tarihe göre sırala
+    const sonrakiOlaylar = records
+      .filter(r => new Date(r.tarih).getTime() > tohTarih)
+      .sort((a, b) => new Date(a.tarih).getTime() - new Date(b.tarih).getTime());
+
+    const ilkSonuc = sonrakiOlaylar.find(r =>
+      r.tur === 'Doğum' ||
+      (r.tur === 'Gebelik Kontrolü' && (r.durum === 'Gebe' || r.durum === 'Gebe Değil')) ||
+      r.tur === 'Tohumlama/Aşım' ||
+      r.tur === 'Doğal Aşım' ||
+      r.tur === 'Kızgınlık'
+    );
+
+    if (!ilkSonuc) return; // Henüz sonuç yok — değerlendirme dışı
+    if (ilkSonuc.tur === 'Doğum') { basarili++; return; }
+    if (ilkSonuc.tur === 'Gebelik Kontrolü' && ilkSonuc.durum === 'Gebe') { basarili++; return; }
+    // Sonuç: Gebe Değil, yeni tohumlama veya kızgınlık → başarısız
+  });
+
+  return { cr: basarili / tohumlamalar.length, tohumlamaSayisi: tohumlamalar.length };
+};
+
 // Fertilite (CR)
 export const calcHerdFertilityAvg = (uremeKayitlari: UremeKaydi[]): number => {
-  const tohumlamalar = uremeKayitlari.filter(r => r.tur === 'Tohumlama/Aşım' || r.tur === 'Doğal Aşım').length;
-  const gebelikler = uremeKayitlari.filter(r => r.tur === 'Gebelik Kontrolü' && r.durum === 'Gebe').length;
-  const dogumlar = uremeKayitlari.filter(r => r.tur === 'Doğum').length;
-  
-  const gercekBasari = Math.min(tohumlamalar, Math.max(gebelikler, dogumlar));
-  if (tohumlamalar === 0) return 0;
-  return gercekBasari / tohumlamalar;
+  // Sürü düzeyinde CR: tüm hayvanların toplam tohumlama/başarı oranı
+  const { cr, tohumlamaSayisi } = calcCRFromRecords(uremeKayitlari);
+  if (tohumlamaSayisi === 0) return 0;
+  return cr;
 };
 
 export const calcHerdFertilityStdDev = (uremeKayitlari: UremeKaydi[], hayvanlar: Hayvan[], avg: number): number => {
   if (hayvanlar.length < 2) return 0.1;
 
-  const crByAnimal: Record<string, { t: number, b: number }> = {};
-  hayvanlar.forEach(h => crByAnimal[h.id] = { t: 0, b: 0 });
-
-  uremeKayitlari.forEach(r => {
-    if (!crByAnimal[r.hayvanId]) return;
-    if (r.tur === 'Tohumlama/Aşım' || r.tur === 'Doğal Aşım') crByAnimal[r.hayvanId].t += 1;
-    if (r.tur === 'Gebelik Kontrolü' && r.durum === 'Gebe') crByAnimal[r.hayvanId].b += 1;
-    if (r.tur === 'Doğum') crByAnimal[r.hayvanId].b += 1;
-  });
-
   const crs: number[] = [];
-  Object.values(crByAnimal).forEach(stats => {
-    if (stats.t > 0) {
-      const success = Math.min(stats.t, stats.b);
-      crs.push(success / stats.t);
-    }
+  hayvanlar.forEach(h => {
+    const hRecords = uremeKayitlari.filter(r => r.hayvanId === h.id);
+    const { cr, tohumlamaSayisi } = calcCRFromRecords(hRecords);
+    if (tohumlamaSayisi > 0) crs.push(cr);
   });
 
   if (crs.length < 2) return 0.1;
@@ -261,12 +289,17 @@ export const correctForSeason = (value: number, date: string): number => {
 };
 
 // laktasyonBiliniyorMu: doğum kaydı yoksa false — düzeltme uygulanmaz
+// DÜZ. 5: Laktasyon düzeltme katsayıları ICAR/NMC referanslarına göre güncellendi.
+// 4. laktasyon pik verim dönemi → referans (1.00).
+// 1–3. laktasyon için artış, 5+ için küçük yaşlı-inek düzeltmesi.
 export const correctForLactation = (milkLitre: number, lactNo: number, laktasyonBiliniyorMu: boolean = true): number => {
   if (!laktasyonBiliniyorMu) return milkLitre; // Veri yoksa olduğu gibi kullan
   let corrected = milkLitre;
-  if (lactNo === 1) corrected *= 1.20;
-  else if (lactNo === 2) corrected *= 1.10;
-  else if (lactNo >= 5) corrected *= 1.05;
+  if (lactNo === 1) corrected *= 1.25;       // 1. laktasyon: belirgin düşük verim
+  else if (lactNo === 2) corrected *= 1.12;  // 2. laktasyon: orta düzey
+  else if (lactNo === 3) corrected *= 1.05;  // 3. laktasyon: pik yakın
+  else if (lactNo === 4) corrected *= 1.00;  // 4. laktasyon: referans (pik)
+  else corrected *= 1.03;                    // 5+: yaşlı inek, hafif yukarı düzeltme
   return corrected;
 };
 
@@ -312,17 +345,21 @@ export const calculateMilkTDI = (
     // Doğum kaydı yoksa laktasyon no bilinmiyor — düzeltme uygulanmaz
   }
 
-  const byDate: Record<string, number> = {};
+  // DÜZ. 2: Her günlük toplam kendi tarihiyle mevsim düzeltmesine tabi tutulur,
+  // ardından düzeltilmiş değerlerin ortalaması alınır.
+  const byDate: Record<string, { toplam: number; tarih: string }> = {};
   records.forEach(r => {
     const d = new Date(r.tarih).toISOString().split('T')[0];
-    byDate[d] = (byDate[d] || 0) + r.litre;
+    if (!byDate[d]) byDate[d] = { toplam: 0, tarih: d };
+    byDate[d].toplam += r.litre;
   });
-  
-  const dailyTotals = Object.values(byDate);
-  const avgMilk = dailyTotals.reduce((sum, v) => sum + v, 0) / dailyTotals.length;
 
-  // Mevsim düzeltmesi: her kaydın katkısını ağırlıklı ortalamayla düzelt
-  const seasonCorrected = correctForSeason(avgMilk, records[0].tarih);
+  const hamDailyTotals = Object.values(byDate).map(v => v.toplam);
+  const avgMilk = hamDailyTotals.reduce((sum, v) => sum + v, 0) / hamDailyTotals.length;
+
+  // Her günü kendi tarihiyle düzelt → mevsim ortalaması doğru hesaplanır
+  const correctedDailyTotals = Object.values(byDate).map(v => correctForSeason(v.toplam, v.tarih));
+  const seasonCorrected = correctedDailyTotals.reduce((sum, v) => sum + v, 0) / correctedDailyTotals.length;
   const corrected = correctForLactation(seasonCorrected, laktasyonNo, laktasyonBiliniyorMu);
 
   const genetikTahmin = applyHeritability(corrected - suruOrtalamasi, H2.SUT_VERIMI);
@@ -351,13 +388,8 @@ export const calculateGrowthTDI = (hayvan: Hayvan, agirlikKayitlari: AgirlikKayd
     return { hamDeger: 0, cevreselDuzeltme: 0, duzeltilmisDeger: 0, h2Katsayisi: H2.BUYUME_ADG, genetikTahmin: 0, normalizedSkor: 50, guvenilirlik: 0, veriSayisi: 0 };
   }
 
-  // Irk bazlı doğum ağırlığı referansları (kg)
-  const DOGUM_AGIRLIGI: Record<string, number> = {
-    'Holstein': 42, 'Simental': 46, 'Simmental': 46,
-    'Jersey': 25, 'Ayrshire': 35, 'Montofon': 44,
-    'Esmer': 42, 'Brown Swiss': 42, 'Angus': 35,
-  };
-  const dogumAgirligi = DOGUM_AGIRLIGI[hayvan.irk] ?? 38; // bilinmeyen ırk için ortalama
+  // DÜZ. 4: Merkezi DOGUM_AGIRLIGI_REF sabiti kullanılıyor — sürü ortalamasıyla tutarlı
+  const dogumAgirligi = DOGUM_AGIRLIGI_REF[hayvan.irk] ?? 38; // bilinmeyen ırk için ortalama
 
   let adg = 0;
   if (records.length >= 2) {
@@ -390,18 +422,30 @@ export const calculateGrowthTDI = (hayvan: Hayvan, agirlikKayitlari: AgirlikKayd
 };
 
 // ─── Sağlık TDİ ─────────────────────────────────────────────────────────────
-export const calculateHealthTDI = (hayvan: Hayvan, saglikOlaylari: SaglikOlayi[], suruOrtSaglik: number, _suruStdDevSaglik: number): SkorDetay => {
+// DÜZ. 1: HSI (100'den başlayıp hastalık/operasyonla azalan sistem) KORUNUYOR.
+// Değişen tek şey: HSI değeri artık sürü HSI ortalamasına göre z-skoru ile
+// normalize ediliyor (diğer metriklerle tutarlı — 50 = sürü ortalaması).
+export const calculateHealthTDI = (hayvan: Hayvan, saglikOlaylari: SaglikOlayi[], suruOrtSaglik: number, suruStdDevSaglik: number): SkorDetay => {
   const records = saglikOlaylari.filter(r => r.hayvanId === hayvan.id);
   const bugun = new Date();
 
   // HSI: 100'den başla, olaylara göre ceza düş (0-100 mutlak skor)
+  // Bu hesaplama değişmedi — tasarım doğru.
   const hsi = hesaplaHSI(records, bugun);
 
-  // Sağlık skoru = HSI'nın kendisi (z-skoru değil).
-  // 0 olay → 100, ağır hastalık → 20-40, rutin aşı → ~100
-  // suruOrtSaglik sadece EBV/genetikTahmin için referans olarak kullanılır.
   const sapma = hsi - suruOrtSaglik;
   const genetikTahmin = applyHeritability(sapma, H2.SAGLIK);
+
+  // Z-skoru normalizasyonu: diğer metriklerle aynı ölçekte (50 = sürü ortalaması)
+  // StdDev çok küçükse (tüm hayvanlar benzer sağlıkta) fallback olarak HSI kullan
+  let normalizedSkor: number;
+  if (suruStdDevSaglik < 0.5) {
+    // Sürüdeki tüm hayvanlar neredeyse aynı HSI'ya sahipse → hepsinin skoru ~50
+    normalizedSkor = 50 + (sapma > 0 ? 1 : sapma < 0 ? -1 : 0) * Math.min(5, Math.abs(sapma));
+  } else {
+    const zSkor = sapma / suruStdDevSaglik;
+    normalizedSkor = Math.max(0, Math.min(100, 50 + zSkor * 15));
+  }
 
   const toplamOnemliOlay = records.filter(r => r.tur !== 'Aşı').length;
 
@@ -411,7 +455,7 @@ export const calculateHealthTDI = (hayvan: Hayvan, saglikOlaylari: SaglikOlayi[]
     duzeltilmisDeger: hsi,
     h2Katsayisi: H2.SAGLIK,
     genetikTahmin,
-    normalizedSkor: hsi,  // Doğrudan HSI = sağlık skoru (0-100)
+    normalizedSkor,
     guvenilirlik: calculateReliability(toplamOnemliOlay, H2.SAGLIK),
     veriSayisi: records.length
   };
@@ -434,20 +478,11 @@ export const calculateFertilityTDI = (
     records = uremeKayitlari.filter(r => kizIdleri.includes(r.hayvanId));
   }
 
-  // Tohumlama kaydı olmadan CR hesaplanamaz — nötr dön
-  const tohumlamalar = records.filter(r => r.tur === 'Tohumlama/Aşım' || r.tur === 'Doğal Aşım').length;
-  if (tohumlamalar === 0) {
+  // DÜZ. 3: Tohumlama bazlı CR (çift sayım önlendi)
+  const { cr, tohumlamaSayisi } = calcCRFromRecords(records);
+  if (tohumlamaSayisi === 0) {
     return { hamDeger: 0, cevreselDuzeltme: 0, duzeltilmisDeger: 0, h2Katsayisi: H2.FERTILITE, genetikTahmin: 0, normalizedSkor: 50, guvenilirlik: 0, veriSayisi: 0 };
   }
-
-  let basarili = 0;
-  records.forEach(r => {
-    if (r.tur === 'Doğum') basarili++;
-    else if (r.tur === 'Gebelik Kontrolü' && r.durum === 'Gebe') basarili++;
-  });
-
-  const gercekBasari = Math.min(tohumlamalar, basarili);
-  const cr = gercekBasari / tohumlamalar; // Artık tohumlamalar > 0 garantili
 
   const sapma = cr - suruOrtCR;
   const genetikTahmin = applyHeritability(sapma, H2.FERTILITE);
@@ -463,8 +498,8 @@ export const calculateFertilityTDI = (
     genetikTahmin,
     normalizedSkor,
     // veriSayisi = tohumlama sayısı (güvenilirlik hesabı için doğru baz)
-    guvenilirlik: calculateReliability(tohumlamalar, H2.FERTILITE),
-    veriSayisi: tohumlamalar
+    guvenilirlik: calculateReliability(tohumlamaSayisi, H2.FERTILITE),
+    veriSayisi: tohumlamaSayisi
   };
 };
 
@@ -481,7 +516,8 @@ export const calculateOverallTDI = (
   if (isletmeTipi === 'Süt') {
     wSut = 0.50; wBuyume = 0.15; wSaglik = 0.15; wUreme = 0.20;
   } else if (isletmeTipi === 'Besi') {
-    wSut = 0.05; wBuyume = 0.60; wSaglik = 0.15; wUreme = 0.20;
+    // DÜZ. 6: Besi işletmelerinde büyüme baskın, üreme önemsiz
+    wSut = 0.00; wBuyume = 0.75; wSaglik = 0.20; wUreme = 0.05;
   } else {
     wSut = 0.30; wBuyume = 0.30; wSaglik = 0.20; wUreme = 0.20;
   }

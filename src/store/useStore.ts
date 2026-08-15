@@ -84,6 +84,10 @@ interface StoreState {
   // Gizlenen Boğalar (Bulls Catalog)
   hiddenBulls: string[];
   setHiddenBulls: (bulls: string[]) => void;
+
+  // AI Asistan Kilit Durumu
+  isAiUnlocked: boolean;
+  setIsAiUnlocked: (unlocked: boolean) => void;
 }
 
 export const useStore = create<StoreState>()(
@@ -169,6 +173,9 @@ export const useStore = create<StoreState>()(
 
       hiddenBulls: [],
       setHiddenBulls: (bulls) => set({ hiddenBulls: bulls }),
+
+      isAiUnlocked: false,
+      setIsAiUnlocked: (unlocked) => set({ isAiUnlocked: unlocked }),
     }),
     {
       name: 'suru-yonetimi-store', // localStorage key
@@ -197,6 +204,7 @@ export const useStore = create<StoreState>()(
         isGuest: state.isGuest,
         theme: state.theme,
         hiddenBulls: state.hiddenBulls,
+        isAiUnlocked: state.isAiUnlocked,
       }),
     }
   )
@@ -224,7 +232,8 @@ useStore.subscribe((state, prevState) => {
     rationMaxKabaOran: state.rationMaxKabaOran,
     rationListesi: state.rationListesi, 
     uremeAyarlari: state.uremeAyarlari,
-    hiddenBulls: state.hiddenBulls
+    hiddenBulls: state.hiddenBulls,
+    isAiUnlocked: state.isAiUnlocked
   };
   
   const prevAyarlar = { 
@@ -244,7 +253,8 @@ useStore.subscribe((state, prevState) => {
     rationMaxKabaOran: prevState.rationMaxKabaOran,
     rationListesi: prevState.rationListesi, 
     uremeAyarlari: prevState.uremeAyarlari,
-    hiddenBulls: prevState.hiddenBulls
+    hiddenBulls: prevState.hiddenBulls,
+    isAiUnlocked: prevState.isAiUnlocked
   };
   
   if (JSON.stringify(ayarlar) !== JSON.stringify(prevAyarlar)) {

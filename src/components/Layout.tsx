@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   Menu, X, Home, Wheat, Activity, Dna, Calculator,
-  Syringe, CalendarDays, Settings, Sparkles, Wifi, WifiOff, RefreshCw, Wallet, User, Sun, Moon, NotebookPen
+  Syringe, CalendarDays, Settings, Sparkles, Wifi, WifiOff, RefreshCw, Wallet, User, Sun, Moon, NotebookPen, Lock
 } from 'lucide-react';
 import { processSyncQueue, pullInitialData, subscribeToRealtimeChanges } from '../services/syncService';
 import { useStore } from '../store/useStore';
@@ -31,7 +31,7 @@ const Layout: React.FC = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isRealtimeActive, setIsRealtimeActive] = useState(false);
-  const { isGuest, theme, setTheme } = useStore();
+  const { isGuest, theme, setTheme, isAiUnlocked } = useStore();
 
   const location = useLocation();
 
@@ -103,28 +103,46 @@ const Layout: React.FC = () => {
     </button>
   );
 
-  const NavContent = ({ isMobile }: { isMobile?: boolean }) => (
-    <nav className={`flex-1 overflow-x-hidden custom-scrollbar ${isMobile ? 'p-2.5 flex flex-col justify-between gap-1 overflow-y-auto' : 'px-3 py-1 flex flex-col justify-center gap-1 overflow-y-auto'}`}>
-      {NAV_ITEMS.map((item) => (
-        <NavLink
-          key={item.path}
-          to={item.path}
-          onClick={() => isMobile && setIsMobileMenuOpen(false)}
-          className={({ isActive }) => `
-            flex items-center space-x-3.5 rounded-xl font-bold transition w-full
-            ${isMobile ? 'px-3.5 py-2 text-[14px]' : 'px-4 py-2 text-[14.5px]'}
-            ${isActive
-              ? 'bg-nature-600 dark:bg-nature-500 text-white shadow-md'
-              : 'text-earth-600 dark:text-gray-300 hover:bg-nature-50 dark:hover:bg-gray-700 hover:text-nature-700 dark:hover:text-white'
-            }
-          `}
-        >
-          {item.icon}
-          <span>{item.label}</span>
-        </NavLink>
-      ))}
-    </nav>
-  );
+  const NavContent = ({ isMobile }: { isMobile?: boolean }) => {
+    const handleLockClick = (e: React.MouseEvent, path: string) => {
+      if (path === '/asistan' && !isAiUnlocked) {
+        e.preventDefault();
+        alert('Bu özelliği kullanmak için Ayarlar sayfasından aktivasyon kodunu girmelisiniz.');
+        if (isMobile) setIsMobileMenuOpen(false);
+      } else {
+        if (isMobile) setIsMobileMenuOpen(false);
+      }
+    };
+
+    return (
+      <nav className={`flex-1 overflow-x-hidden custom-scrollbar ${isMobile ? 'p-2.5 flex flex-col justify-between gap-1 overflow-y-auto' : 'px-3 py-1 flex flex-col justify-center gap-1 overflow-y-auto'}`}>
+        {NAV_ITEMS.map((item) => {
+          const isLocked = item.path === '/asistan' && !isAiUnlocked;
+          
+          return (
+            <NavLink
+              key={item.path}
+              to={isLocked ? '/ayarlar' : item.path}
+              onClick={(e) => handleLockClick(e, item.path)}
+              className={({ isActive }) => `
+                flex items-center space-x-3.5 rounded-xl font-bold transition w-full relative
+                ${isMobile ? 'px-3.5 py-2 text-[14px]' : 'px-4 py-2 text-[14.5px]'}
+                ${isActive && !isLocked
+                  ? 'bg-nature-600 dark:bg-nature-500 text-white shadow-md'
+                  : 'text-earth-600 dark:text-gray-300 hover:bg-nature-50 dark:hover:bg-gray-700 hover:text-nature-700 dark:hover:text-white'
+                }
+                ${isLocked ? 'opacity-60 cursor-not-allowed hover:bg-transparent' : ''}
+              `}
+            >
+              {item.icon}
+              <span className="flex-1">{item.label}</span>
+              {isLocked && <Lock className="w-4 h-4 text-earth-400 dark:text-gray-500" />}
+            </NavLink>
+          );
+        })}
+      </nav>
+    );
+  };
 
   return (
     <div className="h-[100dvh] bg-earth-50 dark:bg-gray-900 flex font-sans overflow-hidden transition-colors duration-200">

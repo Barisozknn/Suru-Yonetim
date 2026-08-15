@@ -43,7 +43,7 @@ const AnimalDetailWrapper = () => {
 
 
 function App() {
-  const { setUser, setSession, theme } = useStore();
+  const { setUser, setSession, theme, isAiUnlocked } = useStore();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -98,7 +98,7 @@ function App() {
             <Route path="/sut-agirlik" element={<YieldAnalysis />} />
             <Route path="/soy-agaci" element={<PedigreePage />} />
             <Route path="/finans" element={<FinancialAnalysis />} />
-            <Route path="/asistan" element={<Assistant />} />
+            <Route path="/asistan" element={isAiUnlocked ? <Assistant /> : <Navigate to="/ayarlar" replace />} />
             <Route path="/gunluk" element={<FarmDiary />} />
             <Route path="/ayarlar" element={<Settings />} />
           </Route>

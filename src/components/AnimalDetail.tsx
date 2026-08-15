@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Info, GitMerge, FileText, Activity, Edit2, TrendingUp, Save } from 'lucide-react';
+import { ArrowLeft, Info, GitMerge, FileText, Activity, Edit2, TrendingUp, Save, X } from 'lucide-react';
+import { COMMON_DISEASES, normalizeDiseaseName } from '../constants/diseases';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import AnimalForm from './AnimalForm';
@@ -73,6 +74,64 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
       setNotlarText('');
     }
   }, [hayvan?.notlar, activeTab]);
+
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [newStatus, setNewStatus] = useState<'Aktif' | 'Satıldı' | 'Öldü'>('Aktif');
+  
+  // Sale details
+  const [satisTarihi, setSatisTarihi] = useState(new Date().toISOString().split('T')[0]);
+  const [satisFiyati, setSatisFiyati] = useState<number | ''>('');
+  
+  // Death details
+  const [olumTarihi, setOlumTarihi] = useState(new Date().toISOString().split('T')[0]);
+  const [olumNedeniTipi, setOlumNedeniTipi] = useState<'Doğal' | 'Kaza' | 'Hastalık' | 'Diğer'>('Doğal');
+  const [olumNedeniDetay, setOlumNedeniDetay] = useState('');
+  const [showHastalikDropdown, setShowHastalikDropdown] = useState(false);
+
+  const handleStatusChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!hayvan) return;
+    
+    const updates: any = { durum: newStatus };
+    
+    if (newStatus === 'Satıldı') {
+      updates.satisTarihi = satisTarihi;
+      updates.satisFiyati = satisFiyati === '' ? 0 : Number(satisFiyati);
+      updates.grupId = null; // Remove from group
+    } else if (newStatus === 'Öldü') {
+      updates.olumTarihi = olumTarihi;
+      updates.olumNedeniTipi = olumNedeniTipi;
+      updates.olumNedeniDetay = olumNedeniTipi === 'Hastalık' && olumNedeniDetay.trim() 
+        ? normalizeDiseaseName(olumNedeniDetay) 
+        : olumNedeniDetay;
+      updates.grupId = null; // Remove from group
+    } else {
+      // Aktif
+      updates.satisTarihi = null;
+      updates.satisFiyati = null;
+      updates.olumTarihi = null;
+      updates.olumNedeniTipi = null;
+      updates.olumNedeniDetay = null;
+    }
+
+    try {
+      await db.hayvanlar.update(hayvan.id, updates);
+      await db.syncQueue.add({
+        table: 'hayvanlar',
+        action: 'UPDATE',
+        payload: { ...hayvan, ...updates },
+        created_at: Date.now()
+      });
+      if (navigator.onLine) {
+        const { processSyncQueue } = await import('../services/syncService');
+        processSyncQueue();
+      }
+      setIsStatusModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      alert('Durum güncellenirken hata oluştu.');
+    }
+  };
 
   const handleSaveNotlar = async () => {
     if (!hayvan) return;
@@ -194,7 +253,26 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
             )}
             <div className="space-y-1">
               <label className="text-sm font-bold text-earth-500 dark:text-gray-400 uppercase tracking-wider">Durum</label>
-              <p className="text-lg font-semibold text-earth-900 dark:text-gray-100">{hayvan.durum}</p>
+              <button 
+                onClick={() => {
+                  setNewStatus(hayvan.durum as any);
+                  if (hayvan.satisTarihi) setSatisTarihi(hayvan.satisTarihi);
+                  if (hayvan.satisFiyati) setSatisFiyati(hayvan.satisFiyati);
+                  if (hayvan.olumTarihi) setOlumTarihi(hayvan.olumTarihi);
+                  if (hayvan.olumNedeniTipi) setOlumNedeniTipi(hayvan.olumNedeniTipi as any);
+                  if (hayvan.olumNedeniDetay) setOlumNedeniDetay(hayvan.olumNedeniDetay);
+                  setIsStatusModalOpen(true);
+                }}
+                className="group flex items-center space-x-2 p-1.5 -ml-1.5 rounded-lg hover:bg-earth-100 dark:hover:bg-gray-700 transition cursor-pointer"
+                title="Durumu Değiştir"
+              >
+                <p className={`text-lg font-semibold ${
+                  hayvan.durum === 'Aktif' ? 'text-green-600 dark:text-green-400' :
+                  hayvan.durum === 'Satıldı' ? 'text-blue-600 dark:text-blue-400' :
+                  'text-red-600 dark:text-red-400'
+                }`}>{hayvan.durum}</p>
+                <Edit2 className="w-4 h-4 text-earth-400 group-hover:text-nature-600 transition" />
+              </button>
             </div>
             <div className="space-y-1">
               <label className="text-sm font-bold text-earth-500 dark:text-gray-400 uppercase tracking-wider">Grup</label>
@@ -488,6 +566,170 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ id, onBack }) => {
           hayvanId={id}
           onClose={() => setIsCalfFormOpen(false)}
         />
+      )}
+      
+      {isStatusModalOpen && (
+        <div className="fixed inset-0 z-50 bg-earth-900/50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md shadow-xl flex flex-col">
+            <div className="p-6 border-b border-earth-200 dark:border-gray-700 flex justify-between items-center bg-nature-50 dark:bg-nature-900/30 rounded-t-2xl">
+              <h2 className="text-xl font-bold text-earth-900 dark:text-gray-100">
+                Durum Değiştir
+              </h2>
+              <button type="button" onClick={() => setIsStatusModalOpen(false)} className="text-earth-500 dark:text-gray-400 hover:text-red-500 transition">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <form onSubmit={handleStatusChange} className="p-6 space-y-6">
+              <div className="space-y-1">
+                <label className="text-sm font-bold text-earth-700 dark:text-gray-300">Yeni Durum</label>
+                <select
+                  value={newStatus}
+                  onChange={(e) => setNewStatus(e.target.value as any)}
+                  className="w-full p-3 border border-earth-300 dark:border-gray-600 rounded-xl outline-none focus:ring-2 focus:ring-nature-500 bg-white dark:bg-gray-800 font-medium"
+                >
+                  <option value="Aktif">Aktif</option>
+                  <option value="Satıldı">Satıldı</option>
+                  <option value="Öldü">Öldü</option>
+                </select>
+              </div>
+
+              {newStatus === 'Satıldı' && (
+                <div className="space-y-4 bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-200 dark:border-blue-800/30">
+                  <h4 className="font-bold text-blue-800 dark:text-blue-400">Satış Kayıt Bilgileri</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-sm font-semibold text-blue-700 dark:text-blue-300">Satış Fiyatı (₺)</label>
+                      <input
+                        type="number"
+                        required
+                        value={satisFiyati}
+                        onChange={(e) => setSatisFiyati(e.target.value === '' ? '' : Number(e.target.value))}
+                        className="w-full p-2 border border-blue-300 dark:border-blue-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800"
+                        placeholder="Örn: 85000"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-sm font-semibold text-blue-700 dark:text-blue-300">Satış Tarihi</label>
+                      <input
+                        type="date"
+                        required
+                        value={satisTarihi}
+                        onChange={(e) => setSatisTarihi(e.target.value)}
+                        className="w-full p-2 border border-blue-300 dark:border-blue-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {newStatus === 'Öldü' && (
+                <div className="space-y-4 bg-red-50 dark:bg-red-900/10 p-4 rounded-xl border border-red-200 dark:border-red-800/30">
+                  <h4 className="font-bold text-red-800 dark:text-red-400">Ölüm Kayıt Bilgileri</h4>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-sm font-semibold text-red-700 dark:text-red-300">Ölüm Tarihi</label>
+                        <input
+                          type="date"
+                          required
+                          value={olumTarihi}
+                          onChange={(e) => setOlumTarihi(e.target.value)}
+                          className="w-full p-2 border border-red-300 dark:border-red-600 rounded-lg focus:ring-2 focus:ring-red-500 bg-white dark:bg-gray-800"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-sm font-semibold text-red-700 dark:text-red-300">Ölüm Nedeni Tipi</label>
+                        <select
+                          value={olumNedeniTipi}
+                          onChange={(e) => {
+                            setOlumNedeniTipi(e.target.value as any);
+                            setOlumNedeniDetay('');
+                          }}
+                          className="w-full p-2 border border-red-300 dark:border-red-600 rounded-lg focus:ring-2 focus:ring-red-500 bg-white dark:bg-gray-800"
+                        >
+                          <option value="Hastalık">Hastalık</option>
+                          <option value="Kaza / Travma">Kaza / Travma</option>
+                          <option value="Zehirlenme">Zehirlenme</option>
+                          <option value="Güç Doğum">Güç Doğum</option>
+                          <option value="Yaşlılık">Yaşlılık</option>
+                          <option value="Diğer">Diğer Nedenler</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="space-y-1 relative">
+                      <label className="text-sm font-semibold text-red-700 dark:text-red-300">
+                        {olumNedeniTipi === 'Hastalık' ? 'Hastalık Adı' : 'Nedeni Belirtin'}
+                      </label>
+                      {olumNedeniTipi === 'Hastalık' ? (
+                        <div>
+                          <input
+                            type="text"
+                            required
+                            value={olumNedeniDetay}
+                            onChange={e => {
+                              setOlumNedeniDetay(e.target.value);
+                              setShowHastalikDropdown(true);
+                            }}
+                            onFocus={() => setShowHastalikDropdown(true)}
+                            onBlur={() => setTimeout(() => setShowHastalikDropdown(false), 200)}
+                            placeholder="Örn: Ketozis (Seçin/Yazın)"
+                            className="w-full p-2 border border-red-300 dark:border-red-600 rounded-lg focus:ring-2 focus:ring-red-500 bg-white dark:bg-gray-800"
+                          />
+                          {showHastalikDropdown && (
+                            <ul className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-red-200 dark:border-gray-700 rounded-lg shadow-xl max-h-48 overflow-y-auto">
+                              {COMMON_DISEASES.filter(d => d.toLocaleLowerCase('tr-TR').includes(olumNedeniDetay.toLocaleLowerCase('tr-TR'))).map(d => (
+                                <li
+                                  key={d}
+                                  onMouseDown={() => { setOlumNedeniDetay(d); setShowHastalikDropdown(false); }}
+                                  className="px-3 py-2 text-sm text-earth-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/30 cursor-pointer"
+                                >
+                                  {d}
+                                </li>
+                              ))}
+                              {olumNedeniDetay && !COMMON_DISEASES.some(d => d.toLocaleLowerCase('tr-TR') === olumNedeniDetay.toLocaleLowerCase('tr-TR')) && (
+                                <li
+                                  onMouseDown={() => setShowHastalikDropdown(false)}
+                                  className="px-3 py-2 text-sm text-red-600 dark:text-red-400 italic bg-red-50/50 dark:bg-red-900/10 cursor-pointer"
+                                >
+                                  "{olumNedeniDetay}" olarak kaydet
+                                </li>
+                              )}
+                            </ul>
+                          )}
+                        </div>
+                      ) : (
+                        <input
+                          type="text"
+                          required
+                          value={olumNedeniDetay}
+                          onChange={e => setOlumNedeniDetay(e.target.value)}
+                          placeholder="Örn: Boğulma, Kaza vb."
+                          className="w-full p-2 border border-red-300 dark:border-red-600 rounded-lg focus:ring-2 focus:ring-red-500 bg-white dark:bg-gray-800"
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="pt-4 flex space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setIsStatusModalOpen(false)}
+                  className="flex-1 px-4 py-3 border border-earth-300 dark:border-gray-600 text-earth-700 dark:text-gray-300 rounded-xl font-bold hover:bg-earth-50 dark:hover:bg-gray-700 transition"
+                >
+                  İptal
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-3 bg-nature-600 text-white rounded-xl font-bold hover:bg-nature-700 transition shadow-md hover:shadow-lg"
+                >
+                  Kaydet
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -144,9 +144,10 @@ export interface UremeKaydi {
   hayvanId: string;
   tarih: string;
   tur: UremeKaydiTur;
-  durum?: 'Gebe' | 'Boş' | 'Belirsiz'; // Gebelik kontrolü için
+  durum?: 'Gebe' | 'Gebe Değil' | 'Boş' | 'Belirsiz' | 'Başarılı' | 'Başarısız' | 'Beklemede'; // Gebelik/tohumlama durumu
   maliyet?: number;
   notlar?: string;
+  babaKupeNo?: string; // Tohumlama yapan boğa/tosun küpe numarası
   detaylar?: {
     gozlemYontemi?: string;
     spermaBogaBilgisi?: string;

@@ -109,8 +109,10 @@ const RationCalculator: React.FC = () => {
     const milk = Number(milkYield) || 0;
     const dailyAdg = Number(adg) || 0;
 
-    const yasamaPayiME = 0.122 * Math.pow(Math.max(weight, 1), 0.75);
-    const yasamaPayiHP = weight * 0.67; // Canlı ağırlık başına yaklaşık 0.67 gram baz protein ihtiyacı
+    // NRC 2001: ME yaşama payı = NEm / km = (0.080 × BW^0.75) / 0.576 ≈ 0.139 × BW^0.75 Mcal/gün
+    const yasamaPayiME = 0.139 * Math.pow(Math.max(weight, 1), 0.75);
+    // NRC 2001: HP yaşama payı metabolik CA bazlı (~7 g HP / BW^0.75 g/gün)
+    const yasamaPayiHP = 7.0 * Math.pow(Math.max(weight, 1), 0.75);
 
     if (verimYonu === 'Sütçü') {
       if (sutcuDonemi === 'Laktasyon') {
@@ -120,16 +122,18 @@ const RationCalculator: React.FC = () => {
         const depressionFactor = 1 - Math.exp(-0.192 * (wol + 3.67));
         
         hedefDMI = dmiUnadjusted * depressionFactor;
-        hedefME = yasamaPayiME + (milk * 0.74);
-        hedefHP_g = yasamaPayiHP + (milk * 85);
+        // ME süt payı: NEL / kl = 0.74 Mcal/kg ÷ 0.65 ≈ 1.14 Mcal/L (ME tabanlı, NEL değil)
+        hedefME = yasamaPayiME + (milk * 1.14);
+        // Diyet HP süt payı: ~100 g HP per L süt (%25-30 verimlilik ile)
+        hedefHP_g = yasamaPayiHP + (milk * 100);
       } else if (sutcuDonemi === 'Uzak Kuru') {
         hedefDMI = weight * 0.020;
-        hedefME = yasamaPayiME + 3.0; // Gebelik payı
-        hedefHP_g = yasamaPayiHP + 700; // Yaşama payı + Fötüs/Gebelik payı
+        hedefME = yasamaPayiME + 4.0; // Gebelik payı (artırıldı — baz ME koeffisyeni yükseltildi)
+        hedefHP_g = yasamaPayiHP + 600; // Gebelik HP payı (baz yükseldiği için ek azaltıldı → hedef ~%12 KM)
       } else if (sutcuDonemi === 'Yakın Kuru') {
         hedefDMI = weight * 0.016; // İştah düşer
-        hedefME = yasamaPayiME + 4.5;
-        hedefHP_g = yasamaPayiHP + 900; // Yaşama payı + Hızlı gebelik gelişimi ve kolostrum hazırlığı
+        hedefME = yasamaPayiME + 5.5; // Gebelik son dönem + kolostrum hazırlığı (artırıldı)
+        hedefHP_g = yasamaPayiHP + 500; // Yakın kuru HP payı (baz yükseldiği için ek azaltıldı → hedef ~%14 KM)
       }
     } else {
       let dmiOrani = 0.023;
@@ -144,7 +148,8 @@ const RationCalculator: React.FC = () => {
 
       hedefDMI = weight * dmiOrani;
       hedefME = yasamaPayiME + ((dailyAdg / 1000) * enerjiMaliyeti_kgGCA);
-      hedefHP_g = yasamaPayiHP + ((dailyAdg / 1000) * 320);
+      // NRC Beef: büyüme HP katsayısı güncellendi (~450 g HP / kg canlı ağırlık kazanımı)
+      hedefHP_g = yasamaPayiHP + ((dailyAdg / 1000) * 450);
     }
 
     const safeDMI = hedefDMI > 0 ? hedefDMI : 1;
@@ -247,11 +252,11 @@ const RationCalculator: React.FC = () => {
         optimize: "cost",
         opType: "min",
         constraints: {
-          me: { min: hedefIhtiyac.me, max: hedefIhtiyac.me * 1.20 },
-          hp: { min: hedefIhtiyac.hp_g, max: hedefIhtiyac.hp_g * 1.20 },
-          ca: { min: hedefIhtiyac.ca * 0.80, max: hedefIhtiyac.ca * 2.00 },
-          p: { min: hedefIhtiyac.p * 0.80, max: hedefIhtiyac.p * 2.00 },
-          dmi: { min: hedefIhtiyac.dmi * 0.95, max: hedefIhtiyac.dmi * 1.05 },
+          me: { min: hedefIhtiyac.me, max: hedefIhtiyac.me * 1.30 },
+          hp: { min: hedefIhtiyac.hp_g, max: hedefIhtiyac.hp_g * 1.30 },
+          ca: { min: hedefIhtiyac.ca * 0.70, max: hedefIhtiyac.ca * 2.50 },
+          p: { min: hedefIhtiyac.p * 0.70, max: hedefIhtiyac.p * 2.50 },
+          dmi: { min: hedefIhtiyac.dmi * 0.90, max: hedefIhtiyac.dmi * 1.15 },
           roughage_min: { min: 0 },
           roughage_max: { max: 0 },
           vit_min_max: { max: hedefIhtiyac.dmi * 0.05 } // Katkılar KMT'nin maks %5'i olabilir
