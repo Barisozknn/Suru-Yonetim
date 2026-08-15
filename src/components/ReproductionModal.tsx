@@ -39,7 +39,7 @@ const ReproductionModal: React.FC<Props> = ({ hayvanId, onClose, existing }) => 
   const today = new Date().toISOString().split('T')[0];
   const [tarih, setTarih] = useState(existing?.tarih || today);
   const [tur, setTur] = useState<UremeKaydiTur>((existing?.tur as string) === 'Tohumlama' ? 'Tohumlama/Aşım' : (existing?.tur || 'Kızgınlık'));
-  const [durum, setDurum] = useState<'Gebe' | 'Boş' | 'Belirsiz'>(existing?.durum || 'Gebe');
+  const [durum, setDurum] = useState<'Gebe' | 'Gebe Değil' | 'Boş' | 'Belirsiz' | 'Başarılı' | 'Başarısız' | 'Beklemede'>(existing?.durum as any || 'Gebe');
   const [notlar, setNotlar] = useState(existing?.notlar || '');
   const [detaylar, setDetaylar] = useState<Record<string, any>>({
     tohumlamaYontemi: 'Yapay',
