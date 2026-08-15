@@ -435,27 +435,36 @@ const CalfList: React.FC<Props> = ({ onClose, onSelectCalf }) => {
                         <div className="flex items-center space-x-3">
                           <div className={`flex items-center space-x-1 text-xs font-bold ${buzagi.kayit?.agizSutuVerildi ? 'text-blue-600 dark:text-blue-400' : 'text-earth-400 dark:text-gray-500'}`}>
                             <Droplet className="w-3.5 h-3.5" />
-                            <span>{buzagi.kayit?.agizSutuVerildi ? 'Kolostrum ✓' : 'Eksik'}</span>
+                            <span>{buzagi.kayit?.agizSutuVerildi ? 'Kolostrum ✓' : 'Kolostrum Eksik'}</span>
                           </div>
 
                           {hasTarget && percentage > 0 && (
-                            <div className={`flex items-center space-x-1 px-2 py-0.5 rounded-full border text-xs font-bold ${color}`}>
-                              <Activity className="w-3 h-3" />
-                              <span>{status}</span>
-                            </div>
+                            <>
+                              <span className="text-earth-300 dark:text-gray-600 text-xs">•</span>
+                              <div className={`flex items-center space-x-1 px-2 py-0.5 rounded-full border text-xs font-bold ${color}`}>
+                                <Activity className="w-3 h-3" />
+                                <span>{status}</span>
+                              </div>
+                            </>
                           )}
 
                           {/* GAA Rozeti */}
                           {buzagi.adg !== null && (
-                            <div className={`flex items-center space-x-1 px-2 py-0.5 rounded-full border text-xs font-bold ${buzagi.adgStatus.color}`}
-                              title={`Hedef GAA: ${buzagi.kayit?.hedefGAAKgGun ?? 'girilmemiş'} kg/gün`}>
-                              <TrendingUp className="w-3 h-3" />
-                              <span>GAA {buzagi.adg > 0 ? '+' : ''}{buzagi.adg} kg/g</span>
-                            </div>
+                            <>
+                              <span className="text-earth-300 dark:text-gray-600 text-xs">•</span>
+                              <div className={`flex items-center space-x-1 px-2 py-0.5 rounded-full border text-xs font-bold ${buzagi.adgStatus.color}`}
+                                title={`Hedef GAA: ${buzagi.kayit?.hedefGAAKgGun ?? 'girilmemiş'} kg/gün`}>
+                                <TrendingUp className="w-3 h-3" />
+                                <span>GAA {buzagi.adg > 0 ? '+' : ''}{buzagi.adg} kg/g</span>
+                              </div>
+                            </>
                           )}
 
                           {!hasTarget && buzagi.adg === null && (
-                            <div className="text-xs text-earth-400 dark:text-gray-500 italic">Hedef girilmemiş</div>
+                            <>
+                              <span className="text-earth-300 dark:text-gray-600 text-xs">•</span>
+                              <div className="text-xs text-earth-400 dark:text-gray-500 italic">Hedef yok</div>
+                            </>
                           )}
                         </div>
 

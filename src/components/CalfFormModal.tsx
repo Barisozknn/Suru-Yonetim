@@ -48,20 +48,26 @@ const CalfFormModal: React.FC<Props> = ({ hayvanId, onClose }) => {
     fetchKayit();
   }, [hayvanId]);
 
+  const parseNumber = (val: string | undefined): number | undefined => {
+    if (!val) return undefined;
+    const num = Number(val.toString().replace(',', '.'));
+    return isNaN(num) ? undefined : num;
+  };
+
   const handleSave = async () => {
     setSaving(true);
     const payload: BuzagiKaydi = {
       id: kayit?.id || uuidv4(),
       hayvanId,
-      dogumAgirligiKg: dogumAgirligiKg ? Number(dogumAgirligiKg) : undefined,
+      dogumAgirligiKg: parseNumber(dogumAgirligiKg),
       agizSutuVerildi,
-      agizSutuMiktarLt: agizSutuMiktarLt ? Number(agizSutuMiktarLt) : undefined,
-      agizSutuSaatSonra: agizSutuSaatSonra ? Number(agizSutuSaatSonra) : undefined,
+      agizSutuMiktarLt: parseNumber(agizSutuMiktarLt),
+      agizSutuSaatSonra: parseNumber(agizSutuSaatSonra),
       hedefSuttenKesimTarihi: hedefSuttenKesimTarihi || undefined,
-      hedefSuttenKesimAgirligiKg: hedefSuttenKesimAgirligiKg ? Number(hedefSuttenKesimAgirligiKg) : undefined,
+      hedefSuttenKesimAgirligiKg: parseNumber(hedefSuttenKesimAgirligiKg),
       gerceklesenSuttenKesimTarihi: gerceklesenSuttenKesimTarihi || undefined,
-      gerceklesenSuttenKesimAgirligiKg: gerceklesenSuttenKesimAgirligiKg ? Number(gerceklesenSuttenKesimAgirligiKg) : undefined,
-      hedefGAAKgGun: hedefGAAKgGun ? Number(hedefGAAKgGun) : undefined,
+      gerceklesenSuttenKesimAgirligiKg: parseNumber(gerceklesenSuttenKesimAgirligiKg),
+      hedefGAAKgGun: parseNumber(hedefGAAKgGun),
     };
 
     const action = kayit ? 'UPDATE' : 'INSERT';

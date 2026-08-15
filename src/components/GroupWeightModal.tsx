@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Save, Scale } from 'lucide-react';
+import { updateAnimalCurrentWeight } from '../utils/weightHelper';
 import { useLiveFarmQuery } from '../hooks/useLiveFarmQuery';
 import { db } from '../lib/db';
 import type { Grup, AgirlikKaydi } from '../types';
@@ -48,14 +49,6 @@ const GroupWeightModal: React.FC<Props> = ({ grup, onClose }) => {
 
       await db.agirlikKayitlari.bulkAdd(payloads);
       
-      // Update actual current weight on the animal profile
-      for (const payload of payloads) {
-        const h = await db.hayvanlar.get(payload.hayvanId);
-        if (h) {
-          await db.hayvanlar.update(h.id, { guncelAgirlikKg: payload.kg });
-        }
-      }
-
       // Senkronizasyon kuyruğuna ekle
       for (const payload of payloads) {
         await db.syncQueue.add({
@@ -64,6 +57,11 @@ const GroupWeightModal: React.FC<Props> = ({ grup, onClose }) => {
           payload,
           created_at: Date.now()
         });
+      }
+
+      // Update actual current weight on the animal profile using helper
+      for (const payload of payloads) {
+        await updateAnimalCurrentWeight(payload.hayvanId);
       }
 
       onClose();

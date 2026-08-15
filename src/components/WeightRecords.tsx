@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import type { AgirlikKaydi, Hayvan } from '../types';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Scale, TrendingUp, Edit2, Trash2, Check, X } from 'lucide-react';
+import { updateAnimalCurrentWeight } from '../utils/weightHelper';
 
 interface Props {
   hayvan: Hayvan;
@@ -33,6 +34,7 @@ const WeightRecords: React.FC<Props> = ({ hayvan }) => {
         payload: { id },
         created_at: Date.now()
       });
+      await updateAnimalCurrentWeight(hayvan.id);
     }
   };
 
@@ -58,13 +60,7 @@ const WeightRecords: React.FC<Props> = ({ hayvan }) => {
     });
     
     // Update animal's current weight
-    await db.hayvanlar.update(hayvan.id, { guncelAgirlikKg: Number(payload.kg) });
-    await db.syncQueue.add({
-      table: 'hayvanlar',
-      action: 'UPDATE',
-      payload: { ...hayvan, guncelAgirlikKg: Number(payload.kg) },
-      created_at: Date.now()
-    });
+    await updateAnimalCurrentWeight(hayvan.id);
 
     setEditingId(null);
     setEditForm({});
@@ -90,13 +86,7 @@ const WeightRecords: React.FC<Props> = ({ hayvan }) => {
     });
 
     // Update animal's current weight
-    await db.hayvanlar.update(hayvan.id, { guncelAgirlikKg: Number(kg) });
-    await db.syncQueue.add({
-      table: 'hayvanlar',
-      action: 'UPDATE',
-      payload: { ...hayvan, guncelAgirlikKg: Number(kg) },
-      created_at: Date.now()
-    });
+    await updateAnimalCurrentWeight(hayvan.id);
 
     setKg('');
   };
