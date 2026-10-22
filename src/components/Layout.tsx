@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   Menu, X, Home, Wheat, Activity, Dna, Calculator,
-  Syringe, CalendarDays, Settings, Sparkles, Wifi, WifiOff, RefreshCw, Wallet, User, Sun, Moon, NotebookPen, Lock
+  Syringe, CalendarDays, Settings, Sparkles, Wifi, WifiOff, RefreshCw, Wallet, User, Sun, Moon, NotebookPen, Lock,
+  ChevronRight
 } from 'lucide-react';
 import { processSyncQueue, pullInitialData, subscribeToRealtimeChanges } from '../services/syncService';
 import { useStore } from '../store/useStore';
@@ -125,18 +126,48 @@ const Layout: React.FC = () => {
               to={isLocked ? '/ayarlar' : item.path}
               onClick={(e) => handleLockClick(e, item.path)}
               className={({ isActive }) => `
-                flex items-center space-x-3.5 rounded-xl font-bold transition w-full relative
-                ${isMobile ? 'px-3.5 py-2 text-[14px]' : 'px-4 py-2 text-[14.5px]'}
+                group flex items-center space-x-3 rounded-xl font-bold transition-all duration-200 ease-out w-full relative select-none
+                ${isMobile ? 'px-3.5 py-2 text-[14px]' : 'px-3.5 py-2 text-[14.5px]'}
                 ${isActive && !isLocked
-                  ? 'bg-nature-600 dark:bg-nature-500 text-white shadow-md'
-                  : 'text-earth-600 dark:text-gray-300 hover:bg-nature-50 dark:hover:bg-gray-700 hover:text-nature-700 dark:hover:text-white'
+                  ? 'bg-nature-600 dark:bg-nature-500 text-white shadow-md shadow-nature-600/25 translate-x-1'
+                  : 'text-earth-600 dark:text-gray-300 hover:bg-nature-50 dark:hover:bg-gray-700/80 hover:text-nature-700 dark:hover:text-white hover:translate-x-1 hover:shadow-sm'
                 }
-                ${isLocked ? 'opacity-60 cursor-not-allowed hover:bg-transparent' : ''}
+                ${isLocked ? 'opacity-60 cursor-not-allowed hover:bg-transparent hover:translate-x-0' : 'active:scale-[0.98]'}
               `}
             >
-              {item.icon}
-              <span className="flex-1">{item.label}</span>
-              {isLocked && <Lock className="w-4 h-4 text-earth-400 dark:text-gray-500" />}
+              {({ isActive }) => (
+                <>
+                  {/* Sol kenar dikey animasyon çizgisi */}
+                  <span
+                    className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 rounded-r-full transition-all duration-200 ease-out pointer-events-none ${
+                      isActive && !isLocked
+                        ? 'h-5 bg-white opacity-90'
+                        : 'h-0 opacity-0 group-hover:h-4 group-hover:opacity-100 bg-nature-600 dark:bg-nature-400'
+                    }`}
+                  />
+
+                  {/* İkon - hover durumunda hafif büyüme ve eğilme */}
+                  <span className={`shrink-0 transition-transform duration-200 ease-out ${!isLocked ? 'group-hover:scale-110 group-hover:rotate-3' : ''}`}>
+                    {item.icon}
+                  </span>
+
+                  {/* Sekme ismi - hover durumunda yumuşak sağa kayma animasyonu */}
+                  <span className={`flex-1 truncate transition-transform duration-200 ease-out ${!isLocked ? 'group-hover:translate-x-1.5' : ''}`}>
+                    {item.label}
+                  </span>
+
+                  {/* Kilit ikonu veya hover'da beliren sağ ok göstergesi */}
+                  {isLocked ? (
+                    <Lock className="w-4 h-4 text-earth-400 dark:text-gray-500 shrink-0" />
+                  ) : (
+                    <ChevronRight className={`w-3.5 h-3.5 shrink-0 transition-all duration-200 ease-out ${
+                      isActive
+                        ? 'opacity-80 translate-x-0 text-white'
+                        : 'opacity-0 -translate-x-2 group-hover:opacity-60 group-hover:translate-x-0 text-nature-600 dark:text-nature-400'
+                    }`} />
+                  )}
+                </>
+              )}
             </NavLink>
           );
         })}
